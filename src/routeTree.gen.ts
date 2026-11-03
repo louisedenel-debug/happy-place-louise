@@ -21,6 +21,7 @@ import { Route as AuthenticatedManageIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedManageBlockersRouteImport } from './routes/_authenticated/manage.blockers'
 import { Route as AuthenticatedManageMetricsRouteImport } from './routes/_authenticated/manage.metrics'
 import { Route as AuthenticatedManageNewsRouteImport } from './routes/_authenticated/manage.news'
+import { Route as AuthenticatedManageRemindersRouteImport } from './routes/_authenticated/manage.reminders'
 import { Route as AuthenticatedManageSubmissionsRouteImport } from './routes/_authenticated/manage.submissions'
 import { Route as AuthenticatedManageUsersRouteImport } from './routes/_authenticated/manage.users'
 
@@ -86,6 +87,12 @@ const AuthenticatedManageNewsRoute = AuthenticatedManageNewsRouteImport.update({
   path: '/news',
   getParentRoute: () => AuthenticatedManageRoute,
 } as any)
+const AuthenticatedManageRemindersRoute =
+  AuthenticatedManageRemindersRouteImport.update({
+    id: '/reminders',
+    path: '/reminders',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
 const AuthenticatedManageSubmissionsRoute =
   AuthenticatedManageSubmissionsRouteImport.update({
     id: '/submissions',
@@ -110,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/manage/blockers': typeof AuthenticatedManageBlockersRoute
   '/manage/metrics': typeof AuthenticatedManageMetricsRoute
   '/manage/news': typeof AuthenticatedManageNewsRoute
+  '/manage/reminders': typeof AuthenticatedManageRemindersRoute
   '/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
   '/manage/users': typeof AuthenticatedManageUsersRoute
   '/manage/': typeof AuthenticatedManageIndexRoute
@@ -124,6 +132,7 @@ export interface FileRoutesByTo {
   '/manage/blockers': typeof AuthenticatedManageBlockersRoute
   '/manage/metrics': typeof AuthenticatedManageMetricsRoute
   '/manage/news': typeof AuthenticatedManageNewsRoute
+  '/manage/reminders': typeof AuthenticatedManageRemindersRoute
   '/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
   '/manage/users': typeof AuthenticatedManageUsersRoute
   '/manage': typeof AuthenticatedManageIndexRoute
@@ -141,6 +150,7 @@ export interface FileRoutesById {
   '/_authenticated/manage/blockers': typeof AuthenticatedManageBlockersRoute
   '/_authenticated/manage/metrics': typeof AuthenticatedManageMetricsRoute
   '/_authenticated/manage/news': typeof AuthenticatedManageNewsRoute
+  '/_authenticated/manage/reminders': typeof AuthenticatedManageRemindersRoute
   '/_authenticated/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
   '/_authenticated/manage/users': typeof AuthenticatedManageUsersRoute
   '/_authenticated/manage/': typeof AuthenticatedManageIndexRoute
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/manage/blockers'
     | '/manage/metrics'
     | '/manage/news'
+    | '/manage/reminders'
     | '/manage/submissions'
     | '/manage/users'
     | '/manage/'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/manage/blockers'
     | '/manage/metrics'
     | '/manage/news'
+    | '/manage/reminders'
     | '/manage/submissions'
     | '/manage/users'
     | '/manage'
@@ -188,6 +200,7 @@ export interface FileRouteTypes {
     | '/_authenticated/manage/blockers'
     | '/_authenticated/manage/metrics'
     | '/_authenticated/manage/news'
+    | '/_authenticated/manage/reminders'
     | '/_authenticated/manage/submissions'
     | '/_authenticated/manage/users'
     | '/_authenticated/manage/'
@@ -286,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManageNewsRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
+    '/_authenticated/manage/reminders': {
+      id: '/_authenticated/manage/reminders'
+      path: '/reminders'
+      fullPath: '/manage/reminders'
+      preLoaderRoute: typeof AuthenticatedManageRemindersRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
     '/_authenticated/manage/submissions': {
       id: '/_authenticated/manage/submissions'
       path: '/submissions'
@@ -307,6 +327,7 @@ interface AuthenticatedManageRouteChildren {
   AuthenticatedManageBlockersRoute: typeof AuthenticatedManageBlockersRoute
   AuthenticatedManageMetricsRoute: typeof AuthenticatedManageMetricsRoute
   AuthenticatedManageNewsRoute: typeof AuthenticatedManageNewsRoute
+  AuthenticatedManageRemindersRoute: typeof AuthenticatedManageRemindersRoute
   AuthenticatedManageSubmissionsRoute: typeof AuthenticatedManageSubmissionsRoute
   AuthenticatedManageUsersRoute: typeof AuthenticatedManageUsersRoute
   AuthenticatedManageIndexRoute: typeof AuthenticatedManageIndexRoute
@@ -316,6 +337,7 @@ const AuthenticatedManageRouteChildren: AuthenticatedManageRouteChildren = {
   AuthenticatedManageBlockersRoute: AuthenticatedManageBlockersRoute,
   AuthenticatedManageMetricsRoute: AuthenticatedManageMetricsRoute,
   AuthenticatedManageNewsRoute: AuthenticatedManageNewsRoute,
+  AuthenticatedManageRemindersRoute: AuthenticatedManageRemindersRoute,
   AuthenticatedManageSubmissionsRoute: AuthenticatedManageSubmissionsRoute,
   AuthenticatedManageUsersRoute: AuthenticatedManageUsersRoute,
   AuthenticatedManageIndexRoute: AuthenticatedManageIndexRoute,

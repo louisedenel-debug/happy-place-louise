@@ -105,8 +105,8 @@ function ManageNews() {
 
   return (
     <section className="space-y-md">
-      <div className="flex items-center justify-between">
-        <h2 className="font-headline-sm text-headline-sm text-primary">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-bold leading-snug text-primary">
           Actualités ({list.data?.length ?? 0})
         </h2>
         <button
@@ -117,9 +117,9 @@ function ManageNews() {
             setShowLinkErrs(false);
             setForm({ ...empty });
           }}
-          className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md"
+          className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-primary px-5 text-base font-semibold text-on-primary hover:opacity-90"
         >
-          + NOUVELLE ACTUALITÉ
+          <span aria-hidden="true" className="material-symbols-outlined">add</span>Nouvelle actualité
         </button>
       </div>
 
@@ -128,19 +128,19 @@ function ManageNews() {
         <p className="text-body-sm text-error">Impossible de charger les actualités.</p>
       )}
 
-      <div className="space-y-xs">
+      <div className="flex flex-col gap-4">
         {list.data?.map((n) => (
           <article
             key={n.id}
-            className="flex flex-col sm:flex-row items-start justify-between gap-sm p-sm min-w-0 overflow-hidden bg-card border border-outline-variant"
+            className="flex min-w-0 flex-wrap items-start justify-between gap-x-4 gap-y-3 overflow-hidden rounded-[10px] border border-l-[6px] border-outline-variant border-l-mod-actus bg-[#FAFAF7] p-5"
           >
             <div className="min-w-0 flex-1 space-y-xs">
               {n.image_path && <NewsImage path={n.image_path} alt={n.title} />}
-              <p className="font-body-md text-primary font-bold wrap-anywhere">{n.title}</p>
-              <p className="text-body-sm text-on-surface-variant line-clamp-2 wrap-anywhere">{n.body}</p>
+              <p className="font-semibold wrap-anywhere">{n.title}</p>
+              <p className="line-clamp-2 wrap-anywhere">{n.body}</p>
               <NewsLinks links={n.links} />
-              <p className="text-[11px] font-label-sm text-on-surface-variant uppercase mt-xs">
-                 {newsStatusLabels[n.status] ?? n.status} • {n.author} • {timeAgo(n.created_at)}
+              <p className="text-sm text-on-surface-variant">
+                 {newsStatusLabels[n.status] ?? n.status} · {timeAgo(n.created_at)} · par {n.author}
               </p>
             </div>
             <RowActions

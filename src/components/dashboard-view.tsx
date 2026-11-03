@@ -15,7 +15,6 @@ import { BlockersBoard } from "@/components/blockers-board";
 import { IndicatorsBoard } from "@/components/indicators-board";
 import { NewsFeed } from "@/components/news-feed";
 import { NewsWriter, PublishConfirm } from "@/components/news-writer";
-import { DepartureNotices } from "@/components/departure-notices";
 import { emptyMedia, linkErrors, mediaFromNews, toNewsLinks, type MediaDraft } from "@/lib/news-media";
 import { BlockerArchive, ValidatedSubmissions } from "@/components/dashboard-extras";
 import { Button } from "@/components/ui/button";
@@ -298,7 +297,6 @@ export function Dashboard({ view }: { view: DashboardView }) {
     <div className="bg-background text-on-surface font-body-md min-h-screen flex flex-col">
       <BrandHeader />
       <main className="flex-grow w-full max-w-interface mx-auto p-sm md:p-md space-y-md">
-        {email && <DepartureNotices email={email} />}
         <div className="mb-lg space-y-sm">
           {!(actions && role !== "admin") && (
             <p className="text-sm text-on-surface-variant">Vue d'ensemble</p>

@@ -136,21 +136,21 @@ export function RowActions({
   deleting?: boolean;
 }) {
   return (
-    <div className="flex gap-xs shrink-0">
+    <div className="flex shrink-0 gap-2">
       <button
         type="button"
         onClick={onEdit}
-        className="px-sm py-1 border border-outline text-primary font-label-sm text-label-sm hover:bg-surface-container"
+        className="inline-flex min-h-12 items-center rounded-lg border border-primary px-5 text-base font-semibold text-primary hover:bg-surface-container"
       >
-        MODIFIER
+        Modifier
       </button>
       <button
         type="button"
         onClick={onDelete}
         disabled={deleting}
-        className="px-sm py-1 border border-error text-error font-label-sm text-label-sm hover:bg-error-container disabled:opacity-50"
+        className="inline-flex min-h-12 items-center rounded-lg border border-sev-crit px-5 text-base font-semibold text-sev-crit hover:bg-sev-crit-tint disabled:opacity-50"
       >
-        SUPPRIMER
+        Supprimer
       </button>
     </div>
   );

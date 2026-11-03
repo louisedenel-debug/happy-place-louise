@@ -8,7 +8,7 @@ import { exportMyRecentSubmissions } from "@/lib/dashboard";
 import { fetchProfile, type Profile } from "@/lib/profile";
 import { PersonaBar } from "@/components/persona-bar";
 
-type NavItem = { label: string; to: "/vue" | "/actions" | "/manage/users" | "/manage/news"; match: string[] };
+type NavItem = { label: string; to: "/vue" | "/actions" | "/manage/reminders" | "/manage/blockers"; match: string[] };
 
 const OVERVIEW: NavItem = { label: "Vue d'ensemble", to: "/vue", match: ["/vue"] };
 const NAV: Record<AppRole, NavItem[]> = {
@@ -16,12 +16,8 @@ const NAV: Record<AppRole, NavItem[]> = {
   manager: [OVERVIEW, { label: "Vos actions", to: "/actions", match: ["/actions"] }],
   admin: [
     OVERVIEW,
-    { label: "Gérer les données", to: "/manage/users", match: ["/manage/users"] },
-    {
-      label: "Vos actions",
-      to: "/manage/news",
-      match: ["/manage/news", "/manage/blockers", "/manage/metrics", "/manage/submissions"],
-    },
+    { label: "Gérer les données", to: "/manage/reminders", match: ["/manage/reminders", "/manage/users"] },
+    { label: "Vos actions", to: "/manage/blockers", match: ["/manage/blockers", "/manage/metrics", "/manage/news"] },
   ],
 };
 

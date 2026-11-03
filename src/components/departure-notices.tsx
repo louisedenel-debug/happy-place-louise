@@ -17,10 +17,13 @@ export function DepartureNotices({ email }: { email: string }) {
     queryKey: ["departure_notices", email.toLowerCase()],
     queryFn: () => fetchMyDepartureNotices(email),
   });
-  if (!q.data?.length) return null;
+  const list = q.data ?? [];
   return (
-    <div className="space-y-xs">
-      {q.data.map((n) => (
+    <div className="flex flex-col gap-4">
+      <h2 className="text-xl font-bold leading-snug text-primary">Rappels de départ ({list.length} à traiter)</h2>
+      {q.isError && <p className="text-base text-error">Les rappels sont indisponibles.</p>}
+      {!q.isLoading && !q.isError && list.length === 0 && <p>Tous les départs ont été pris en compte.</p>}
+      {list.map((n) => (
         <NoticeBanner key={n.id} notice={n} email={email} />
       ))}
     </div>
@@ -32,7 +35,6 @@ function NoticeBanner({ notice: n, email }: { notice: DepartureNotice; email: st
   const [open, setOpen] = useState(false);
   const [zipping, setZipping] = useState(false);
   const count = n.documents.length;
-  const reminder = !!n.reminder_at;
   const deleteOn = new Date(new Date(n.created_at).getTime() + 7 * 86400000).toISOString();
   const text =
     count === 0
@@ -60,18 +62,21 @@ function NoticeBanner({ notice: n, email }: { notice: DepartureNotice; email: st
     }
   }
 
-  const btn = "px-sm py-1 border border-outline text-primary font-label-sm text-label-sm hover:bg-surface-container disabled:opacity-50";
+  const btn =
+    "inline-flex min-h-12 items-center rounded-lg border border-primary px-5 text-base font-semibold text-primary hover:bg-surface-container disabled:opacity-50";
+  const btnPrimary =
+    "inline-flex min-h-12 items-center rounded-lg bg-primary px-5 text-base font-semibold text-on-primary hover:opacity-90 disabled:opacity-60";
 
   return (
     <div
-      role={reminder ? "alert" : "status"}
-      className={`p-sm border space-y-xs ${reminder ? "border-error bg-error-container text-on-error-container" : "border-outline-variant bg-surface-container-lowest"}`}
+      role="status"
+      className="flex flex-col gap-3 rounded-[10px] border border-l-[6px] border-outline-variant border-l-sev-alert bg-[#FAFAF7] p-5"
     >
-      <p className="font-body-md">
-        {reminder && <strong>Rappel : </strong>}
+      <p className="wrap-anywhere">
+        <strong>Rappel : </strong>
         {text}
       </p>
-      <div className="flex flex-wrap gap-xs">
+      <div className="flex flex-wrap gap-2">
         {count > 0 && (
           <>
             <button type="button" className={btn} onClick={() => setOpen((o) => !o)} aria-expanded={open}>
@@ -82,7 +87,7 @@ function NoticeBanner({ notice: n, email }: { notice: DepartureNotice; email: st
             </button>
           </>
         )}
-        <button type="button" className={btn} onClick={() => mark.mutate()} disabled={mark.isPending}>
+        <button type="button" className={btnPrimary} onClick={() => mark.mutate()} disabled={mark.isPending}>
           {count > 0 ? "J'ai téléchargé les documents" : "J'ai pris note"}
         </button>
       </div>
