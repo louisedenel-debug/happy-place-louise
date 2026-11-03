@@ -31,3 +31,6 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Configuration de la preview propre à cette machine
+.claude/
