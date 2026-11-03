@@ -1,0 +1,59 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Avant.dc.html": {
+      "expand": "fill",
+      "h": 2800,
+      "is_interactive": true,
+      "title": "Avant : dashboard actuel",
+      "w": 1360,
+      "x": 0,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 5400,
+      "is_interactive": true,
+      "title": "Après : solutions 1 et 2",
+      "w": 1500,
+      "x": 1440,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-02T09:55:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "noteOrder": [
+    "titre",
+    "regle"
+  ],
+  "notes": {
+    "regle": {
+      "fill": "gray",
+      "text": "Mêmes données et mêmes parcours dans les deux versions. Changent : la taille du texte, les espaces, les coins, les couleurs et les icônes, et, dans la version après, l'ordre des blocs selon le rôle. Léa (collaboratrice) : idées, points bloquants, actualités, indicateurs. Julien (manager) : publier une actualité avec l'aide à la rédaction (arrivée, résultat, contrat signé), demandes de soumissions, points bloquants, indicateurs. Marc (admin) : rappels de départ, actualités publiées et brouillons, soumissions de toutes les équipes, points bloquants, indicateurs. Menu en haut « Gestion des données » avec ses sous-pages (actualités, soumissions, points bloquants, indicateurs, utilisateurs autorisés). Choisir un parcours dans la barre noire en haut de chaque maquette.",
+      "w": 1000,
+      "x": 0,
+      "y": -150
+    },
+    "titre": {
+      "kind": "title1",
+      "maxW": 2800,
+      "text": "Happy Place : solution 1 (texte et espaces) et solution 2 (couleur comme repère)",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Avant.dc.html",
+    "Main.dc.html"
+  ],
+  "pages": [],
+  "title": "Happy Place : maquette avant / après"
+}
