@@ -1,19 +1,25 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import sharkLogo from "@/assets/bigger-boat-shark.png";
 import { signOut, type AppRole } from "@/lib/auth";
 import { exportMyRecentSubmissions } from "@/lib/dashboard";
 import { fetchProfile, type Profile } from "@/lib/profile";
+import { fetchActionsBadge, markActionsSeen } from "@/lib/action-badge";
 import { PersonaBar } from "@/components/persona-bar";
 
-type NavItem = { label: string; to: "/vue" | "/actions" | "/manage/reminders" | "/manage/blockers"; match: string[] };
+type NavItem = {
+  label: string;
+  to: "/vue" | "/actions" | "/manage/reminders" | "/manage/blockers";
+  match: string[];
+  badge?: boolean;
+};
 
 const OVERVIEW: NavItem = { label: "Vue d'ensemble", to: "/vue", match: ["/vue"] };
 const NAV: Record<AppRole, NavItem[]> = {
-  collaborateur: [OVERVIEW, { label: "Vos actions", to: "/actions", match: ["/actions"] }],
-  manager: [OVERVIEW, { label: "Vos actions", to: "/actions", match: ["/actions"] }],
+  collaborateur: [OVERVIEW, { label: "Vos actions", to: "/actions", match: ["/actions"], badge: true }],
+  manager: [OVERVIEW, { label: "Vos actions", to: "/actions", match: ["/actions"], badge: true }],
   admin: [
     OVERVIEW,
     { label: "Gérer les données", to: "/manage/reminders", match: ["/manage/reminders", "/manage/users"] },
@@ -109,11 +115,41 @@ function ProfileMenu({ profile }: { profile: Profile }) {
   );
 }
 
+// Vrai tant que la page « Vos actions » est la dernière page ouverte (survit aux changements de page, pas au rechargement).
+let onActionsPage = false;
+
 export function BrandHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // gcTime 0 : après un changement de rôle, l'en-tête ne montre jamais l'ancien profil.
   const profile = useQuery({ queryKey: ["profile"], queryFn: fetchProfile, retry: false, gcTime: 0 });
   const items = profile.data ? NAV[profile.data.role] : [];
+  const badge = useQuery({
+    queryKey: ["actions-badge", profile.data?.email],
+    queryFn: () => fetchActionsBadge(profile.data!.role, profile.data!.email),
+    enabled: !!profile.data,
+    retry: false,
+    refetchInterval: 60_000,
+  });
+  const unread = badge.data ?? 0;
+
+  // Les nouveautés sont marquées comme lues quand on QUITTE « Vos actions » (ou ferme l'onglet),
+  // pas à l'arrivée : on atterrit sur cette page, la pastille doit rester visible pendant la visite.
+  const qc = useQueryClient();
+  const email = profile.data?.email;
+  useEffect(() => {
+    if (!email) return;
+    if (pathname === "/actions") {
+      onActionsPage = true;
+      const onHide = () => markActionsSeen(email);
+      window.addEventListener("pagehide", onHide);
+      return () => window.removeEventListener("pagehide", onHide);
+    }
+    if (onActionsPage) {
+      onActionsPage = false;
+      markActionsSeen(email);
+      qc.invalidateQueries({ queryKey: ["actions-badge"] });
+    }
+  }, [pathname, email, qc]);
 
   return (
     <header className="border-b border-outline-variant bg-surface-container-lowest">
@@ -143,6 +179,19 @@ export function BrandHeader() {
                   }`}
                 >
                   {n.label}
+                  {n.badge && unread > 0 && (
+                    <span
+                      aria-hidden="true"
+                      className="ml-2 grid h-6 min-w-6 place-items-center rounded-full bg-sev-crit px-1.5 text-sm font-bold leading-none text-white"
+                    >
+                      {unread > 9 ? "9+" : unread}
+                    </span>
+                  )}
+                  {n.badge && unread > 0 && (
+                    <span className="sr-only">
+                      , {unread} nouveauté{unread > 1 ? "s" : ""} non lue{unread > 1 ? "s" : ""}
+                    </span>
+                  )}
                 </Link>
               );
             })}
