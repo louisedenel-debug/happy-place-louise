@@ -87,6 +87,18 @@ export function formatMetricValue(value: number | string, unit: string | null): 
   return `${formatted}${unit ?? ""}`;
 }
 
+/** Valeur d'un indicateur à l'écran : « 40,6 % » (espace insécable avant le %). */
+export function formatKpi(value: number | string, unit: string | null): string {
+  return formatMetricValue(value, unit).replace(/%$/, "\u00a0%");
+}
+
+/** Libellé de la tendance sans pictogramme, pour le chip d'évolution. */
+export const TREND_PLAIN: Record<Metric["trend"], string> = {
+  hausse: "En hausse",
+  baisse: "En baisse",
+  stable: "Stable",
+};
+
 export async function fetchNews(): Promise<News[]> {
   const { data, error } = await db
     .from("news")

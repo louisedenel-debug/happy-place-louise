@@ -65,11 +65,13 @@ export function canReadAttachment(
 const PAGE = 4;
 
 export function ValidatedSubmissions({
+  order,
   role,
   email,
   managerTeams,
   onRead,
 }: {
+  order?: number;
   role: string | null | undefined;
   email: string;
   managerTeams: string[];
@@ -86,40 +88,51 @@ export function ValidatedSubmissions({
   const shown = filtered.slice(0, limit);
 
   return (
-    <section className="col-span-12 min-w-0 bg-surface-container-lowest border border-outline-variant p-md">
-      <div className="flex flex-wrap items-center justify-between gap-sm border-b border-outline-variant pb-sm mb-md">
-        <h2 className="font-headline-sm text-headline-sm text-primary">Demandes validées</h2>
-        <label className="flex items-center gap-xs font-label-sm text-label-sm text-on-surface-variant min-w-0">
-          <span className="sr-only">Filtrer par équipe</span>
-          <select
-            aria-label="Filtrer par équipe"
-            value={team}
-            onChange={(e) => { setTeam(e.target.value); setLimit(PAGE); }}
-            className="max-w-full bg-card border border-outline-variant p-xs focus:outline-none focus:border-primary"
-          >
-            <option value="">Toutes les équipes</option>
-            {teams.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
+    <section
+      aria-labelledby="t-valid"
+      style={order ? { order } : undefined}
+      className="col-span-12 min-w-0 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
+    >
+      <div className="flex flex-wrap items-center gap-3 border-b border-outline-variant bg-mod-demandes-tint p-5">
+        <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[10px] bg-mod-demandes text-white">
+          <span className="material-symbols-outlined">task_alt</span>
+        </span>
+        <h2 id="t-valid" className="flex-1 font-headline-sm text-[28px] leading-tight text-mod-demandes">
+          Idées validées
+        </h2>
+        <label htmlFor="f-ideas-team" className="text-sm text-on-surface-variant">
+          Équipe
         </label>
+        <select
+          id="f-ideas-team"
+          value={team}
+          onChange={(e) => { setTeam(e.target.value); setLimit(PAGE); }}
+          className="min-h-12 min-w-[220px] rounded-lg border border-outline bg-white px-3 text-base text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <option value="">Toutes les équipes</option>
+          {teams.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
       </div>
-      {q.isLoading && <p className="text-body-sm text-on-surface-variant">Chargement…</p>}
-      {q.isError && <p className="text-body-sm text-error">Les demandes validées sont indisponibles.</p>}
+      <div className="flex flex-col gap-4 p-5">
+      <p>Toutes les idées validées du cabinet. Choisissez une équipe dans le filtre pour cibler ses idées.</p>
+      {q.isLoading && <p className="text-base text-on-surface-variant">Chargement…</p>}
+      {q.isError && <p className="text-base text-error">Les idées validées sont indisponibles.</p>}
       {q.data && filtered.length === 0 && (
-        <p className="text-body-sm text-on-surface-variant italic">Aucune demande validée pour le moment.</p>
+        <p className="text-base text-on-surface-variant">Aucune idée validée pour le moment.</p>
       )}
-      <div className="grid gap-xs md:grid-cols-2">
+      <div className="grid items-start gap-4 md:grid-cols-2">
         {shown.map((s) => (
-          <div key={s.id} className="p-sm border border-outline-variant bg-card min-w-0 overflow-hidden space-y-xs">
+          <div key={s.id} className="min-w-0 space-y-2 overflow-hidden rounded-[10px] border border-outline-variant bg-[#FAFAF7] p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-base font-bold text-primary wrap-anywhere">{ideaTitle(s)}</h3>
+              <h3 className="text-lg font-bold text-primary wrap-anywhere">{ideaTitle(s)}</h3>
               {email && (s.submitted_by_email ?? "").toLowerCase() === email.toLowerCase() && (
                 <span className="inline-flex items-center rounded-lg border border-st-ok bg-st-ok-tint px-2.5 py-0.5 text-sm font-semibold text-st-ok">
                   Validée
                 </span>
               )}
             </div>
-            <p className="text-[11px] font-label-sm text-on-surface-variant uppercase wrap-anywhere">
-              <span className="text-primary font-bold">{s.author_name}</span> • {s.team} •{" "}
+            <p className="text-sm text-on-surface-variant wrap-anywhere">
+              {s.author_name} · {s.team} ·{" "}
               {s.validated_at ? `Validée le ${formatExactDate(s.validated_at)}` : `Soumise le ${formatExactDate(s.created_at)}`}
             </p>
             <SubmissionPreview content={s.content} onOpen={() => onRead(s)} />
@@ -154,6 +167,7 @@ export function ValidatedSubmissions({
           )}
         </div>
       )}
+      </div>
     </section>
   );
 }

@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { toast } from "sonner";
 import {
   MAX_NEWS_LINKS,
   NEWS_IMAGE_TYPES,
   imageError,
   linkDisplay,
+  linkErrors,
+  normalizeLinkUrl,
   signedNewsImageUrl,
   type MediaDraft,
   type NewsLink,
@@ -165,6 +168,188 @@ export function NewsMediaEditor({
         </button>
         {full && <span className="font-label-sm text-label-sm text-on-surface-variant">3 liens maximum</span>}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Pièces jointes façon maquette : bouton rond « + » qui ouvre une fenêtre (image ou lien,
+ * le lien se saisit directement dans la fenêtre), puis une puce par pièce jointe avec son bouton de retrait.
+ * Même modèle de données que NewsMediaEditor : une image et 3 liens au maximum.
+ */
+export function NewsAttachments({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: MediaDraft;
+  onChange: (v: MediaDraft) => void;
+  disabled?: boolean;
+}) {
+  const input = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<"choose" | "link">("choose");
+  const [url, setUrl] = useState("");
+  const [label, setLabel] = useState("");
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const showExisting = !value.file && value.existingPath && !value.removeExisting;
+  const imageName = value.file ? value.file.name : showExisting ? "Image jointe" : null;
+  const full = value.links.length >= MAX_NEWS_LINKS;
+
+  const chip =
+    "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-outline bg-white py-1 pl-2.5 pr-1.5 text-sm";
+  const remove = "grid size-6 shrink-0 place-items-center text-on-surface hover:text-error disabled:opacity-50";
+  const dlgBtn =
+    "inline-flex min-h-12 items-center gap-2 rounded-lg border border-primary px-5 text-base font-semibold text-primary hover:bg-surface-container disabled:opacity-50";
+  const dlgField =
+    "mt-1 h-12 w-full rounded-lg border border-outline-variant bg-white px-3 text-base focus:outline-none focus:ring-2 focus:ring-primary";
+
+  function openDialog() {
+    setStep("choose");
+    setUrl("");
+    setLabel("");
+    setUrlError(null);
+    setOpen(true);
+  }
+
+  function addLink(e: React.FormEvent) {
+    e.preventDefault();
+    const draft = { url, label };
+    const err = linkErrors([draft])[0];
+    if (err) {
+      setUrlError(err);
+      return;
+    }
+    onChange({ ...value, links: [...value.links, { url: normalizeLinkUrl(url)!, label: label.trim() }] });
+    setOpen(false);
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-2">
+      <input
+        ref={input}
+        type="file"
+        accept={NEWS_IMAGE_TYPES.join(",")}
+        className="hidden"
+        data-testid="news-image-input"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          e.target.value = "";
+          if (!f) return;
+          const err = imageError(f);
+          if (err) { toast.error(err); return; }
+          onChange({ ...value, file: f });
+        }}
+      />
+      <div className="flex flex-wrap items-center gap-2.5">
+        <p className="m-0 text-sm font-semibold text-on-surface-variant">Pièces jointes</p>
+        <button
+          type="button"
+          aria-label="Ajouter une pièce jointe"
+          disabled={disabled}
+          onClick={openDialog}
+          className="grid size-9 place-items-center rounded-full border-[1.5px] border-mod-actus bg-white text-mod-actus disabled:opacity-50"
+        >
+          <I name="add" />
+        </button>
+        {imageName && (
+          <span className={chip}>
+            <I name="image" className="text-mod-actus !text-base" />
+            <span className="wrap-anywhere">{imageName}</span>
+            <button
+              type="button"
+              aria-label={`Retirer l'image ${imageName}`}
+              disabled={disabled}
+              onClick={() => onChange({ ...value, file: null, removeExisting: !!value.existingPath })}
+              className={remove}
+            >
+              <I name="close" className="!text-base" />
+            </button>
+          </span>
+        )}
+        {value.links.map((l, i) => (
+          <span key={i} className={chip}>
+            <I name="link" className="text-mod-actus !text-base" />
+            <span className="wrap-anywhere">{linkDisplay(l)}</span>
+            <button
+              type="button"
+              aria-label={`Retirer le lien ${linkDisplay(l)}`}
+              disabled={disabled}
+              onClick={() => onChange({ ...value, links: value.links.filter((_, j) => j !== i) })}
+              className={remove}
+            >
+              <I name="close" className="!text-base" />
+            </button>
+          </span>
+        ))}
+      </div>
+
+      <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[rgba(27,28,28,0.55)]" />
+          <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-50 flex w-[min(480px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-xl border border-primary bg-white p-6 focus:outline-none">
+            <DialogPrimitive.Title className="font-headline-sm text-[28px] leading-tight text-mod-actus">
+              {step === "link" ? "Ajouter un lien" : "Ajouter une pièce jointe"}
+            </DialogPrimitive.Title>
+            {step === "choose" ? (
+              <>
+                <DialogPrimitive.Description className="text-base">Ajoutez une image ou un lien.</DialogPrimitive.Description>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => { setOpen(false); input.current?.click(); }} className={dlgBtn}>
+                    <I name="image" /> Une image
+                  </button>
+                  <button
+                    type="button"
+                    disabled={full}
+                    title={full ? "3 liens maximum" : undefined}
+                    onClick={() => setStep("link")}
+                    className={dlgBtn}
+                  >
+                    <I name="link" /> Un lien
+                  </button>
+                </div>
+                {full && <p className="text-sm text-on-surface-variant">3 liens maximum.</p>}
+                <div className="flex justify-end">
+                  <DialogPrimitive.Close className={dlgBtn}>Annuler</DialogPrimitive.Close>
+                </div>
+              </>
+            ) : (
+              <form onSubmit={addLink} className="flex flex-col gap-4" noValidate>
+                <DialogPrimitive.Description className="text-base">
+                  Collez l'adresse du lien. Le libellé est facultatif : sans libellé, on affiche le nom du site.
+                </DialogPrimitive.Description>
+                <label className="block text-sm font-semibold text-on-surface-variant">
+                  Adresse du lien
+                  <input
+                    autoFocus
+                    inputMode="url"
+                    placeholder="https://…"
+                    maxLength={2000}
+                    value={url}
+                    aria-invalid={!!urlError}
+                    onChange={(e) => { setUrl(e.target.value); setUrlError(null); }}
+                    className={dlgField}
+                  />
+                </label>
+                {urlError && <p role="alert" className="-mt-2 text-sm font-semibold text-sev-crit">{urlError}</p>}
+                <label className="block text-sm font-semibold text-on-surface-variant">
+                  Libellé (facultatif)
+                  <input maxLength={80} value={label} onChange={(e) => setLabel(e.target.value)} className={dlgField} />
+                </label>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <button type="button" onClick={() => setStep("choose")} className={dlgBtn}>Retour</button>
+                  <button
+                    type="submit"
+                    className="inline-flex min-h-12 items-center rounded-lg bg-primary px-5 text-base font-semibold text-on-primary hover:opacity-90"
+                  >
+                    Ajouter le lien
+                  </button>
+                </div>
+              </form>
+            )}
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
     </div>
   );
 }

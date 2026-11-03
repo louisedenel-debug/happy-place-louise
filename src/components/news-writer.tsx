@@ -1,6 +1,6 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useState } from "react";
-import { NewsMediaEditor } from "@/components/news-media";
+import { NewsAttachments } from "@/components/news-media";
 import type { MediaDraft } from "@/lib/news-media";
 import { HELP_EXAMPLES, HELP_TYPES, wordCount, wordMessage, type HelpKind } from "@/lib/news-help";
 
@@ -58,7 +58,7 @@ export function NewsWriter({
     "w-full rounded-lg border border-outline bg-white p-3 text-base text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
   return (
-    <div className="flex max-w-[860px] flex-col gap-4">
+    <div id="redaction-actualite" className="flex max-w-[860px] scroll-mt-24 flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <h3 className="text-xl font-bold leading-snug text-primary">Rédiger une actualité</h3>
         <div className="group relative">
@@ -95,6 +95,16 @@ export function NewsWriter({
           Aide à la rédaction
         </button>
       </div>
+
+      {editing && (
+        <p
+          role="status"
+          className="flex items-center gap-2 rounded-lg border border-mod-actus bg-mod-actus-tint px-4 py-3 text-base font-semibold text-mod-actus"
+        >
+          <Icon name="edit" />
+          Vous modifiez un brouillon : « {title || "sans titre"} ». Publiez-le ou enregistrez vos changements.
+        </p>
+      )}
 
       <p className="max-w-[640px] text-base">
         Trois minutes suffisent pour faire connaître votre équipe : ses réussites sont vues, ses nouveaux visages
@@ -199,8 +209,7 @@ export function NewsWriter({
       </div>
 
       <div className="flex flex-col gap-2">
-        <p className="m-0 text-sm font-semibold text-on-surface-variant">Pièces jointes</p>
-        <NewsMediaEditor value={media} onChange={onMedia} linkErrs={linkErrs} disabled={saving} title={title} />
+        <NewsAttachments value={media} onChange={onMedia} disabled={saving} />
         {ex && <p className="text-sm text-on-surface-variant">{ex.att}</p>}
       </div>
 
