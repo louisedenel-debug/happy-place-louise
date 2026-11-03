@@ -14,7 +14,7 @@ export function NewsFeed({ items, heading }: { items: News[]; heading?: string }
         {items.map((n) => {
           const open = openId === n.id;
           return (
-            <div key={n.id} className="min-w-0 rounded-[10px] border border-outline-variant bg-[#FAFAF7]">
+            <div key={n.id} className="min-w-0 rounded-[12px] border border-outline-variant bg-[#FAFAF7]">
               <button
                 type="button"
                 aria-expanded={open}

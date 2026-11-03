@@ -71,7 +71,7 @@ export function NewsWriter({
           </button>
           <div
             role="tooltip"
-            className="absolute left-0 top-[calc(100%+8px)] z-20 hidden w-[340px] max-w-[86vw] rounded-[10px] border border-mod-actus bg-mod-actus-tint p-4 shadow-lg group-focus-within:block group-hover:block"
+            className="absolute left-0 top-[calc(100%+8px)] z-20 hidden w-[340px] max-w-[86vw] rounded-[12px] border border-mod-actus bg-mod-actus-tint p-4 shadow-lg group-focus-within:block group-hover:block"
           >
             <p className="mb-2.5 text-lg font-bold leading-snug text-mod-actus">Une bonne actualité</p>
             <ul className="m-0 flex list-disc flex-col gap-1.5 pl-5">
@@ -132,12 +132,12 @@ export function NewsWriter({
                     role="radio"
                     aria-checked={on}
                     onClick={() => pick(t.kind)}
-                    className={`flex h-full w-full flex-col gap-2 rounded-[10px] border p-4 text-left text-primary ${
+                    className={`flex h-full w-full flex-col gap-2 rounded-[12px] border p-4 text-left text-primary ${
                       on ? "border-2 border-mod-actus bg-mod-actus-tint" : "border-outline bg-white hover:bg-surface-container"
                     }`}
                   >
                     <span className="flex items-center gap-2.5">
-                      <span aria-hidden="true" className="grid h-9 w-9 flex-none place-items-center rounded-[10px] bg-mod-actus text-white">
+                      <span aria-hidden="true" className="grid h-9 w-9 flex-none place-items-center rounded-[12px] bg-mod-actus text-white">
                         <Icon name={t.icon} />
                       </span>
                     </span>
@@ -146,7 +146,7 @@ export function NewsWriter({
                   </button>
                   <div
                     role="tooltip"
-                    className="absolute left-0 top-[calc(100%+8px)] z-20 hidden w-[340px] max-w-[86vw] rounded-[10px] border border-mod-actus bg-mod-actus-tint p-4 shadow-lg group-focus-within:block group-hover:block"
+                    className="absolute left-0 top-[calc(100%+8px)] z-20 hidden w-[340px] max-w-[86vw] rounded-[12px] border border-mod-actus bg-mod-actus-tint p-4 shadow-lg group-focus-within:block group-hover:block"
                   >
                     <p className="mb-2.5 text-lg font-bold leading-snug text-mod-actus">{e.checkTitle}</p>
                     <ul className="m-0 flex list-none flex-col gap-2.5 p-0">

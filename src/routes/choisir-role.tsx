@@ -115,14 +115,14 @@ function ChoisirRolePage() {
   }
 
   const inputCls =
-    "mt-xs h-11 w-full border border-outline-variant bg-background px-sm font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary";
+    "mt-xs h-11 w-full rounded-lg border border-outline-variant bg-background px-sm font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary";
   const labelCls = "block font-label-sm text-label-sm uppercase text-on-surface-variant";
 
   return (
     <div className="min-h-dvh w-full bg-background flex flex-col">
       <BrandHeader />
       <main className="flex flex-1 items-center justify-center px-md py-lg">
-        <section className="w-[min(100%,34rem)] border border-outline-variant bg-surface-container-lowest p-lg shadow-sm">
+        <section className="w-[min(100%,34rem)] border border-outline-variant bg-surface-container-lowest p-lg shadow-sm rounded-xl">
           <div className="space-y-xs">
             <p className="font-label-sm text-label-sm uppercase text-on-surface-variant">
               {current ? `Rôle actuel : ${current}` : "Première connexion"}
@@ -134,7 +134,7 @@ function ChoisirRolePage() {
           </div>
 
           {error && (
-            <p className="mt-md border border-error bg-error-container p-sm font-body-sm text-on-error-container" role="alert">
+            <p className="mt-md border border-error bg-error-container p-sm font-body-sm text-on-error-container rounded-lg" role="alert">
               {error}
             </p>
           )}
@@ -159,7 +159,7 @@ function ChoisirRolePage() {
                 {ROLES.map((r) => (
                   <label
                     key={r.value}
-                    className={`flex cursor-pointer gap-sm border p-sm ${
+                    className={`flex cursor-pointer gap-sm rounded-xl border p-sm ${
                       role === r.value ? "border-primary bg-surface-container" : "border-outline-variant"
                     }`}
                   >
@@ -193,7 +193,7 @@ function ChoisirRolePage() {
                 </label>
               )}
 
-              <Button type="submit" disabled={busy} className="h-12 w-full rounded-none font-label-md text-xs uppercase text-on-primary">
+              <Button type="submit" disabled={busy} className="h-12 w-full rounded-lg font-label-md text-xs uppercase text-on-primary">
                 {busy ? "PATIENTE…" : current ? "CHANGER DE RÔLE" : "ENTRER DANS HAPPY PLACE"}
               </Button>
             </form>

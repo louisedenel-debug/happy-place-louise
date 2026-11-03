@@ -129,7 +129,7 @@ function ManageBlockers() {
         {list.data?.map((b) => (
           <article
             key={b.id}
-            className={`flex flex-wrap items-start justify-between gap-x-4 gap-y-3 rounded-[10px] border border-l-[6px] border-outline-variant bg-[#FAFAF7] p-5 ${
+            className={`flex flex-wrap items-start justify-between gap-x-4 gap-y-3 rounded-[12px] border border-l-[6px] border-outline-variant bg-[#FAFAF7] p-5 ${
               b.severity === "critical" ? "border-l-sev-crit" : "border-l-sev-alert"
             }`}
           >

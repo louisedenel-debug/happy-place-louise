@@ -71,7 +71,7 @@ export function BlockersBoard({
       className={`min-w-0 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest ${className}`}
     >
       <div className="flex flex-wrap items-center gap-3 border-b border-outline-variant bg-mod-blocages-tint p-5">
-        <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[10px] bg-mod-blocages text-white">
+        <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[12px] bg-mod-blocages text-white">
           <Icon name="flag" />
         </span>
         <h2 id="t-blo" className="flex-1 whitespace-nowrap font-headline-sm text-[28px] leading-tight text-mod-blocages">
@@ -82,7 +82,7 @@ export function BlockersBoard({
       </div>
 
       <div className="flex flex-col gap-4 p-5">
-        <div className="flex items-start gap-3 rounded-[10px] border border-mod-blocages bg-mod-blocages-tint px-4 py-3">
+        <div className="flex items-start gap-3 rounded-[12px] border border-mod-blocages bg-mod-blocages-tint px-4 py-3">
           <Icon name="info" className="mt-0.5 text-mod-blocages" />
           <p>{note}</p>
         </div>
@@ -106,7 +106,7 @@ export function BlockersBoard({
           return (
             <div
               key={b.id}
-              className={`rounded-[10px] border border-outline-variant border-l-[6px] bg-[#FAFAF7] ${
+              className={`rounded-[12px] border border-outline-variant border-l-[6px] bg-[#FAFAF7] ${
                 critical ? "border-l-sev-crit" : "border-l-sev-alert"
               }`}
             >

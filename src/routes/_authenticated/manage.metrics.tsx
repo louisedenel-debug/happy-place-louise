@@ -127,7 +127,7 @@ function ManageMetrics() {
         {list.data?.map((m) => (
           <article
             key={m.key}
-            className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 rounded-[10px] border border-l-[6px] border-outline-variant border-l-mod-indicateurs bg-[#FAFAF7] p-5"
+            className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 rounded-[12px] border border-l-[6px] border-outline-variant border-l-mod-indicateurs bg-[#FAFAF7] p-5"
           >
             <div className="flex min-w-0 flex-1 basis-80 flex-col gap-1.5 [overflow-wrap:anywhere]">
               <p className="font-semibold">{m.label}</p>

@@ -134,7 +134,7 @@ function ManageSubmissions() {
         {list.data?.map((s) => (
           <article
             key={s.id}
-            className="flex min-w-0 overflow-hidden items-start justify-between gap-sm p-sm bg-card border border-outline-variant"
+            className="flex min-w-0 overflow-hidden items-start justify-between gap-sm p-sm bg-card border border-outline-variant rounded-lg"
           >
             <div className="min-w-0 flex-1">
               <p className="font-body-md text-primary font-bold wrap-anywhere">

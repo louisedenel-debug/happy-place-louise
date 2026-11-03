@@ -313,7 +313,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
               className="col-span-12 min-w-0 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
             >
               <div className="flex flex-wrap items-center gap-3 border-b border-outline-variant bg-mod-actus-tint p-5">
-                <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[10px] bg-mod-actus text-white">
+                <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[12px] bg-mod-actus text-white">
                   <Icon name="newspaper" />
                 </span>
                 <h2 id="t-actus" className="flex-1 font-headline-sm text-[28px] leading-tight text-mod-actus">
@@ -351,7 +351,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
                       return (
                         <div
                           key={n.id}
-                          className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[10px] border border-outline-variant bg-[#FAFAF7] p-5"
+                          className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[12px] border border-outline-variant bg-[#FAFAF7] p-5"
                         >
                           <span className="flex min-w-0 flex-col gap-0.5">
                             <span className="font-semibold wrap-anywhere">{n.title}</span>
@@ -422,7 +422,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
                 onClick={() => setQueueOpen((o) => !o)}
                 className="flex w-full flex-wrap items-center gap-3 bg-mod-demandes-tint p-5 text-left"
               >
-                <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[10px] bg-mod-demandes text-white">
+                <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[12px] bg-mod-demandes text-white">
                   <Icon name="inbox" />
                 </span>
                 <h2 id="idees-equipe" className="flex-1 font-headline-sm text-[28px] leading-tight text-mod-demandes">
@@ -440,7 +440,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
                     <p className="text-base text-on-surface-variant">Aucune idée à traiter pour le moment.</p>
                   )}
                   {submissions.data?.map((s) => (
-                    <article key={s.id} className="min-w-0 space-y-2 overflow-hidden rounded-[10px] border border-outline-variant bg-[#FAFAF7] p-5">
+                    <article key={s.id} className="min-w-0 space-y-2 overflow-hidden rounded-[12px] border border-outline-variant bg-[#FAFAF7] p-5">
                       <h3 className="text-lg font-bold text-primary wrap-anywhere">{ideaTitle(s)}</h3>
                       <p className="text-sm text-on-surface-variant wrap-anywhere">
                         {s.author_name} · {s.team} · {timeAgo(s.created_at)}
@@ -478,7 +478,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
               className="col-span-12 min-w-0 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
             >
               <div className="flex flex-wrap items-center gap-3 border-b border-outline-variant bg-mod-demandes-tint p-5">
-                <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[10px] bg-mod-demandes text-white">
+                <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[12px] bg-mod-demandes text-white">
                   <Icon name="lightbulb" />
                 </span>
                 <h2 id="mes-idees" className="flex-1 font-headline-sm text-[28px] leading-tight text-mod-demandes">
@@ -510,7 +510,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
                         ? { label: "Refusée", cls: "border-st-ko bg-st-ko-tint text-st-ko" }
                         : { label: "En attente", cls: "border-st-wait bg-st-wait-tint text-st-wait" };
                   return (
-                    <article key={s.id} className="min-w-0 space-y-2 overflow-hidden rounded-[10px] border border-outline-variant bg-[#FAFAF7] p-5">
+                    <article key={s.id} className="min-w-0 space-y-2 overflow-hidden rounded-[12px] border border-outline-variant bg-[#FAFAF7] p-5">
                       <div className="flex flex-wrap items-center gap-3">
                         <span className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-sm font-semibold ${st.cls}`}>
                           {st.label}
@@ -606,11 +606,11 @@ export function Dashboard({ view }: { view: DashboardView }) {
               review.mutate({ id: rejecting.id, status: "refusée", ...res.data });
             }}
           >
-            <p className="max-h-48 overflow-y-auto border border-outline-variant bg-surface-container-low p-xs text-body-sm italic text-on-surface-variant whitespace-pre-line wrap-anywhere">“{rejecting.content}”</p>
+            <p className="max-h-48 overflow-y-auto border border-outline-variant bg-surface-container-low p-xs text-body-sm italic text-on-surface-variant whitespace-pre-line wrap-anywhere rounded-lg">“{rejecting.content}”</p>
             <ErrorSummary errors={rejectErrors} />
             <Field label="Motif du refus" error={rejectErrors.rejection_category}>
               <select
-                className="w-full border border-outline-variant bg-card p-xs text-body-sm"
+                className="w-full border border-outline-variant bg-card p-xs text-body-sm rounded-lg"
                 value={rejectForm.rejection_category}
                 onChange={(e) => setRejectForm({ ...rejectForm, rejection_category: e.target.value })}
               >
@@ -650,7 +650,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
                   required
                   value={submissionForm.team}
                   onChange={(e) => setSubmissionForm({ ...submissionForm, team: e.target.value })}
-                  className="w-full border border-outline-variant bg-surface px-sm py-xs font-body-md"
+                  className="w-full border border-outline-variant bg-surface px-sm py-xs font-body-md rounded-lg"
                 >
                   <option value="">Choisissez une de vos équipes</option>
                   {myTeams.data?.map((t) => (

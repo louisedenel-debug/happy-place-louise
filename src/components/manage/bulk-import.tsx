@@ -164,11 +164,11 @@ export function BulkImport({ onImported }: { onImported: () => void }) {
 
   function cancel() { setResult(null); setSent([]); setError(null); setInputKey((k) => k + 1); }
 
-  const btn = "px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container disabled:opacity-50";
+  const btn = "rounded-lg px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container disabled:opacity-50";
   const validCount = result?.rows.filter((r) => r.status === "valide").length ?? 0;
 
   return (
-    <section className="space-y-sm bg-surface-container-lowest border border-outline-variant p-md">
+    <section className="space-y-sm bg-surface-container-lowest border border-outline-variant p-md rounded-xl">
       <h2 className="font-label-md text-label-md text-primary">Importer une liste</h2>
       <div className="flex flex-wrap items-center gap-sm">
         <button type="button" className={btn} onClick={() => downloadTemplate().catch((e) => toast.error((e as Error).message))}>

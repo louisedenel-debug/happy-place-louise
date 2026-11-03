@@ -21,7 +21,7 @@ function I({ name, className = "" }: { name: string; className?: string }) {
 export function NewsImage({ path, alt, className = "" }: { path: string; alt: string; className?: string }) {
   const q = useQuery({ queryKey: ["news-image", path], queryFn: () => signedNewsImageUrl(path), staleTime: 50 * 60 * 1000, retry: false });
   if (!q.data) return null;
-  return <img src={q.data} alt={alt} className={`w-full max-h-60 object-cover border border-outline-variant ${className}`} />;
+  return <img src={q.data} alt={alt} className={`w-full max-h-60 object-cover rounded-lg border border-outline-variant ${className}`} />;
 }
 
 export function NewsLinks({ links }: { links: unknown }) {
@@ -92,7 +92,7 @@ export function NewsMediaEditor({
       {hasImage && (
         <div className="space-y-xs">
           {preview ? (
-            <img src={preview} alt={title || "Aperçu de l'image"} className="w-full max-w-xs max-h-40 object-cover border border-outline-variant" />
+            <img src={preview} alt={title || "Aperçu de l'image"} className="w-full max-w-xs max-h-40 object-cover border border-outline-variant rounded-lg" />
           ) : (
             showExisting && <NewsImage path={value.existingPath!} alt={title || "Image de l'actualité"} className="max-w-xs max-h-40" />
           )}
@@ -121,7 +121,7 @@ export function NewsMediaEditor({
               value={l.url}
               disabled={disabled}
               onChange={(e) => onChange({ ...value, links: value.links.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)) })}
-              className="min-w-0 flex-[2] bg-card border border-outline-variant p-xs font-body-sm focus:outline-none focus:border-primary"
+              className="min-w-0 flex-[2] bg-card border border-outline-variant p-xs font-body-sm focus:outline-none focus:border-primary rounded-lg"
             />
             <div className="flex gap-xs min-w-0 flex-1">
               <input
@@ -131,7 +131,7 @@ export function NewsMediaEditor({
                 value={l.label}
                 disabled={disabled}
                 onChange={(e) => onChange({ ...value, links: value.links.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })}
-                className="min-w-0 flex-1 bg-card border border-outline-variant p-xs font-body-sm focus:outline-none focus:border-primary"
+                className="min-w-0 flex-1 bg-card border border-outline-variant p-xs font-body-sm focus:outline-none focus:border-primary rounded-lg"
               />
               <button
                 type="button"

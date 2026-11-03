@@ -13,7 +13,7 @@ export function BlockerArchive({ open, onClose }: { open: boolean; onClose: () =
     <DialogPrimitive.Root open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
-        <DialogPrimitive.Content className="fixed z-50 inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[min(48rem,calc(100vw-2rem))] h-dvh md:h-auto md:max-h-[85vh] flex flex-col bg-surface-container-lowest border border-outline shadow-lg focus:outline-none">
+        <DialogPrimitive.Content className="fixed z-50 inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[min(48rem,calc(100vw-2rem))] h-dvh md:h-auto md:max-h-[85vh] flex flex-col bg-surface-container-lowest border border-outline shadow-lg focus:outline-none md:rounded-xl md:overflow-hidden">
           <div className="flex items-start justify-between gap-sm border-b border-outline-variant p-md">
             <div className="min-w-0">
               <DialogPrimitive.Title className="font-headline-sm text-headline-sm text-primary">
@@ -34,7 +34,7 @@ export function BlockerArchive({ open, onClose }: { open: boolean; onClose: () =
               <p className="text-body-sm text-on-surface-variant italic">Aucun point bloquant résolu.</p>
             )}
             {q.data?.map((b) => (
-              <div key={b.id} className="bg-card border border-outline-variant p-sm min-w-0">
+              <div key={b.id} className="bg-card border border-outline-variant p-sm min-w-0 rounded-lg">
                 <p className="font-body-md text-primary font-bold wrap-anywhere">{b.title}</p>
                 {b.description && (
                   <p className="text-body-sm text-on-surface-variant whitespace-pre-line wrap-anywhere">{b.description}</p>
@@ -95,7 +95,7 @@ export function ValidatedSubmissions({
       className="col-span-12 min-w-0 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
     >
       <div className="flex flex-wrap items-center gap-3 border-b border-outline-variant bg-mod-demandes-tint p-5">
-        <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[10px] bg-mod-demandes text-white">
+        <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[12px] bg-mod-demandes text-white">
           <span className="material-symbols-outlined">task_alt</span>
         </span>
         <h2 id="t-valid" className="flex-1 font-headline-sm text-[28px] leading-tight text-mod-demandes">
@@ -112,7 +112,7 @@ export function ValidatedSubmissions({
       )}
       <div className="grid items-start gap-4 md:grid-cols-2">
         {shown.map((s) => (
-          <div key={s.id} className="min-w-0 space-y-2 overflow-hidden rounded-[10px] border border-outline-variant bg-[#FAFAF7] p-5">
+          <div key={s.id} className="min-w-0 space-y-2 overflow-hidden rounded-[12px] border border-outline-variant bg-[#FAFAF7] p-5">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-lg font-bold text-primary wrap-anywhere">{ideaTitle(s)}</h3>
               {email && (s.submitted_by_email ?? "").toLowerCase() === email.toLowerCase() && (

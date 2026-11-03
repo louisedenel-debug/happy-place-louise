@@ -70,7 +70,7 @@ function NoticeBanner({ notice: n, email }: { notice: DepartureNotice; email: st
   return (
     <div
       role="status"
-      className="flex flex-col gap-3 rounded-[10px] border border-l-[6px] border-outline-variant border-l-sev-alert bg-[#FAFAF7] p-5"
+      className="flex flex-col gap-3 rounded-[12px] border border-l-[6px] border-outline-variant border-l-sev-alert bg-[#FAFAF7] p-5"
     >
       <p className="wrap-anywhere">
         <strong>Rappel : </strong>

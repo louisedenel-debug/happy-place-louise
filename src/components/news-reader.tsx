@@ -12,7 +12,7 @@ export function NewsReader({ news: n, onClose }: { news: News | null; onClose: (
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
         {n && (
           <DialogPrimitive.Content
-            className="fixed z-50 inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[min(48rem,calc(100vw-2rem))] h-dvh md:h-auto md:max-h-[85vh] flex flex-col bg-surface-container-lowest border border-outline shadow-lg focus:outline-none"
+            className="fixed z-50 inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[min(48rem,calc(100vw-2rem))] h-dvh md:h-auto md:max-h-[85vh] flex flex-col bg-surface-container-lowest border border-outline shadow-lg focus:outline-none md:rounded-xl md:overflow-hidden"
           >
             <div className="flex items-start justify-between gap-sm border-b border-outline-variant p-md">
               <div className="min-w-0">

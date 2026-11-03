@@ -132,7 +132,7 @@ function ManageNews() {
         {list.data?.map((n) => (
           <article
             key={n.id}
-            className="flex min-w-0 flex-wrap items-start justify-between gap-x-4 gap-y-3 overflow-hidden rounded-[10px] border border-l-[6px] border-outline-variant border-l-mod-actus bg-[#FAFAF7] p-5"
+            className="flex min-w-0 flex-wrap items-start justify-between gap-x-4 gap-y-3 overflow-hidden rounded-[12px] border border-l-[6px] border-outline-variant border-l-mod-actus bg-[#FAFAF7] p-5"
           >
             <div className="min-w-0 flex-1 space-y-xs">
               {n.image_path && <NewsImage path={n.image_path} alt={n.title} />}

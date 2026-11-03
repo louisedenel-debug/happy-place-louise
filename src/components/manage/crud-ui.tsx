@@ -10,7 +10,7 @@ export function ManageIcon({ name, className = "" }: { name: string; className?:
 }
 
 const inputBase =
-  "w-full bg-card border border-outline-variant focus:border-primary focus:outline-none p-sm font-body-md text-on-surface";
+  "w-full rounded-lg bg-card border border-outline-variant focus:border-primary focus:outline-none p-sm font-body-md text-on-surface";
 
 export function Field({
   label,
@@ -63,7 +63,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="w-full max-w-2xl bg-surface-container-lowest border border-outline p-md space-y-md"
+        className="w-full max-w-2xl bg-surface-container-lowest border border-outline p-md space-y-md rounded-xl"
       >
         <div className="flex items-center justify-between border-b border-outline-variant pb-sm">
           <h2 className="font-headline-sm text-headline-sm text-primary">{title}</h2>
@@ -96,7 +96,7 @@ export function FormActions({
       <button
         type="button"
         onClick={onCancel}
-        className="px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container"
+        className="px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container rounded-lg"
       >
         ANNULER
       </button>
@@ -115,7 +115,7 @@ export function ErrorSummary({ errors }: { errors: FieldErrors }) {
   const count = Object.keys(errors).length;
   if (!count) return null;
   return (
-    <div role="alert" className="text-body-sm text-error border border-error/40 bg-error-container/30 p-sm wrap-anywhere">
+    <div role="alert" className="text-body-sm text-error border border-error/40 bg-error-container/30 p-sm wrap-anywhere rounded-lg">
       <p>{count} champ{count > 1 ? "s" : ""} à corriger avant l'enregistrement.</p>
       <ul className="mt-xs list-disc pl-md">
         {Object.entries(errors).map(([k, m]) => (
@@ -177,7 +177,7 @@ export function ConfirmDelete({
         <button
           type="button"
           onClick={onCancel}
-          className="px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container"
+          className="px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container rounded-lg"
         >
           ANNULER
         </button>
