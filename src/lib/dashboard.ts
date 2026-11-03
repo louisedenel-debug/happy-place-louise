@@ -118,6 +118,7 @@ export async function saveDraftNews(input: {
     : await db.from("news").insert(payload).select("id").single();
   if (error) throw error;
   await applyNewsImage(data.id, input.media);
+  return data.id;
 }
 
 export async function publishDraftNews(id: string) {

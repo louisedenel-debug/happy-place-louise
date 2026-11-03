@@ -11,9 +11,9 @@ import { AttachmentLink } from "@/components/attachment-link";
 import { CharCounter, SubmissionPreview, rejectionErrorMessage } from "@/components/expandable-card";
 import { Linkify } from "@/components/linkify";
 import { SubmissionReader } from "@/components/submission-reader";
-import { NewsReader } from "@/components/news-reader";
+import { NewsFeed } from "@/components/news-feed";
+import { NewsWriter, PublishConfirm } from "@/components/news-writer";
 import { DepartureNotices } from "@/components/departure-notices";
-import { NewsImage, NewsLinks, NewsMediaEditor } from "@/components/news-media";
 import { emptyMedia, linkErrors, mediaFromNews, toNewsLinks, type MediaDraft } from "@/lib/news-media";
 import { BlockerArchive, ValidatedSubmissions } from "@/components/dashboard-extras";
 import { Button } from "@/components/ui/button";
@@ -115,7 +115,8 @@ export function Dashboard({ view }: { view: DashboardView }) {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [rejecting, setRejecting] = useState<Submission | null>(null);
   const [reading, setReading] = useState<Submission | null>(null);
-  const [readingNews, setReadingNews] = useState<News | null>(null);
+  const [titleError, setTitleError] = useState(false);
+  const [publishAsk, setPublishAsk] = useState<{ draft: News | null } | null>(null);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [rejectForm, setRejectForm] = useState({ rejection_category: "", rejection_note: "" });
   const [rejectErrors, setRejectErrors] = useState<FieldErrors>({});
@@ -150,10 +151,55 @@ export function Dashboard({ view }: { view: DashboardView }) {
     onError,
   });
 
+  const newsPayload = () => ({
+    links: toNewsLinks(media.links),
+    media,
+    id: editingNewsId ?? undefined,
+    title: title.trim(),
+    body,
+    author: profile.data?.name ?? myName,
+    author_email: myEmail,
+  });
+  const resetEditor = () => {
+    setTitle("");
+    setBody("");
+    setEditingNewsId(null);
+    setMedia(emptyMedia());
+    setShowLinkErrs(false);
+    setTitleError(false);
+  };
+  /** Valide le titre et les liens avant d'enregistrer ou de publier. */
+  const editorReady = () => {
+    setShowLinkErrs(true);
+    if (!title.trim()) {
+      setTitleError(true);
+      return false;
+    }
+    if (Object.keys(linkErrors(media.links)).length) {
+      toast.error("Corrige les liens invalides avant d'enregistrer.");
+      return false;
+    }
+    return true;
+  };
+  const publishNow = useMutation({
+    mutationFn: async () => publishDraftNews(await saveDraftNews(newsPayload())),
+    onSuccess: () => {
+      resetEditor();
+      setPublishAsk(null);
+      toast.success("Actualité publiée.");
+      qc.invalidateQueries({ queryKey: ["news"] });
+    },
+    onError: (e: unknown) => {
+      setPublishAsk(null);
+      toast.error((e as Error).message);
+    },
+  });
+
   const publishDraft = useMutation({
     mutationFn: publishDraftNews,
     onSuccess: () => {
-      toast.success("Actualité publiée");
+      setPublishAsk(null);
+      toast.success("Actualité publiée.");
       qc.invalidateQueries({ queryKey: ["news"] });
     },
     onError,
@@ -251,210 +297,102 @@ export function Dashboard({ view }: { view: DashboardView }) {
         </div>
 
         <div className="bento-grid">
-          {/* News Management & Input */}
+          {/* Actualités du cabinet */}
           {(actions ? canWriteNews : true) && (
-          <section className={`col-span-12 bg-surface-container-lowest border border-outline-variant p-md flex flex-col gap-md`}>
-            <div className="flex items-center justify-between border-b border-outline-variant pb-sm">
-              <h2 className="font-headline-sm text-headline-sm text-primary">
-                Actualités du cabinet
-              </h2>
-              {actions && (
-                <span className="font-label-sm text-label-sm text-on-surface-variant">
-                  {drafts} brouillon{drafts > 1 ? "s" : ""} en attente
-                </span>
-              )}
-            </div>
-            {actions && canWriteNews && <form
-              className="space-y-md"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!title.trim()) return;
-                setShowLinkErrs(true);
-                if (Object.keys(linkErrors(media.links)).length) {
-                  toast.error("Corrige les liens invalides avant d'enregistrer.");
-                  return;
-                }
-                saveDraft.mutate({
-                  links: toNewsLinks(media.links),
-                  media,
-                  id: editingNewsId ?? undefined,
-                  title: title.trim(),
-                  body,
-                  author: myName,
-                  author_email: myEmail,
-                });
-              }}
+            <section
+              aria-labelledby="t-actus"
+              className="col-span-12 min-w-0 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
             >
-              <div className="space-y-xs">
-                <label className="font-label-md text-label-md text-on-surface-variant block">
-                  TITRE
-                </label>
-                <input
-                  className="w-full bg-transparent border-b border-outline-variant focus:border-primary focus:outline-none transition-colors font-headline-sm text-headline-sm px-0 py-xs"
-                   placeholder="Saisis un titre…"
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
+              <div className="flex flex-wrap items-center gap-3 border-b border-outline-variant bg-mod-actus-tint p-5">
+                <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[10px] bg-mod-actus text-white">
+                  <Icon name="newspaper" />
+                </span>
+                <h2 id="t-actus" className="flex-1 font-headline-sm text-[28px] leading-tight text-mod-actus">
+                  Actualités du cabinet
+                </h2>
               </div>
-              <div className="space-y-xs">
-                <label className="font-label-md text-label-md text-on-surface-variant block">
-                  CONTENU
-                </label>
-                <textarea
-                  className="w-full bg-card border border-outline-variant focus:border-primary focus:outline-none p-sm font-body-md"
-                   placeholder="Rédige l'actualité…"
-                  rows={4}
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-sm">
-                <NewsMediaEditor
-                  value={media}
-                  onChange={setMedia}
-                  linkErrs={newsLinkErrs}
-                  disabled={saveDraft.isPending}
-                  title={title}
-                />
-                <div className="flex items-center gap-sm">
-                  {editingNewsId && (
-                    <button
-                      type="button"
-                      className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary"
-                      onClick={() => {
-                        setEditingNewsId(null);
-                        setTitle("");
-                        setBody("");
-                        setMedia(emptyMedia());
-                        setShowLinkErrs(false);
-                      }}
-                    >
-                      Annuler
-                    </button>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={saveDraft.isPending}
-                    className="px-lg py-xs bg-primary text-on-primary font-label-md text-label-md disabled:opacity-50"
-                  >
-                    {saveDraft.isPending ? "Enregistrement…" : "Enregistrer le brouillon"}
-                  </button>
-                </div>
-              </div>
-            </form>}
-            <div className="mt-md pt-md border-t border-outline-variant">
-              {actions && canWriteNews && visibleDrafts.length > 0 && (
-                <>
-                  <h3 className="font-label-md text-label-md text-on-surface-variant mb-sm">
-                    BROUILLONS
-                  </h3>
-                  <div className="space-y-xs mb-md">
+              <div className="flex flex-col gap-8 p-5">
+                {actions && canWriteNews && (
+                  <NewsWriter
+                    title={title}
+                    body={body}
+                    media={media}
+                    linkErrs={newsLinkErrs}
+                    titleError={titleError}
+                    saving={saveDraft.isPending || publishNow.isPending}
+                    editing={!!editingNewsId}
+                    onTitle={(v) => {
+                      setTitle(v);
+                      setTitleError(false);
+                    }}
+                    onBody={setBody}
+                    onMedia={setMedia}
+                    onPublish={() => editorReady() && setPublishAsk({ draft: null })}
+                    onSaveDraft={() => editorReady() && saveDraft.mutate(newsPayload())}
+                    onCancelEdit={resetEditor}
+                  />
+                )}
+                {actions && canWriteNews && visibleDrafts.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <h3 className="text-xl font-bold leading-snug text-primary">
+                      Brouillons en attente ({visibleDrafts.length})
+                    </h3>
                     {visibleDrafts.map((n) => {
-                      const own = (n.author_email ?? "").toLowerCase() === myEmail;
-                      const allowed = isAdmin || own;
+                      const allowed = isAdmin || (n.author_email ?? "").toLowerCase() === myEmail;
                       return (
                         <div
                           key={n.id}
-                          className="flex items-center justify-between gap-sm p-sm bg-surface-container"
+                          className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[10px] border border-outline-variant bg-[#FAFAF7] p-5"
                         >
-                          <div className="flex items-center gap-md min-w-0">
-                            <Icon name="draft" className="text-on-surface-variant" />
-                            <div className="min-w-0">
-                              <p className="font-body-md text-primary flex items-center gap-xs">
-                                <span className="truncate">{n.title}</span>
-                                <span className="shrink-0 border border-outline-variant px-xs font-label-sm text-label-sm text-on-surface-variant">
-                                  Brouillon
-                                </span>
-                              </p>
-                              <p className="text-xs text-on-surface-variant uppercase font-label-sm">
-                                Créé {timeAgo(n.created_at)} • Par {n.author}
-                              </p>
-                            </div>
-                          </div>
+                          <span className="flex min-w-0 flex-col gap-0.5">
+                            <span className="font-semibold wrap-anywhere">{n.title}</span>
+                            <span className="text-sm text-on-surface-variant">Enregistré {timeAgo(n.created_at)}</span>
+                          </span>
                           {allowed && (
-                            <div className="flex items-center gap-sm shrink-0">
+                            <span className="flex flex-wrap items-center gap-2">
                               <button
                                 type="button"
-                                className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary"
+                                className="min-h-12 px-2 text-base font-semibold text-primary underline"
                                 onClick={() => {
                                   setEditingNewsId(n.id);
                                   setTitle(n.title);
                                   setBody(n.body ?? "");
                                   setMedia(mediaFromNews(n));
                                   setShowLinkErrs(false);
+                                  setTitleError(false);
                                 }}
                               >
                                 Modifier
                               </button>
                               <button
                                 type="button"
-                                className="font-label-sm text-label-sm text-error"
+                                className="min-h-12 px-2 text-base font-semibold text-sev-crit underline"
                                 disabled={removeDraft.isPending}
                                 onClick={() => {
-                                  if (window.confirm(`Supprimer le brouillon « ${n.title} » ?`))
-                                    removeDraft.mutate(n);
+                                  if (window.confirm(`Supprimer le brouillon « ${n.title} » ?`)) removeDraft.mutate(n);
                                 }}
                               >
                                 Supprimer
                               </button>
                               <button
                                 type="button"
-                                className="px-sm py-1 bg-primary text-on-primary font-label-sm text-label-sm disabled:opacity-50"
-                                disabled={publishDraft.isPending}
-                                onClick={() => {
-                                  if (window.confirm(`Publier l'actualité « ${n.title} » ? Elle sera visible par tous.`))
-                                    publishDraft.mutate(n.id);
-                                }}
+                                className="inline-flex min-h-12 items-center rounded-lg bg-primary px-5 text-base font-semibold text-on-primary hover:opacity-90"
+                                onClick={() => setPublishAsk({ draft: n })}
                               >
                                 Publier
                               </button>
-                            </div>
+                            </span>
                           )}
                         </div>
                       );
                     })}
                   </div>
-                </>
-              )}
-              <h3 className="font-label-md text-label-md text-on-surface-variant mb-sm">
-                PUBLIÉES RÉCEMMENT
-              </h3>
-              <div className="space-y-xs">
-                {news.isLoading && (
-                  <p className="text-body-sm text-on-surface-variant">Chargement…</p>
                 )}
-                {news.isError && (
-                  <p className="text-body-sm text-error">
-                    Les actualités sont indisponibles.
-                  </p>
-                )}
-                {published.slice(0, 4).map((n) => (
-                  <button
-                    type="button"
-                    key={n.id}
-                    onClick={() => setReadingNews(n)}
-                    aria-haspopup="dialog"
-                    className="w-full text-left p-sm bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer group min-w-0 overflow-hidden space-y-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  >
-                    {n.image_path && <NewsImage path={n.image_path} alt={n.title} />}
-                    <div className="flex items-center justify-between gap-sm min-w-0">
-                    <div className="flex items-center gap-md min-w-0">
-                      <Icon name="article" className="text-on-surface-variant" />
-                      <div className="min-w-0">
-                        <p className="font-body-md text-primary group-hover:underline wrap-anywhere">{n.title}</p>
-                        <p className="text-xs text-on-surface-variant uppercase font-label-sm">
-                          Publiée {timeAgo(n.created_at)} • Par {n.author}
-                        </p>
-                      </div>
-                    </div>
-                    </div>
-                    <NewsLinks links={n.links} />
-                  </button>
-                ))}
+                {news.isLoading && <p className="text-base text-on-surface-variant">Chargement…</p>}
+                {news.isError && <p className="text-base text-error">Les actualités sont indisponibles.</p>}
+                <NewsFeed items={published.slice(0, 6)} heading={actions && canWriteNews ? "Déjà publiées" : undefined} />
               </div>
-            </div>
-          </section>
+            </section>
           )}
 
           {/* Idées de l'équipe à traiter */}
@@ -718,7 +656,14 @@ export function Dashboard({ view }: { view: DashboardView }) {
         </div>
       </main>
       <BlockerArchive open={archiveOpen} onClose={() => setArchiveOpen(false)} />
-      <NewsReader news={readingNews} onClose={() => setReadingNews(null)} />
+      {publishAsk && (
+        <PublishConfirm
+          title={publishAsk.draft ? publishAsk.draft.title : title.trim()}
+          pending={publishNow.isPending || publishDraft.isPending}
+          onCancel={() => setPublishAsk(null)}
+          onConfirm={() => (publishAsk.draft ? publishDraft.mutate(publishAsk.draft.id) : publishNow.mutate())}
+        />
+      )}
       <SubmissionReader
         submission={reading}
         onClose={() => setReading(null)}
