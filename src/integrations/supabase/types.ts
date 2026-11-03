@@ -268,6 +268,7 @@ export type Database = {
         Row: {
           author: string
           author_email: string | null
+          blocker_id: string | null
           body: string | null
           created_at: string
           id: string
@@ -280,6 +281,7 @@ export type Database = {
         Insert: {
           author?: string
           author_email?: string | null
+          blocker_id?: string | null
           body?: string | null
           created_at?: string
           id?: string
@@ -292,6 +294,7 @@ export type Database = {
         Update: {
           author?: string
           author_email?: string | null
+          blocker_id?: string | null
           body?: string | null
           created_at?: string
           id?: string
@@ -301,7 +304,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["news_status"]
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "news_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: true
+            referencedRelation: "blockers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       submission_status_history: {
         Row: {
