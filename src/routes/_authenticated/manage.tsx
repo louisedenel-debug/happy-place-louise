@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -29,16 +29,21 @@ export const Route = createFileRoute("/_authenticated/manage")({
   component: ManageLayout,
 });
 
-const tabs = [
-  { to: "/manage/news", label: "ACTUALITÉS" },
-  { to: "/manage/submissions", label: "SOUMISSIONS" },
+// Deux familles, comme dans le menu : « Vos actions » et « Gérer les données ».
+const actionTabs = [
   { to: "/manage/blockers", label: "POINTS BLOQUANTS" },
   { to: "/manage/metrics", label: "INDICATEURS" },
-  { to: "/manage/users", label: "UTILISATEURS AUTORISÉS" },
+  { to: "/manage/news", label: "ACTUALITÉS" },
+  { to: "/manage/submissions", label: "SOUMISSIONS" },
 ] as const;
+const dataTabs = [{ to: "/manage/users", label: "UTILISATEURS AUTORISÉS" }] as const;
 
 function ManageLayout() {
   const qc = useQueryClient();
+  const pathname = useRouterState({ select: (st) => st.location.pathname });
+  const dataSection = pathname.startsWith("/manage/users");
+  const tabs = dataSection ? dataTabs : actionTabs;
+  const section = dataSection ? "Gérer les données" : "Vos actions";
   // Suppression silencieuse des pièces jointes échues, une fois par chargement de /manage
   useEffect(() => {
     processAttachmentDeletionQueue()
@@ -56,12 +61,12 @@ function ManageLayout() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-sm">
           <div className="space-y-1">
             <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">
-              Gestion des données
+              Administration
             </p>
-            <h1 className="font-headline-lg text-headline-lg text-primary">Gestion des données</h1>
+            <h1 className="font-headline-lg text-headline-lg text-primary">{section}</h1>
           </div>
           <Link
-            to="/"
+            to="/vue"
             className="px-md py-xs border border-outline bg-surface text-primary font-label-md text-label-md hover:bg-surface-container"
           >
             ← RETOUR À LA VUE D'ENSEMBLE
