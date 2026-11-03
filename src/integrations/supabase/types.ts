@@ -372,6 +372,7 @@ export type Database = {
           status: Database["public"]["Enums"]["submission_status"]
           submitted_by_email: string | null
           team: string
+          title: string | null
         }
         Insert: {
           attachment_name?: string | null
@@ -388,6 +389,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["submission_status"]
           submitted_by_email?: string | null
           team: string
+          title?: string | null
         }
         Update: {
           attachment_name?: string | null
@@ -404,6 +406,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["submission_status"]
           submitted_by_email?: string | null
           team?: string
+          title?: string | null
         }
         Relationships: [
           {

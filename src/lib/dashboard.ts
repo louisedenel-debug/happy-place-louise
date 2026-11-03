@@ -22,6 +22,7 @@ export type News = {
 
 export type Submission = {
   id: string;
+  title?: string | null;
   author_name: string;
   team: string;
   content: string;
@@ -307,6 +308,7 @@ export function timeAgo(iso: string): string {
 
 export type NewsInput = { title: string; body: string; author: string; status: string; links?: NewsLink[] };
 export type SubmissionInput = {
+  title?: string;
   author_name: string;
   team: string;
   content: string;
@@ -387,25 +389,40 @@ export async function createSubmission(input: SubmissionInput) {
 }
 
 export const ATTACHMENT_BUCKET = "submission-attachments";
+/** Types acceptés pour une pièce jointe → extension du fichier stocké. */
+export const ATTACHMENT_TYPES: Record<string, string> = {
+  "application/pdf": "pdf",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 export const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024;
 
+/** Titre affiché : celui de l'idée, ou (anciennes idées sans titre) sa première phrase. */
+export function ideaTitle(s: Pick<Submission, "title" | "content">): string {
+  if (s.title?.trim()) return s.title.trim();
+  const first = s.content.split(/[\n.!?]/)[0].trim();
+  return first.length > 70 ? `${first.slice(0, 67)}…` : first || "Idée";
+}
+
+/** Idée d'un manager : la base la valide automatiquement. */
 export async function submitIdea(input: Omit<SubmissionInput, "status">, file?: File | null) {
   let attachment_path: string | null = null;
   let attachment_name: string | null = null;
   if (file) {
-    if (file.type !== "application/pdf") throw new Error("Seuls les fichiers PDF sont acceptés.");
+    if (!ATTACHMENT_TYPES[file.type]) throw new Error("Seuls les PDF et les images (JPEG, PNG, WebP) sont acceptés.");
     if (file.size > MAX_ATTACHMENT_BYTES) throw new Error("Le fichier dépasse 20 Mo.");
     const { data: u } = await db.auth.getUser();
     if (!u.user) throw new Error("Session expirée");
-    attachment_path = `${u.user.id}/${crypto.randomUUID()}.pdf`;
+    attachment_path = `${u.user.id}/${crypto.randomUUID()}.${ATTACHMENT_TYPES[file.type]}`;
     attachment_name = file.name.slice(0, 200);
     const { error: upErr } = await db.storage
       .from(ATTACHMENT_BUCKET)
-      .upload(attachment_path, file, { contentType: "application/pdf" });
+      .upload(attachment_path, file, { contentType: file.type });
     if (upErr) throw upErr;
   }
   const { error } = await db.from("submissions").insert({
-    author_name: input.author_name, team: input.team, content: input.content, status: "en attente",
+    title: input.title?.trim(), author_name: input.author_name, team: input.team, content: input.content, status: "en attente",
     attachment_path, attachment_name,
   });
   if (error) throw error;

@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AttachmentLink } from "@/components/attachment-link";
 import { SubmissionPreview, formatExactDate } from "@/components/expandable-card";
-import { fetchResolvedBlockers, fetchValidatedSubmissions, type Submission } from "@/lib/dashboard";
+import { fetchResolvedBlockers, fetchValidatedSubmissions, ideaTitle, type Submission } from "@/lib/dashboard";
 
 /** Fenêtre « Archive des points bloquants » (lecture seule, statut RÉSOLU). */
 export function BlockerArchive({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -62,7 +62,7 @@ export function canReadAttachment(
   return ctx.role === "manager" && ctx.managerTeams.includes(s.team);
 }
 
-const PAGE = 10;
+const PAGE = 4;
 
 export function ValidatedSubmissions({
   role,
@@ -110,6 +110,14 @@ export function ValidatedSubmissions({
       <div className="grid gap-xs md:grid-cols-2">
         {shown.map((s) => (
           <div key={s.id} className="p-sm border border-outline-variant bg-card min-w-0 overflow-hidden space-y-xs">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-base font-bold text-primary wrap-anywhere">{ideaTitle(s)}</h3>
+              {email && (s.submitted_by_email ?? "").toLowerCase() === email.toLowerCase() && (
+                <span className="inline-flex items-center rounded-lg border border-st-ok bg-st-ok-tint px-2.5 py-0.5 text-sm font-semibold text-st-ok">
+                  Validée
+                </span>
+              )}
+            </div>
             <p className="text-[11px] font-label-sm text-on-surface-variant uppercase wrap-anywhere">
               <span className="text-primary font-bold">{s.author_name}</span> • {s.team} •{" "}
               {s.validated_at ? `Validée le ${formatExactDate(s.validated_at)}` : `Soumise le ${formatExactDate(s.created_at)}`}
@@ -124,14 +132,27 @@ export function ValidatedSubmissions({
           </div>
         ))}
       </div>
-      {filtered.length > limit && (
-        <button
-          type="button"
-          onClick={() => setLimit((l) => l + PAGE)}
-          className="mt-md font-label-sm text-label-sm text-primary underline"
-        >
-          Afficher plus ({filtered.length - limit} restantes)
-        </button>
+      {(filtered.length > limit || limit > PAGE) && (
+        <div className="mt-md flex flex-wrap gap-md">
+          {filtered.length > limit && (
+            <button
+              type="button"
+              onClick={() => setLimit((l) => l + PAGE)}
+              className="font-label-sm text-label-sm text-primary underline"
+            >
+              Afficher plus ({filtered.length - limit} restantes)
+            </button>
+          )}
+          {limit > PAGE && (
+            <button
+              type="button"
+              onClick={() => setLimit(PAGE)}
+              className="font-label-sm text-label-sm text-primary underline"
+            >
+              Afficher moins
+            </button>
+          )}
+        </div>
       )}
     </section>
   );

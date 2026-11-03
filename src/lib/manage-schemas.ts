@@ -20,6 +20,7 @@ export const rejectionSchema = z.object({
 });
 
 export const submissionSchema = z.object({
+  title: z.string().trim().max(120, "120 caractères maximum").optional(),
   author_name: z.string().trim().min(2, "Nom requis").max(80, "80 caractères maximum"),
   team: z.string().trim().min(2, "Pôle requis").max(60, "60 caractères maximum"),
   content: z.string().trim().min(5, "5 caractères minimum").superRefine((v, ctx) => {
@@ -39,6 +40,14 @@ export const submissionSchema = z.object({
     ctx.addIssue({ code: "custom", path: ["rejection_note"], message: "La raison du refus est obligatoire" });
   else if (v.rejection_note.trim().length > 500)
     ctx.addIssue({ code: "custom", path: ["rejection_note"], message: rejectionTooLong(v.rejection_note.trim().length) });
+});
+
+/** Nouvelle idée : titre et description obligatoires. */
+export const ideaFormSchema = z.object({
+  author_name: z.string().trim().min(2, "Votre nom est requis").max(80, "80 caractères maximum"),
+  team: z.string().trim().min(2, "Choisissez une équipe").max(60),
+  title: z.string().trim().min(1, "Donnez un titre à votre idée").max(120, "120 caractères maximum"),
+  content: z.string().trim().min(5, "Décrivez votre idée en 5 caractères minimum").max(2000, "2 000 caractères maximum"),
 });
 
 export const blockerSchema = z.object({

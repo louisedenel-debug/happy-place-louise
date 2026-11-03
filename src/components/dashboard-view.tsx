@@ -1,10 +1,11 @@
 import { useRouteContext } from "@tanstack/react-router";
+import { fetchProfile } from "@/lib/profile";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ErrorSummary, Field, FormActions, Modal, TextArea, TextInput } from "@/components/manage/crud-ui";
-import { rejectionSchema, submissionSchema, validate, type FieldErrors } from "@/lib/manage-schemas";
+import { ideaFormSchema, rejectionSchema, validate, type FieldErrors } from "@/lib/manage-schemas";
 import { BrandHeader } from "@/components/brand-header";
 import { AttachmentLink } from "@/components/attachment-link";
 import { CharCounter, SubmissionPreview, rejectionErrorMessage } from "@/components/expandable-card";
@@ -32,6 +33,9 @@ import {
   deleteDraftNews,
   reviewSubmission,
   submitIdea,
+  ideaTitle,
+  ATTACHMENT_TYPES,
+  MAX_ATTACHMENT_BYTES,
   timeAgo,
   updateBlockerStatus,
   updateMetric,
@@ -92,6 +96,8 @@ export function Dashboard({ view }: { view: DashboardView }) {
   const [media, setMedia] = useState<MediaDraft>(emptyMedia);
   const [showLinkErrs, setShowLinkErrs] = useState(false);
   const newsLinkErrs = showLinkErrs ? linkErrors(media.links) : {};
+  const profile = useQuery({ queryKey: ["profile"], queryFn: fetchProfile, retry: false });
+  const [queueOpen, setQueueOpen] = useState(true);
   const [submissionForm, setSubmissionForm] = useState<SubmissionInput | null>(null);
   const [submissionErrors, setSubmissionErrors] = useState<FieldErrors>({});
   const myTeams = useQuery({
@@ -184,16 +190,16 @@ export function Dashboard({ view }: { view: DashboardView }) {
   }
 
   const submit = useMutation({
-    mutationFn: (input: SubmissionInput) => submitIdea({
-      author_name: input.author_name,
-      team: input.team,
-      content: input.content,
-    }, attachment),
+    mutationFn: (input: SubmissionInput) =>
+      submitIdea(
+        { title: input.title, author_name: input.author_name, team: input.team, content: input.content },
+        attachment,
+      ),
     onSuccess: () => {
       setSubmissionForm(null);
       setAttachment(null);
       setSubmissionErrors({});
-      toast.success("Soumission envoyée");
+      toast.success(role === "manager" ? "Idée validée automatiquement." : "Idée envoyée à votre manager.");
       qc.invalidateQueries({ queryKey: ["submissions"] });
     },
     onError: (e: unknown) => toast.error(rejectionErrorMessage(e)),
@@ -211,19 +217,25 @@ export function Dashboard({ view }: { view: DashboardView }) {
   const drafts = visibleDrafts.length;
   const published = news.data?.filter((n) => n.status === "publiée") ?? [];
 
+  function openIdeaForm() {
+    setSubmissionErrors({});
+    setAttachment(null);
+    const only = role === "manager" && myTeams.data?.length === 1 ? myTeams.data[0] : "";
+    setSubmissionForm({ title: "", author_name: profile.data?.name ?? myName, team: only, content: "", status: "en attente" });
+  }
+
   function sendSubmission(e: React.FormEvent) {
     e.preventDefault();
     if (!submissionForm) return;
-    // Collaborators: team is set server-side from their account
-    // Admin: always the « Admin » team (set server-side); manager: one of their teams
+    // Collaborateur : équipe fixée côté base depuis son compte ; manager : l'une de ses équipes.
     const team = role === "collaborateur" ? "auto" : role === "admin" ? "Admin" : submissionForm.team;
-    const result = validate(submissionSchema, { ...submissionForm, team, status: "en attente" });
+    const result = validate(ideaFormSchema, { ...submissionForm, team });
     if (!result.ok) {
       setSubmissionErrors(result.errors);
       return;
     }
     setSubmissionErrors({});
-    submit.mutate(result.data);
+    submit.mutate({ ...result.data, status: "en attente" });
   }
 
   return (
@@ -241,7 +253,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
         <div className="bento-grid">
           {/* News Management & Input */}
           {(actions ? canWriteNews : true) && (
-          <section className={`col-span-12 ${actions ? "lg:col-span-8" : ""} bg-surface-container-lowest border border-outline-variant p-md flex flex-col gap-md`}>
+          <section className={`col-span-12 bg-surface-container-lowest border border-outline-variant p-md flex flex-col gap-md`}>
             <div className="flex items-center justify-between border-b border-outline-variant pb-sm">
               <h2 className="font-headline-sm text-headline-sm text-primary">
                 Actualités du cabinet
@@ -445,65 +457,65 @@ export function Dashboard({ view }: { view: DashboardView }) {
           </section>
           )}
 
-          {/* Pending Submissions */}
+          {/* Idées de l'équipe à traiter */}
           {actions && canReview && (
-          <section className="col-span-12 lg:col-span-4 min-w-0 bg-surface-container-lowest border border-outline-variant p-md flex flex-col">
-            <div className="flex items-center justify-between border-b border-outline-variant pb-sm mb-md">
-              <h2 className="font-headline-sm text-headline-sm text-primary">
-                Soumissions en attente
-              </h2>
-              <div className="bg-tertiary-fixed text-on-tertiary-fixed px-xs py-1 rounded-full font-label-sm text-label-sm">
-                {submissions.data?.length ?? 0} NOUVELLES
-              </div>
-            </div>
-            <div className="space-y-sm flex-grow min-w-0">
-              {submissions.isError && (
-                <p className="text-body-sm text-error">
-                  Les soumissions sont indisponibles.
-                </p>
-              )}
-              {submissions.data?.length === 0 && (
-                <p className="text-body-sm text-on-surface-variant italic">
-                  Aucune soumission en attente.
-                </p>
-              )}
-              {submissions.data?.map((s) => (
-                <div
-                  key={s.id}
-                  className="p-sm border border-outline-variant bg-card space-y-sm min-w-0 overflow-hidden"
-                >
-                  <div className="flex items-center gap-sm">
-                    <div className="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center">
-                      <Icon name="person" className="text-sm" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-body-sm text-primary font-bold wrap-anywhere">{s.author_name}</p>
-                      <p className="text-[10px] text-on-surface-variant font-label-sm wrap-anywhere">{s.team}</p>
-                    </div>
-                    <span className="text-[10px] text-on-surface-variant font-label-sm whitespace-nowrap">
-                      {timeAgo(s.created_at)}
-                    </span>
-                  </div>
-                  <SubmissionPreview content={s.content} onOpen={() => setReading(s)} />
-                  <AttachmentLink path={s.attachment_path} name={s.attachment_name} />
-                  {canReview && <div className="flex gap-xs pt-xs">
-                    <button
-                      onClick={() => startReject(s)}
-                      className="flex-1 py-1 border border-outline text-primary font-label-sm text-label-sm hover:bg-surface-container transition-colors"
-                    >
-                      REFUSER
-                    </button>
-                    <button
-                      onClick={() => review.mutate({ id: s.id, status: "validée" })}
-                      className="flex-1 py-1 bg-primary text-on-primary font-label-sm text-label-sm hover:opacity-90 transition-colors"
-                    >
-                      VALIDER
-                    </button>
-                  </div>}
+            <section
+              aria-labelledby="idees-equipe"
+              className="col-span-12 min-w-0 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
+            >
+              <button
+                type="button"
+                aria-expanded={queueOpen}
+                aria-controls="idees-equipe-liste"
+                onClick={() => setQueueOpen((o) => !o)}
+                className="flex w-full flex-wrap items-center gap-3 bg-mod-demandes-tint p-5 text-left"
+              >
+                <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[10px] bg-mod-demandes text-white">
+                  <Icon name="inbox" />
+                </span>
+                <h2 id="idees-equipe" className="flex-1 font-headline-sm text-[28px] leading-tight text-mod-demandes">
+                  Idées de votre équipe à traiter
+                </h2>
+                <span className="rounded-lg border border-st-ko bg-st-ko-tint px-2.5 py-1 text-sm font-semibold text-st-ko">
+                  {submissions.data?.length ?? 0} à traiter
+                </span>
+                <Icon name={queueOpen ? "expand_less" : "expand_more"} className="text-mod-demandes" />
+              </button>
+              {queueOpen && (
+                <div id="idees-equipe-liste" className="flex flex-col gap-4 border-t border-outline-variant p-5">
+                  {submissions.isError && <p className="text-base text-error">Les idées sont indisponibles.</p>}
+                  {submissions.data?.length === 0 && (
+                    <p className="text-base text-on-surface-variant">Aucune idée à traiter pour le moment.</p>
+                  )}
+                  {submissions.data?.map((s) => (
+                    <article key={s.id} className="min-w-0 space-y-2 overflow-hidden rounded-[10px] border border-outline-variant bg-[#FAFAF7] p-5">
+                      <h3 className="text-lg font-bold text-primary wrap-anywhere">{ideaTitle(s)}</h3>
+                      <p className="text-sm text-on-surface-variant wrap-anywhere">
+                        {s.author_name} · {s.team} · {timeAgo(s.created_at)}
+                      </p>
+                      <SubmissionPreview content={s.content} onOpen={() => setReading(s)} />
+                      <AttachmentLink path={s.attachment_path} name={s.attachment_name} />
+                      <div className="flex flex-wrap gap-3 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => startReject(s)}
+                          className="inline-flex min-h-12 items-center rounded-lg bg-st-ko px-5 text-base font-semibold text-white hover:opacity-90"
+                        >
+                          Refuser
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => review.mutate({ id: s.id, status: "validée" })}
+                          className="inline-flex min-h-12 items-center rounded-lg bg-st-ok px-5 text-base font-semibold text-white hover:opacity-90"
+                        >
+                          Valider
+                        </button>
+                      </div>
+                    </article>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </section>
+              )}
+            </section>
           )}
 
           {/* Mes idées */}
@@ -521,11 +533,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
                 </h2>
                 <button
                   type="button"
-                  onClick={() => {
-                    setSubmissionErrors({});
-                    const only = role === "manager" && myTeams.data?.length === 1 ? myTeams.data[0] : "";
-                    setSubmissionForm({ author_name: "", team: only, content: "", status: "en attente" });
-                  }}
+                  onClick={openIdeaForm}
                   className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-mod-demandes px-5 text-base font-semibold text-white hover:opacity-90"
                 >
                   <Icon name="add" /> Soumettre une idée
@@ -558,6 +566,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
                           {s.team} · soumise {timeAgo(s.created_at)}
                         </span>
                       </div>
+                      <h3 className="text-lg font-bold text-primary wrap-anywhere">{ideaTitle(s)}</h3>
                       <SubmissionPreview content={s.content} onOpen={() => setReading(s)} />
                       <AttachmentLink path={s.attachment_path} name={s.attachment_name} />
                       {s.status === "refusée" && (
@@ -762,14 +771,13 @@ export function Dashboard({ view }: { view: DashboardView }) {
         </Modal>
       )}
       {submissionForm && (
-        <Modal title="Soumettre une proposition" onClose={() => setSubmissionForm(null)}>
+        <Modal title="Soumettre une idée" onClose={() => setSubmissionForm(null)}>
           <form onSubmit={sendSubmission} className="space-y-sm" noValidate>
             <ErrorSummary errors={submissionErrors} />
-            <Field label="Nom" error={submissionErrors.author_name}>
+            <Field label="Votre nom" error={submissionErrors.author_name}>
               <TextInput
                 value={submissionForm.author_name}
                 maxLength={80}
-                placeholder="Ton nom"
                 onChange={(e) => setSubmissionForm({ ...submissionForm, author_name: e.target.value })}
               />
             </Field>
@@ -781,39 +789,48 @@ export function Dashboard({ view }: { view: DashboardView }) {
                   onChange={(e) => setSubmissionForm({ ...submissionForm, team: e.target.value })}
                   className="w-full border border-outline-variant bg-surface px-sm py-xs font-body-md"
                 >
-                  <option value="">Choisis une de tes équipes</option>
+                  <option value="">Choisissez une de vos équipes</option>
                   {myTeams.data?.map((t) => (
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
               </Field>
             )}
-            {role === "admin" && (
-              <p className="text-body-sm text-on-surface-variant">Équipe : Admin</p>
-            )}
-            <Field label="Proposition" error={submissionErrors.content}>
+            <Field label="Votre idée" error={submissionErrors.title}>
+              <TextInput
+                value={submissionForm.title ?? ""}
+                maxLength={120}
+                placeholder="Le titre de votre idée"
+                onChange={(e) => setSubmissionForm({ ...submissionForm, title: e.target.value })}
+              />
+            </Field>
+            <Field label="Décrivez votre idée" error={submissionErrors.content}>
               <TextArea
                 rows={5}
                 value={submissionForm.content}
-                placeholder="Décris l'amélioration proposée pour le cabinet…"
+                placeholder="Qu'est-ce qui changerait pour le cabinet ?"
                 onChange={(e) => setSubmissionForm({ ...submissionForm, content: e.target.value })}
               />
               <CharCounter value={submissionForm.content} max={2000} min={5} />
             </Field>
-            <Field label="Document PDF (optionnel, 20 Mo max)" error={submissionErrors.attachment}>
+            <Field label="Pièce jointe : PDF ou image (optionnel, 20 Mo max)" error={submissionErrors.attachment}>
               <input
                 type="file"
-                accept="application/pdf,.pdf"
+                accept="application/pdf,.pdf,image/jpeg,image/png,image/webp"
                 className="block w-full text-body-sm"
                 onChange={(e) => {
                   const f = e.target.files?.[0] ?? null;
-                  if (f && f.type !== "application/pdf") {
-                    setSubmissionErrors({ ...submissionErrors, attachment: "Seuls les fichiers PDF sont acceptés." });
-                    e.target.value = ""; setAttachment(null); return;
+                  if (f && !ATTACHMENT_TYPES[f.type]) {
+                    setSubmissionErrors({ ...submissionErrors, attachment: "Seuls les PDF et les images (JPEG, PNG, WebP) sont acceptés." });
+                    e.target.value = "";
+                    setAttachment(null);
+                    return;
                   }
-                  if (f && f.size > 20 * 1024 * 1024) {
+                  if (f && f.size > MAX_ATTACHMENT_BYTES) {
                     setSubmissionErrors({ ...submissionErrors, attachment: "Le fichier dépasse 20 Mo." });
-                    e.target.value = ""; setAttachment(null); return;
+                    e.target.value = "";
+                    setAttachment(null);
+                    return;
                   }
                   const { attachment: _a, ...rest } = submissionErrors;
                   setSubmissionErrors(rest);

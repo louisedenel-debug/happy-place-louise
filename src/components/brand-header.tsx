@@ -6,6 +6,7 @@ import sharkLogo from "@/assets/bigger-boat-shark.png";
 import { signOut, type AppRole } from "@/lib/auth";
 import { exportMyRecentSubmissions } from "@/lib/dashboard";
 import { fetchProfile, type Profile } from "@/lib/profile";
+import { PersonaBar } from "@/components/persona-bar";
 
 type NavItem = { label: string; to: "/vue" | "/actions" | "/manage/users" | "/manage/news"; match: string[] };
 
@@ -120,6 +121,7 @@ export function BrandHeader() {
 
   return (
     <header className="border-b border-outline-variant bg-surface-container-lowest">
+      <PersonaBar />
       <div className="mx-auto flex min-h-[72px] w-full max-w-interface flex-wrap items-center gap-x-8 gap-y-2 px-sm py-xs md:px-md">
         <Link to="/" className="flex min-w-0 items-center gap-sm" aria-label="Bigger Boat — accueil">
           <img

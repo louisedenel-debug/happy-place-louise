@@ -2,7 +2,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Linkify } from "@/components/linkify";
 import { AttachmentLink } from "@/components/attachment-link";
 import { formatExactDate } from "@/components/expandable-card";
-import type { Submission } from "@/lib/dashboard";
+import { ideaTitle, type Submission } from "@/lib/dashboard";
 
 /** Grande fenêtre de lecture d'une soumission (focus piégé, Échap, clic fond). */
 export function SubmissionReader({
@@ -31,10 +31,10 @@ export function SubmissionReader({
             <div className="flex items-start justify-between gap-sm border-b border-outline-variant p-md">
               <div className="min-w-0">
                 <DialogPrimitive.Title className="font-headline-sm text-headline-sm text-primary wrap-anywhere">
-                  {s.author_name}
+                  {ideaTitle(s)}
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Description className="font-label-sm text-label-sm text-on-surface-variant">
-                  {s.team} • {(statusLabel ?? s.status).toUpperCase()} • Soumise le {formatExactDate(s.created_at)}
+                  {s.author_name} • {s.team} • {(statusLabel ?? s.status).toUpperCase()} • Soumise le {formatExactDate(s.created_at)}
                 </DialogPrimitive.Description>
               </div>
               <DialogPrimitive.Close
