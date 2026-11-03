@@ -1,3 +1,4 @@
+import { TeamFilter } from "@/components/team-filter";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -100,18 +101,7 @@ export function ValidatedSubmissions({
         <h2 id="t-valid" className="flex-1 font-headline-sm text-[28px] leading-tight text-mod-demandes">
           Idées validées
         </h2>
-        <label htmlFor="f-ideas-team" className="text-sm text-on-surface-variant">
-          Équipe
-        </label>
-        <select
-          id="f-ideas-team"
-          value={team}
-          onChange={(e) => { setTeam(e.target.value); setLimit(PAGE); }}
-          className="min-h-12 min-w-[220px] rounded-lg border border-outline bg-white px-3 text-base text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        >
-          <option value="">Toutes les équipes</option>
-          {teams.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
+        <TeamFilter teams={teams} value={team} onChange={(t) => { setTeam(t); setLimit(PAGE); }} />
       </div>
       <div className="flex flex-col gap-4 p-5">
       <p>Toutes les idées validées du cabinet. Choisissez une équipe dans le filtre pour cibler ses idées.</p>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { TeamFilter } from "@/components/team-filter";
 import { timeAgo, type Blocker } from "@/lib/dashboard";
 
 const STEPS = ["OUVERT", "EN COURS", "SURVEILLANCE", "RÉSOLU"] as const;
@@ -77,24 +78,7 @@ export function BlockersBoard({
           Points bloquants
         </h2>
         <span className="rounded-lg bg-sev-crit-tint px-2.5 py-1 text-sm font-semibold text-sev-crit">Priorité haute</span>
-        <div className="flex items-center gap-3">
-          <label htmlFor="f-team" className="text-sm text-on-surface-variant">
-            Équipe
-          </label>
-          <select
-            id="f-team"
-            value={team}
-            onChange={(e) => setPicked(e.target.value)}
-            className="min-h-12 min-w-[220px] rounded-lg border border-outline bg-white px-3 text-base text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            <option value="">Toutes les équipes</option>
-            {teams.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </div>
+        <TeamFilter teams={teams} value={team} onChange={setPicked} />
       </div>
 
       <div className="flex flex-col gap-4 p-5">

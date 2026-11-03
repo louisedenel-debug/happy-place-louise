@@ -261,8 +261,8 @@ export function Dashboard({ view }: { view: DashboardView }) {
   // Léa suit ses idées en attente et refusées (les validées sont en vue d'ensemble) ; Julien voit toutes les siennes.
   const myIdeas = (mine.data ?? []).filter((s) => role === "manager" || s.status !== "validée");
   // Vue d'ensemble : Léa et Marc lisent d'abord les indicateurs ; Julien enchaîne idées, points bloquants, indicateurs.
-  const ORDER = role === "manager" ? { news: 1, valid: 2, blo: 3, ind: 4 } : { news: 1, ind: 2, valid: 3, blo: 4 };
-  const splitRow = role === "manager";
+  // Même ordre pour les trois profils.
+  const ORDER = { news: 1, ind: 2, valid: 3, blo: 4 };
   // Filtre d'équipe des points bloquants : l'équipe du profil (Marc : toutes).
   const defaultBlockerTeam =
     role === "admin" ? "" : role === "manager" ? (myTeams.data?.[0] ?? "") : (profile.data?.team ?? "");
@@ -557,7 +557,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
               defaultTeam={defaultBlockerTeam}
               onOpenArchive={() => setArchiveOpen(true)}
               order={ORDER.blo}
-              className={splitRow ? "col-span-12 lg:col-span-7" : "col-span-12"}
+              className="col-span-12"
             />
           )}
 
@@ -566,8 +566,9 @@ export function Dashboard({ view }: { view: DashboardView }) {
             <IndicatorsBoard
               metrics={metrics.data}
               isError={metrics.isError}
+              email={myEmail}
               order={ORDER.ind}
-              className={splitRow ? "col-span-12 lg:col-span-5" : "col-span-12"}
+              className="col-span-12"
             />
           )}
         </div>
