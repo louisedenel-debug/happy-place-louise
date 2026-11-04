@@ -10,13 +10,31 @@ import {
   type Persona,
 } from "@/lib/personas";
 
+const DEMO_KEY = "hp-demo";
+const DEMO_CODE = "bigger-boat";
+
+/** En local, la barre est toujours là ; en ligne, elle n'apparaît qu'après avoir ouvert le site avec ?demo=bigger-boat (?demo=off la cache). */
+function demoEnabled(): boolean {
+  if (import.meta.env.DEV) return true;
+  try {
+    const asked = new URLSearchParams(window.location.search).get("demo");
+    if (asked === DEMO_CODE) localStorage.setItem(DEMO_KEY, "1");
+    if (asked === "off") localStorage.removeItem(DEMO_KEY);
+    return localStorage.getItem(DEMO_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 /** Barre de test (version élèves) : trois personnages distincts, chacun avec son compte. */
 export function PersonaBar() {
   const [signedIn, setSignedIn] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [current, setCurrent] = useState<string | null>(null);
+  const [demo, setDemo] = useState(false);
 
   useEffect(() => {
+    setDemo(demoEnabled());
     setCurrent(currentPersonaKey());
     supabase.auth.getSession().then(async ({ data }) => {
       setSignedIn(!!data.session);
@@ -30,7 +48,7 @@ export function PersonaBar() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  if (!signedIn) return null;
+  if (!signedIn || !demo) return null;
 
   async function pick(p: Persona) {
     if (busy || p.key === current) return;

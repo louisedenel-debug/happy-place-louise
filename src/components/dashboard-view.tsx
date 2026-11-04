@@ -299,9 +299,6 @@ export function Dashboard({ view }: { view: DashboardView }) {
       <main className="flex-grow w-full max-w-interface mx-auto p-sm md:p-md space-y-md">
         {confirmDialog}
         <div className="mb-lg space-y-sm">
-          {!(actions && role !== "admin") && (
-            <p className="text-sm text-on-surface-variant">Vue d'ensemble</p>
-          )}
           <h1 className="font-headline-lg text-headline-lg text-primary">Happy Place</h1>
         </div>
 
