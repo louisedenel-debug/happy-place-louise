@@ -91,7 +91,7 @@ export function NewsWriter({
             helpOpen ? "border-[#4F1A51] bg-[#4F1A51] hover:bg-[#5E2060]" : "border-mod-actus bg-mod-actus hover:bg-[#8A3A8C]"
           }`}
         >
-          <Icon name="auto_awesome" />
+          <Icon name="menu_book" />
           Aide à la rédaction
         </button>
       </div>
