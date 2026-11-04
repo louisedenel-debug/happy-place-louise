@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchProfile } from "@/lib/profile";
-import { PERSONAS, currentPersonaKey, saveCurrentSession, switchPersona, type Persona } from "@/lib/personas";
+import {
+  PERSONAS,
+  currentPersonaKey,
+  reconcilePersonas,
+  saveCurrentSession,
+  switchPersona,
+  type Persona,
+} from "@/lib/personas";
 
 /** Barre de test (version élèves) : trois personnages distincts, chacun avec son compte. */
 export function PersonaBar() {
@@ -14,18 +20,8 @@ export function PersonaBar() {
     setCurrent(currentPersonaKey());
     supabase.auth.getSession().then(async ({ data }) => {
       setSignedIn(!!data.session);
-      // Compte déjà ouvert avant la barre : on l'adopte s'il correspond à un personnage.
-      if (data.session && !currentPersonaKey()) {
-        const profile = await fetchProfile().catch(() => null);
-        const match = PERSONAS.find(
-          (p) => profile && profile.name === `${p.firstName} ${p.lastName}` && profile.role === p.role,
-        );
-        if (match) {
-          localStorage.setItem("hp-persona-current", match.key);
-          setCurrent(match.key);
-          await saveCurrentSession();
-        }
-      }
+      // Le personnage actif est celui du compte réellement connecté, pas un simple souvenir du navigateur.
+      if (data.session) setCurrent(await reconcilePersonas());
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setSignedIn(!!session);

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/lib/auth";
+import { fetchProfile } from "@/lib/profile";
 
 // Version élèves : un navigateur = une session anonyme = une seule personne.
 // Pour tester les trois parcours, chaque personnage a son propre compte, et sa session
@@ -34,6 +35,20 @@ function readSaved(): Saved {
   }
 }
 
+function writeSaved(saved: Saved) {
+  localStorage.setItem(STORE, JSON.stringify(saved));
+}
+
+/** Identifiant du compte contenu dans un jeton (champ « sub »). */
+function userIdOf(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof payload.sub === "string" ? payload.sub : null;
+  } catch {
+    return null;
+  }
+}
+
 export function currentPersonaKey(): string | null {
   try {
     return localStorage.getItem(CURRENT);
@@ -42,14 +57,49 @@ export function currentPersonaKey(): string | null {
   }
 }
 
-/** Garde la session en cours sous le nom du personnage actif (les jetons se renouvellent). */
+/**
+ * Garde la session en cours dans la case du personnage à qui appartient ce compte (les jetons se renouvellent).
+ * On identifie le personnage par le compte, jamais par le simple « personnage actif » : avec deux onglets ouverts,
+ * l'autre onglet pouvait sinon ranger la session de Julien dans la case de Léa.
+ */
 export async function saveCurrentSession() {
-  const key = currentPersonaKey();
-  if (!key || switching) return;
+  if (switching) return;
   const { data } = await supabase.auth.getSession();
   if (!data.session) return;
   const { access_token, refresh_token } = data.session;
-  localStorage.setItem(STORE, JSON.stringify({ ...readSaved(), [key]: { access_token, refresh_token } }));
+  const uid = data.session.user.id;
+  const saved = readSaved();
+  let key = Object.keys(saved).find((k) => userIdOf(saved[k].access_token) === uid) ?? null;
+  if (!key) {
+    // Compte pas encore rangé : on le range dans la case du personnage actif, si elle est libre.
+    const cur = currentPersonaKey();
+    if (!cur || saved[cur]) return;
+    key = cur;
+  }
+  writeSaved({ ...saved, [key]: { access_token, refresh_token } });
+}
+
+/**
+ * Remet de l'ordre : le personnage actif est celui du compte réellement connecté (reconnu à son nom et son rôle),
+ * et une même session ne peut pas servir à deux personnages.
+ */
+export async function reconcilePersonas(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) return currentPersonaKey();
+  const profile = await fetchProfile().catch(() => null);
+  const match = PERSONAS.find(
+    (p) => profile && profile.name === `${p.firstName} ${p.lastName}` && profile.role === p.role,
+  );
+  if (!match) return currentPersonaKey();
+  const uid = data.session.user.id;
+  const saved = readSaved();
+  for (const k of Object.keys(saved)) {
+    if (k !== match.key && userIdOf(saved[k].access_token) === uid) delete saved[k];
+  }
+  saved[match.key] = { access_token: data.session.access_token, refresh_token: data.session.refresh_token };
+  writeSaved(saved);
+  localStorage.setItem(CURRENT, match.key);
+  return match.key;
 }
 
 export async function switchPersona(p: Persona) {
@@ -76,8 +126,14 @@ export async function switchPersona(p: Persona) {
     if (error) throw error;
     await supabase.auth.refreshSession();
     localStorage.setItem(CURRENT, p.key);
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      writeSaved({
+        ...readSaved(),
+        [p.key]: { access_token: data.session.access_token, refresh_token: data.session.refresh_token },
+      });
+    }
   } finally {
     switching = false;
   }
-  await saveCurrentSession();
 }

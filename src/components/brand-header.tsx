@@ -124,7 +124,8 @@ export function BrandHeader() {
   const profile = useQuery({ queryKey: ["profile"], queryFn: fetchProfile, retry: false, gcTime: 0 });
   const items = profile.data ? NAV[profile.data.role] : [];
   const badge = useQuery({
-    queryKey: ["actions-badge", profile.data?.email],
+    // Clé sous « submissions » : valider, refuser ou soumettre une idée met la pastille à jour tout de suite.
+    queryKey: ["submissions", "actions-badge", profile.data?.email],
     queryFn: () => fetchActionsBadge(profile.data!.role, profile.data!.email),
     enabled: !!profile.data,
     retry: false,
@@ -147,7 +148,7 @@ export function BrandHeader() {
     if (onActionsPage) {
       onActionsPage = false;
       markActionsSeen(email);
-      qc.invalidateQueries({ queryKey: ["actions-badge"] });
+      qc.invalidateQueries({ queryKey: ["submissions", "actions-badge"] });
     }
   }, [pathname, email, qc]);
 
