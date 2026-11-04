@@ -61,18 +61,9 @@ function ManageLayout() {
     <div className="bg-background text-on-surface font-body-md min-h-screen">
       <BrandHeader />
       <main className="w-full max-w-interface mx-auto p-sm md:p-md space-y-md">
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-          <div>
-            <p className="text-sm text-on-surface-variant">{section}</p>
-            <h1 className="mt-2 font-headline-lg text-headline-lg text-primary">{pageTitle}</h1>
-          </div>
-          <Link
-            to="/vue"
-            className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-primary px-5 text-base font-semibold text-primary hover:bg-surface-container"
-          >
-            <span aria-hidden="true" className="material-symbols-outlined">arrow_back</span>
-            Retour à la vue d'ensemble
-          </Link>
+        <div>
+          <p className="text-sm text-on-surface-variant">{section}</p>
+          <h1 className="mt-2 font-headline-lg text-headline-lg text-primary">{pageTitle}</h1>
         </div>
 
         <section className="space-y-md rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
