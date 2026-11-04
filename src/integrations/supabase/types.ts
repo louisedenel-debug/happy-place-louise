@@ -48,6 +48,8 @@ export type Database = {
       }
       allowed_users: {
         Row: {
+          contact_email: string | null
+          welcome_sent_at: string | null
           created_at: string
           departure_date: string | null
           email: string
@@ -57,6 +59,8 @@ export type Database = {
           team: string | null
         }
         Insert: {
+          contact_email?: string | null
+          welcome_sent_at?: string | null
           created_at?: string
           departure_date?: string | null
           email: string
@@ -66,6 +70,8 @@ export type Database = {
           team?: string | null
         }
         Update: {
+          contact_email?: string | null
+          welcome_sent_at?: string | null
           created_at?: string
           departure_date?: string | null
           email?: string
@@ -268,6 +274,7 @@ export type Database = {
         Row: {
           author: string
           author_email: string | null
+          blocker_id: string | null
           body: string | null
           created_at: string
           id: string
@@ -280,6 +287,7 @@ export type Database = {
         Insert: {
           author?: string
           author_email?: string | null
+          blocker_id?: string | null
           body?: string | null
           created_at?: string
           id?: string
@@ -292,6 +300,7 @@ export type Database = {
         Update: {
           author?: string
           author_email?: string | null
+          blocker_id?: string | null
           body?: string | null
           created_at?: string
           id?: string
@@ -301,7 +310,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["news_status"]
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "news_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: true
+            referencedRelation: "blockers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       submission_status_history: {
         Row: {
@@ -372,6 +389,7 @@ export type Database = {
           status: Database["public"]["Enums"]["submission_status"]
           submitted_by_email: string | null
           team: string
+          title: string | null
         }
         Insert: {
           attachment_name?: string | null
@@ -388,6 +406,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["submission_status"]
           submitted_by_email?: string | null
           team: string
+          title?: string | null
         }
         Update: {
           attachment_name?: string | null
@@ -404,6 +423,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["submission_status"]
           submitted_by_email?: string | null
           team?: string
+          title?: string | null
         }
         Relationships: [
           {
@@ -452,6 +472,7 @@ export type Database = {
     Functions: {
       choisir_mon_role: {
         Args: {
+          _contact_email?: string | null
           _first_name: string
           _last_name: string
           _role: Database["public"]["Enums"]["app_role"]

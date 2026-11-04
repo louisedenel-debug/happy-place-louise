@@ -1,9 +1,11 @@
+import { TeamFilter } from "@/components/team-filter";
+import { ShowMoreActions, ShowMoreButton } from "@/components/show-more-button";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AttachmentLink } from "@/components/attachment-link";
 import { SubmissionPreview, formatExactDate } from "@/components/expandable-card";
-import { fetchResolvedBlockers, fetchValidatedSubmissions, type Submission } from "@/lib/dashboard";
+import { fetchResolvedBlockers, fetchValidatedSubmissions, ideaTitle, type Submission } from "@/lib/dashboard";
 
 /** Fenêtre « Archive des points bloquants » (lecture seule, statut RÉSOLU). */
 export function BlockerArchive({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -12,7 +14,7 @@ export function BlockerArchive({ open, onClose }: { open: boolean; onClose: () =
     <DialogPrimitive.Root open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
-        <DialogPrimitive.Content className="fixed z-50 inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[min(48rem,calc(100vw-2rem))] h-dvh md:h-auto md:max-h-[85vh] flex flex-col bg-surface-container-lowest border border-outline shadow-lg focus:outline-none">
+        <DialogPrimitive.Content className="fixed z-50 inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[min(48rem,calc(100vw-2rem))] h-dvh md:h-auto md:max-h-[85vh] flex flex-col bg-surface-container-lowest border border-outline shadow-lg focus:outline-none md:rounded-xl md:overflow-hidden">
           <div className="flex items-start justify-between gap-sm border-b border-outline-variant p-md">
             <div className="min-w-0">
               <DialogPrimitive.Title className="font-headline-sm text-headline-sm text-primary">
@@ -33,7 +35,7 @@ export function BlockerArchive({ open, onClose }: { open: boolean; onClose: () =
               <p className="text-body-sm text-on-surface-variant italic">Aucun point bloquant résolu.</p>
             )}
             {q.data?.map((b) => (
-              <div key={b.id} className="bg-card border border-outline-variant p-sm min-w-0">
+              <div key={b.id} className="bg-card border border-outline-variant p-sm min-w-0 rounded-lg">
                 <p className="font-body-md text-primary font-bold wrap-anywhere">{b.title}</p>
                 {b.description && (
                   <p className="text-body-sm text-on-surface-variant whitespace-pre-line wrap-anywhere">{b.description}</p>
@@ -62,14 +64,16 @@ export function canReadAttachment(
   return ctx.role === "manager" && ctx.managerTeams.includes(s.team);
 }
 
-const PAGE = 10;
+const PAGE = 4;
 
 export function ValidatedSubmissions({
+  order,
   role,
   email,
   managerTeams,
   onRead,
 }: {
+  order?: number;
   role: string | null | undefined;
   email: string;
   managerTeams: string[];
@@ -86,32 +90,40 @@ export function ValidatedSubmissions({
   const shown = filtered.slice(0, limit);
 
   return (
-    <section className="col-span-12 min-w-0 bg-surface-container-lowest border border-outline-variant p-md">
-      <div className="flex flex-wrap items-center justify-between gap-sm border-b border-outline-variant pb-sm mb-md">
-        <h2 className="font-headline-sm text-headline-sm text-primary">Demandes validées</h2>
-        <label className="flex items-center gap-xs font-label-sm text-label-sm text-on-surface-variant min-w-0">
-          <span className="sr-only">Filtrer par équipe</span>
-          <select
-            aria-label="Filtrer par équipe"
-            value={team}
-            onChange={(e) => { setTeam(e.target.value); setLimit(PAGE); }}
-            className="max-w-full bg-card border border-outline-variant p-xs focus:outline-none focus:border-primary"
-          >
-            <option value="">Toutes les équipes</option>
-            {teams.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </label>
+    <section
+      aria-labelledby="t-valid"
+      style={order ? { order } : undefined}
+      className="col-span-12 min-w-0 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
+    >
+      <div className="flex flex-wrap items-center gap-3 border-b border-outline-variant bg-mod-demandes-tint p-5">
+        <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[12px] bg-mod-demandes text-white">
+          <span className="material-symbols-outlined">task_alt</span>
+        </span>
+        <h2 id="t-valid" className="flex-1 font-headline-sm text-[28px] leading-tight text-mod-demandes">
+          Idées validées
+        </h2>
+        <TeamFilter teams={teams} value={team} onChange={(t) => { setTeam(t); setLimit(PAGE); }} />
       </div>
-      {q.isLoading && <p className="text-body-sm text-on-surface-variant">Chargement…</p>}
-      {q.isError && <p className="text-body-sm text-error">Les demandes validées sont indisponibles.</p>}
+      <div className="flex flex-col gap-4 p-5">
+      <p>Toutes les idées validées du cabinet. Choisissez une équipe dans le filtre pour cibler ses idées.</p>
+      {q.isLoading && <p className="text-base text-on-surface-variant">Chargement…</p>}
+      {q.isError && <p className="text-base text-error">Les idées validées sont indisponibles.</p>}
       {q.data && filtered.length === 0 && (
-        <p className="text-body-sm text-on-surface-variant italic">Aucune demande validée pour le moment.</p>
+        <p className="text-base text-on-surface-variant">Aucune idée validée pour le moment.</p>
       )}
-      <div className="grid gap-xs md:grid-cols-2">
+      <div className="grid items-start gap-4 md:grid-cols-2">
         {shown.map((s) => (
-          <div key={s.id} className="p-sm border border-outline-variant bg-card min-w-0 overflow-hidden space-y-xs">
-            <p className="text-[11px] font-label-sm text-on-surface-variant uppercase wrap-anywhere">
-              <span className="text-primary font-bold">{s.author_name}</span> • {s.team} •{" "}
+          <div key={s.id} className="min-w-0 space-y-2 overflow-hidden rounded-[12px] border border-outline-variant bg-[#FAFAF7] p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-lg font-bold text-primary wrap-anywhere">{ideaTitle(s)}</h3>
+              {email && (s.submitted_by_email ?? "").toLowerCase() === email.toLowerCase() && (
+                <span className="inline-flex items-center rounded-lg border border-st-ok bg-st-ok-tint px-2.5 py-0.5 text-sm font-semibold text-st-ok">
+                  Validée
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-on-surface-variant wrap-anywhere">
+              {s.author_name} · {s.team} ·{" "}
               {s.validated_at ? `Validée le ${formatExactDate(s.validated_at)}` : `Soumise le ${formatExactDate(s.created_at)}`}
             </p>
             <SubmissionPreview content={s.content} onOpen={() => onRead(s)} />
@@ -124,15 +136,17 @@ export function ValidatedSubmissions({
           </div>
         ))}
       </div>
-      {filtered.length > limit && (
-        <button
-          type="button"
-          onClick={() => setLimit((l) => l + PAGE)}
-          className="mt-md font-label-sm text-label-sm text-primary underline"
-        >
-          Afficher plus ({filtered.length - limit} restantes)
-        </button>
+      {(filtered.length > limit || limit > PAGE) && (
+        <ShowMoreActions>
+          {filtered.length > limit && (
+            <ShowMoreButton onClick={() => setLimit((l) => l + PAGE)}>
+              Voir plus d'idées ({filtered.length - limit})
+            </ShowMoreButton>
+          )}
+          {limit > PAGE && <ShowMoreButton onClick={() => setLimit(PAGE)}>Voir moins d'idées</ShowMoreButton>}
+        </ShowMoreActions>
       )}
+      </div>
     </section>
   );
 }

@@ -20,7 +20,7 @@ import {
   deltaText,
   formatMetricValue,
   updateMetricRow,
-  TREND_LABELS,
+  TREND_PLAIN,
   type Metric,
   type MetricInput,
 } from "@/lib/dashboard";
@@ -102,8 +102,8 @@ function ManageMetrics() {
 
   return (
     <section className="space-y-md">
-      <div className="flex items-center justify-between">
-        <h2 className="font-headline-sm text-headline-sm text-primary">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-bold leading-snug text-primary">
           Indicateurs ({list.data?.length ?? 0})
         </h2>
         <button
@@ -112,9 +112,9 @@ function ManageMetrics() {
             setErrors({});
             setForm({ ...empty });
           }}
-          className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md"
+          className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-primary px-5 text-base font-semibold text-on-primary hover:opacity-90"
         >
-          + NOUVEL INDICATEUR
+          <span aria-hidden="true" className="material-symbols-outlined">add</span>Nouvel indicateur
         </button>
       </div>
 
@@ -123,25 +123,34 @@ function ManageMetrics() {
         <p className="text-body-sm text-error">Impossible de charger les indicateurs.</p>
       )}
 
-      <div className="space-y-xs">
+      <div className="flex flex-col gap-4">
         {list.data?.map((m) => (
           <article
             key={m.key}
-            className="flex items-start justify-between gap-sm p-sm bg-card border border-outline-variant"
+            className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 rounded-[12px] border border-l-[6px] border-outline-variant border-l-mod-indicateurs bg-[#FAFAF7] p-5"
           >
-            <div className="min-w-0 [overflow-wrap:anywhere]">
-              <p className="font-body-md text-primary font-bold">
-                {m.label} — {formatMetricValue(m.value, m.unit)}
+            <div className="flex min-w-0 flex-1 basis-80 flex-col gap-1.5 [overflow-wrap:anywhere]">
+              <p className="font-semibold">{m.label}</p>
+              <p className="flex flex-wrap items-center gap-3">
+                <span className="font-headline-sm text-[28px] leading-tight">{formatMetricValue(m.value, m.unit)}</span>
+                <span
+                  className={`rounded-lg border px-2.5 py-1 text-sm font-semibold ${
+                    m.trend === "hausse"
+                      ? "border-st-ok bg-st-ok-tint text-st-ok"
+                      : m.trend === "baisse"
+                        ? "border-st-ko bg-st-ko-tint text-st-ko"
+                        : "border-st-wait bg-st-wait-tint text-st-wait"
+                  }`}
+                >
+                  {TREND_PLAIN[m.trend]}
+                  {deltaText(m) && ` · ${deltaText(m)}`}
+                </span>
               </p>
-              <p className="text-[11px] font-label-sm text-on-surface-variant mt-xs">
-                {m.key} • {TREND_LABELS[m.trend]}
-                {m.previous_value != null && (
-                  <>
-                    {deltaText(m) && ` · ${deltaText(m)}`}
-                    {` · avant : ${formatMetricValue(m.previous_value, m.unit).replace(/%$/, " %")}`}
-                  </>
-                )}
-              </p>
+              {m.previous_value != null && (
+                <p className="text-sm text-on-surface-variant">
+                  Avant : {formatMetricValue(m.previous_value, m.unit).replace(/%$/, " %")}
+                </p>
+              )}
               <MetricHistory metricKey={m.key} unit={m.unit} />
             </div>
             <RowActions

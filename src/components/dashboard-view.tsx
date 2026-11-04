@@ -1,0 +1,702 @@
+import { useRouteContext } from "@tanstack/react-router";
+import { fetchProfile } from "@/lib/profile";
+import { supabase } from "@/integrations/supabase/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
+import { ErrorSummary, Field, FormActions, Modal, TextArea, TextInput, useConfirm } from "@/components/manage/crud-ui";
+import { ideaFormSchema, rejectionSchema, validate, type FieldErrors } from "@/lib/manage-schemas";
+import { BrandHeader } from "@/components/brand-header";
+import { AttachmentLink } from "@/components/attachment-link";
+import { IdeaAttachment } from "@/components/idea-attachment";
+import { CharCounter, SubmissionPreview, rejectionErrorMessage } from "@/components/expandable-card";
+import { Linkify } from "@/components/linkify";
+import { SubmissionReader } from "@/components/submission-reader";
+import { BlockersBoard } from "@/components/blockers-board";
+import { IndicatorsBoard } from "@/components/indicators-board";
+import { NewsFeed } from "@/components/news-feed";
+import { NewsWriter, PublishConfirm } from "@/components/news-writer";
+import { emptyMedia, linkErrors, mediaFromNews, toNewsLinks, type MediaDraft } from "@/lib/news-media";
+import { BlockerArchive, ValidatedSubmissions } from "@/components/dashboard-extras";
+import { Button } from "@/components/ui/button";
+import {
+  fetchBlockers,
+  fetchMetrics,
+  deltaText,
+  fetchNews,
+  fetchSubmissions,
+  fetchMySubmissions,
+  exportMyRecentSubmissions,
+  REJECTION_CATEGORIES,
+  type News,
+  type Submission,
+  saveDraftNews,
+  publishDraftNews,
+  deleteDraftNews,
+  reviewSubmission,
+  submitIdea,
+  ideaTitle,
+  timeAgo,
+  updateBlockerStatus,
+  updateMetric,
+  TREND_LABELS,
+  type Metric,
+  type SubmissionInput,
+} from "@/lib/dashboard";
+
+function Icon({ name, className = "" }: { name: string; className?: string }) {
+  return (
+    <span aria-hidden="true" className={`material-symbols-outlined ${className}`}>
+      {name}
+    </span>
+  );
+}
+
+function trendText(m: Metric | undefined) {
+  return m ? TREND_LABELS[m.trend] : "";
+}
+
+function metricOf(metrics: Metric[] | undefined, key: string) {
+  return metrics?.find((m) => m.key === key);
+}
+
+function formatMetric(m: Metric | undefined, fallback: string) {
+  if (!m) return fallback;
+  const v = Number(m.value);
+  const formatted = m.unit === "%" ? v.toFixed(1) : v.toLocaleString("fr-FR");
+  return `${formatted}${m.unit ?? ""}`;
+}
+
+function metricLabel(metric: Metric | undefined, fallback: string) {
+  if (!metric) return fallback;
+  if (metric.key === "training_kpi") return "Taux de placement";
+  if (metric.key === "active_users") return "Missions actives";
+  return metric.label;
+}
+
+export type DashboardView = "overview" | "actions";
+
+/** Une seule page pour les trois profils : le rôle et la vue (`/vue` ou `/actions`) décident des blocs affichés. */
+export function Dashboard({ view }: { view: DashboardView }) {
+  const [ask, confirmDialog] = useConfirm();
+  const qc = useQueryClient();
+  const { role, email, user } = useRouteContext({ from: "/_authenticated" });
+  const actions = view === "actions";
+  const isAdmin = role === "admin";
+  const canReview = role === "admin" || role === "manager";
+  const canWriteNews = canReview;
+  const myEmail = (email ?? "").toLowerCase();
+  const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
+  const myName =
+    (typeof meta.full_name === "string" && meta.full_name) ||
+    (typeof meta.name === "string" && meta.name) ||
+    myEmail;
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
+  const [media, setMedia] = useState<MediaDraft>(emptyMedia);
+  const [showLinkErrs, setShowLinkErrs] = useState(false);
+  const newsLinkErrs = showLinkErrs ? linkErrors(media.links) : {};
+  const profile = useQuery({ queryKey: ["profile"], queryFn: fetchProfile, retry: false });
+  const [queueOpen, setQueueOpen] = useState(true);
+  const [submissionForm, setSubmissionForm] = useState<SubmissionInput | null>(null);
+  const [submissionErrors, setSubmissionErrors] = useState<FieldErrors>({});
+  const myTeams = useQuery({
+    queryKey: ["manager_teams", "mine", email],
+    enabled: role === "manager" && !!email,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("manager_teams")
+        .select("team, allowed_users!inner(email)")
+        .eq("allowed_users.email", (email ?? "").toLowerCase());
+      if (error) throw error;
+      return (data ?? []).map((t) => t.team).sort();
+    },
+  });
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const [rejecting, setRejecting] = useState<Submission | null>(null);
+  const [reading, setReading] = useState<Submission | null>(null);
+  const [titleError, setTitleError] = useState(false);
+  const [publishAsk, setPublishAsk] = useState<{ draft: News | null } | null>(null);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [rejectForm, setRejectForm] = useState({ rejection_category: "", rejection_note: "" });
+  const [rejectErrors, setRejectErrors] = useState<FieldErrors>({});
+
+  const news = useQuery({ queryKey: ["news"], queryFn: fetchNews, retry: false });
+  const submissions = useQuery({
+    queryKey: ["submissions"],
+    queryFn: fetchSubmissions,
+    retry: false,
+  });
+  const mine = useQuery({
+    queryKey: ["submissions", "mine", email],
+    queryFn: () => fetchMySubmissions(email ?? ""),
+    enabled: !!email,
+    retry: false,
+  });
+  const blockers = useQuery({ queryKey: ["blockers"], queryFn: fetchBlockers, retry: false });
+  const metrics = useQuery({ queryKey: ["metrics"], queryFn: fetchMetrics, retry: false });
+  const onError = (e: unknown) => toast.error((e as Error).message);
+
+  const saveDraft = useMutation({
+    mutationFn: saveDraftNews,
+    onSuccess: () => {
+      setTitle("");
+      setBody("");
+      setEditingNewsId(null);
+      setMedia(emptyMedia());
+      setShowLinkErrs(false);
+      toast.success("Brouillon enregistré");
+      qc.invalidateQueries({ queryKey: ["news"] });
+    },
+    onError,
+  });
+
+  const newsPayload = () => ({
+    links: toNewsLinks(media.links),
+    media,
+    id: editingNewsId ?? undefined,
+    title: title.trim(),
+    body,
+    author: profile.data?.name ?? myName,
+    author_email: myEmail,
+  });
+  const resetEditor = () => {
+    setTitle("");
+    setBody("");
+    setEditingNewsId(null);
+    setMedia(emptyMedia());
+    setShowLinkErrs(false);
+    setTitleError(false);
+  };
+  /** Valide le titre et les liens avant d'enregistrer ou de publier. */
+  const editorReady = () => {
+    setShowLinkErrs(true);
+    if (!title.trim()) {
+      setTitleError(true);
+      return false;
+    }
+    if (Object.keys(linkErrors(media.links)).length) {
+      toast.error("Corrige les liens invalides avant d'enregistrer.");
+      return false;
+    }
+    return true;
+  };
+  const publishNow = useMutation({
+    mutationFn: async () => publishDraftNews(await saveDraftNews(newsPayload())),
+    onSuccess: () => {
+      resetEditor();
+      setPublishAsk(null);
+      toast.success("Actualité publiée.");
+      qc.invalidateQueries({ queryKey: ["news"] });
+    },
+    onError: (e: unknown) => {
+      setPublishAsk(null);
+      toast.error((e as Error).message);
+    },
+  });
+
+  const publishDraft = useMutation({
+    mutationFn: publishDraftNews,
+    onSuccess: () => {
+      setPublishAsk(null);
+      toast.success("Actualité publiée.");
+      qc.invalidateQueries({ queryKey: ["news"] });
+    },
+    onError,
+  });
+
+  const removeDraft = useMutation({
+    mutationFn: (n: { id: string; image_path?: string | null }) => deleteDraftNews(n.id, n.image_path),
+    onSuccess: () => {
+      toast.success("Brouillon supprimé");
+      qc.invalidateQueries({ queryKey: ["news"] });
+    },
+    onError,
+  });
+
+  const review = useMutation({
+    mutationFn: reviewSubmission,
+    onSuccess: (_d, vars) => {
+      if (vars.status === "refusée") {
+        setRejecting(null);
+        toast.success("Soumission refusée");
+      } else {
+        setReading((r) => (r?.id === vars.id ? null : r));
+      }
+      qc.invalidateQueries({ queryKey: ["submissions"] });
+    },
+    onError: (e: unknown) => toast.error(rejectionErrorMessage(e)),
+  });
+
+  function startReject(s: Submission) {
+    setReading(null);
+    setRejecting(s);
+    setRejectErrors({});
+    setRejectForm({ rejection_category: "", rejection_note: "" });
+  }
+
+  const submit = useMutation({
+    mutationFn: (input: SubmissionInput) =>
+      submitIdea(
+        { title: input.title, author_name: input.author_name, team: input.team, content: input.content },
+        attachment,
+      ),
+    onSuccess: () => {
+      setSubmissionForm(null);
+      setAttachment(null);
+      setSubmissionErrors({});
+      toast.success(role === "manager" ? "Idée validée automatiquement." : "Idée envoyée à votre manager.");
+      qc.invalidateQueries({ queryKey: ["submissions"] });
+    },
+    onError: (e: unknown) => toast.error(rejectionErrorMessage(e)),
+  });
+
+  const setBlocker = useMutation({
+    mutationFn: updateBlockerStatus,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["blockers"] }),
+    onError,
+  });
+
+  // Léa suit ses idées en attente et refusées (les validées sont en vue d'ensemble) ; Julien voit toutes les siennes.
+  const myIdeas = (mine.data ?? []).filter((s) => role === "manager" || s.status !== "validée");
+  // Vue d'ensemble : Léa et Marc lisent d'abord les indicateurs ; Julien enchaîne idées, points bloquants, indicateurs.
+  // Même ordre pour les trois profils.
+  const ORDER = { news: 1, ind: 2, valid: 3, blo: 4 };
+  // Filtre d'équipe des points bloquants : l'équipe du profil (Marc : toutes).
+  const defaultBlockerTeam =
+    role === "admin" ? "" : role === "manager" ? (myTeams.data?.[0] ?? "") : (profile.data?.team ?? "");
+  const visibleDrafts = news.data?.filter((n) => n.status === "brouillon") ?? [];
+  const drafts = visibleDrafts.length;
+  // Le brouillon en cours de modification remonte dans le formulaire : on le retire de la liste.
+  const listedDrafts = visibleDrafts.filter((n) => n.id !== editingNewsId);
+  const published = news.data?.filter((n) => n.status === "publiée") ?? [];
+
+  function openIdeaForm() {
+    setSubmissionErrors({});
+    setAttachment(null);
+    const only = role === "manager" && myTeams.data?.length === 1 ? myTeams.data[0] : "";
+    setSubmissionForm({ title: "", author_name: profile.data?.name ?? myName, team: only, content: "", status: "en attente" });
+  }
+
+  function sendSubmission(e: React.FormEvent) {
+    e.preventDefault();
+    if (!submissionForm) return;
+    // Collaborateur : équipe fixée côté base depuis son compte ; manager : l'une de ses équipes.
+    const team = role === "collaborateur" ? "auto" : role === "admin" ? "Admin" : submissionForm.team;
+    const result = validate(ideaFormSchema, { ...submissionForm, team });
+    if (!result.ok) {
+      setSubmissionErrors(result.errors);
+      return;
+    }
+    setSubmissionErrors({});
+    submit.mutate({ ...result.data, status: "en attente" });
+  }
+
+  return (
+    <div className="bg-background text-on-surface font-body-md min-h-screen flex flex-col">
+      <BrandHeader />
+      <main className="flex-grow w-full max-w-interface mx-auto p-sm md:p-md space-y-md">
+        {confirmDialog}
+        <div className="mb-lg space-y-sm">
+          <h1 className="font-headline-lg text-headline-lg text-primary">Happy Place</h1>
+        </div>
+
+        <div className="bento-grid">
+          {/* Actualités du cabinet */}
+          {(actions ? canWriteNews : true) && (
+            <section
+              aria-labelledby="t-actus"
+              style={{ order: ORDER.news }}
+              className="col-span-12 min-w-0 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
+            >
+              <div className="flex flex-wrap items-center gap-3 border-b border-outline-variant bg-mod-actus-tint p-5">
+                <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[12px] bg-mod-actus text-white">
+                  <Icon name="newspaper" />
+                </span>
+                <h2 id="t-actus" className="flex-1 font-headline-sm text-[28px] leading-tight text-mod-actus">
+                  Actualités du cabinet
+                </h2>
+              </div>
+              <div className="flex flex-col gap-8 p-5">
+                {actions && canWriteNews && (
+                  <NewsWriter
+                    title={title}
+                    body={body}
+                    media={media}
+                    linkErrs={newsLinkErrs}
+                    titleError={titleError}
+                    saving={saveDraft.isPending || publishNow.isPending}
+                    editing={!!editingNewsId}
+                    onTitle={(v) => {
+                      setTitle(v);
+                      setTitleError(false);
+                    }}
+                    onBody={setBody}
+                    onMedia={setMedia}
+                    onPublish={() => editorReady() && setPublishAsk({ draft: null })}
+                    onSaveDraft={() => editorReady() && saveDraft.mutate(newsPayload())}
+                    onCancelEdit={resetEditor}
+                  />
+                )}
+                {actions && canWriteNews && listedDrafts.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <h3 className="text-xl font-bold leading-snug text-primary">
+                      Brouillons en attente ({listedDrafts.length})
+                    </h3>
+                    {listedDrafts.map((n) => {
+                      const allowed = isAdmin || (n.author_email ?? "").toLowerCase() === myEmail;
+                      return (
+                        <div
+                          key={n.id}
+                          className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[12px] border border-outline-variant bg-[#FAFAF7] p-5"
+                        >
+                          <span className="flex min-w-0 flex-col gap-0.5">
+                            <span className="font-semibold wrap-anywhere">{n.title}</span>
+                            <span className="text-sm text-on-surface-variant">Enregistré {timeAgo(n.created_at)}</span>
+                          </span>
+                          {allowed && (
+                            <span className="flex flex-wrap items-center gap-2">
+                              <button
+                                type="button"
+                                className="min-h-12 px-2 text-base font-semibold text-primary underline"
+                                onClick={() => {
+                                  setEditingNewsId(n.id);
+                                  setTitle(n.title);
+                                  setBody(n.body ?? "");
+                                  setMedia(mediaFromNews(n));
+                                  setShowLinkErrs(false);
+                                  setTitleError(false);
+                                  requestAnimationFrame(() => {
+                                    document.getElementById("redaction-actualite")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                                    document.getElementById("actu-titre")?.focus({ preventScroll: true });
+                                  });
+                                }}
+                              >
+                                Modifier
+                              </button>
+                              <button
+                                type="button"
+                                className="min-h-12 px-2 text-base font-semibold text-sev-crit underline"
+                                disabled={removeDraft.isPending}
+                                onClick={async () => {
+                                  const ok = await ask({
+                                    title: "Supprimer le brouillon ?",
+                                    message: `Supprimer le brouillon « ${n.title} » ?`,
+                                    confirmLabel: "Supprimer",
+                                    danger: true,
+                                  });
+                                  if (ok) removeDraft.mutate(n);
+                                }}
+                              >
+                                Supprimer
+                              </button>
+                              <button
+                                type="button"
+                                className="inline-flex min-h-12 items-center rounded-lg bg-primary px-5 text-base font-semibold text-on-primary hover:opacity-90"
+                                onClick={() => setPublishAsk({ draft: n })}
+                              >
+                                Publier
+                              </button>
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {news.isLoading && <p className="text-base text-on-surface-variant">Chargement…</p>}
+                {news.isError && <p className="text-base text-error">Les actualités sont indisponibles.</p>}
+                <NewsFeed items={published} heading={actions && canWriteNews ? "Déjà publiées" : undefined} />
+              </div>
+            </section>
+          )}
+
+          {/* Idées de l'équipe à traiter */}
+          {actions && canReview && (
+            <section
+              aria-labelledby="idees-equipe"
+              style={{ order: 2 }}
+              className="col-span-12 min-w-0 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
+            >
+              <button
+                type="button"
+                aria-expanded={queueOpen}
+                aria-controls="idees-equipe-liste"
+                onClick={() => setQueueOpen((o) => !o)}
+                className="flex w-full flex-wrap items-center gap-3 bg-mod-demandes-tint p-5 text-left"
+              >
+                <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[12px] bg-mod-demandes text-white">
+                  <Icon name="inbox" />
+                </span>
+                <h2 id="idees-equipe" className="flex-1 font-headline-sm text-[28px] leading-tight text-mod-demandes">
+                  Idées de votre équipe à traiter
+                </h2>
+                <span className="rounded-lg border border-st-ko bg-st-ko-tint px-2.5 py-1 text-sm font-semibold text-st-ko">
+                  {submissions.data?.length ?? 0} à traiter
+                </span>
+                <Icon name={queueOpen ? "expand_less" : "expand_more"} className="text-mod-demandes" />
+              </button>
+              {queueOpen && (
+                <div id="idees-equipe-liste" className="flex flex-col gap-4 border-t border-outline-variant p-5">
+                  {submissions.isError && <p className="text-base text-error">Les idées sont indisponibles.</p>}
+                  {submissions.data?.length === 0 && (
+                    <p className="text-base text-on-surface-variant">Aucune idée à traiter pour le moment.</p>
+                  )}
+                  {submissions.data?.map((s) => (
+                    <article key={s.id} className="min-w-0 space-y-2 overflow-hidden rounded-[12px] border border-outline-variant bg-[#FAFAF7] p-5">
+                      <h3 className="text-lg font-bold text-primary wrap-anywhere">{ideaTitle(s)}</h3>
+                      <p className="text-sm text-on-surface-variant wrap-anywhere">
+                        {s.author_name} · {s.team} · {timeAgo(s.created_at)}
+                      </p>
+                      <SubmissionPreview content={s.content} onOpen={() => setReading(s)} />
+                      <AttachmentLink path={s.attachment_path} name={s.attachment_name} />
+                      <div className="flex flex-wrap gap-3 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => startReject(s)}
+                          className="inline-flex min-h-12 items-center rounded-lg bg-st-ko px-5 text-base font-semibold text-white hover:opacity-90"
+                        >
+                          Refuser
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => review.mutate({ id: s.id, status: "validée" })}
+                          className="inline-flex min-h-12 items-center rounded-lg bg-st-ok px-5 text-base font-semibold text-white hover:opacity-90"
+                        >
+                          Valider
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Mes idées */}
+          {actions && (
+            <section
+              aria-labelledby="mes-idees"
+              style={{ order: 3 }}
+              className="col-span-12 min-w-0 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest"
+            >
+              <div className="flex flex-wrap items-center gap-3 border-b border-outline-variant bg-mod-demandes-tint p-5">
+                <span aria-hidden="true" className="grid h-11 w-11 flex-none place-items-center rounded-[12px] bg-mod-demandes text-white">
+                  <Icon name="lightbulb" />
+                </span>
+                <h2 id="mes-idees" className="flex-1 font-headline-sm text-[28px] leading-tight text-mod-demandes">
+                  Mes idées
+                </h2>
+                <button
+                  type="button"
+                  onClick={openIdeaForm}
+                  className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-mod-demandes px-5 text-base font-semibold text-white hover:opacity-90"
+                >
+                  <Icon name="add" /> Soumettre une idée
+                </button>
+              </div>
+              <div className="flex flex-col gap-4 p-5">
+                {mine.isLoading && <p className="text-base text-on-surface-variant">Chargement…</p>}
+                {mine.isError && <p className="text-base text-error">Vos idées sont indisponibles.</p>}
+                {myIdeas.length === 0 && !mine.isLoading && !mine.isError && (
+                  <p className="text-base text-on-surface-variant">
+                    {role === "manager"
+                      ? "Vous n'avez pas encore soumis d'idée."
+                      : "Aucune idée en attente ou refusée. Les idées validées sont dans la vue d'ensemble."}
+                  </p>
+                )}
+                {myIdeas.map((s) => {
+                  const st =
+                    s.status === "validée"
+                      ? { label: "Validée", cls: "border-st-ok bg-st-ok-tint text-st-ok" }
+                      : s.status === "refusée"
+                        ? { label: "Refusée", cls: "border-st-ko bg-st-ko-tint text-st-ko" }
+                        : { label: "En attente", cls: "border-st-wait bg-st-wait-tint text-st-wait" };
+                  return (
+                    <article key={s.id} className="min-w-0 space-y-2 overflow-hidden rounded-[12px] border border-outline-variant bg-[#FAFAF7] p-5">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-sm font-semibold ${st.cls}`}>
+                          {st.label}
+                        </span>
+                        <span className="text-sm text-on-surface-variant">
+                          {s.team} · soumise {timeAgo(s.created_at)}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-bold text-primary wrap-anywhere">{ideaTitle(s)}</h3>
+                      <SubmissionPreview content={s.content} onOpen={() => setReading(s)} />
+                      <AttachmentLink path={s.attachment_path} name={s.attachment_name} />
+                      {s.status === "refusée" && (
+                        <div className="rounded-lg border border-st-ko bg-st-ko-tint p-3 text-base text-st-ko wrap-anywhere">
+                          <p className="font-bold">Motif du refus : {s.rejection_category ?? "non précisé"}</p>
+                          {s.rejection_note && (
+                            <p className="whitespace-pre-line">
+                              <Linkify text={s.rejection_note} />
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {!actions && (
+          <ValidatedSubmissions
+            order={ORDER.valid}
+            role={role}
+            email={myEmail}
+            managerTeams={myTeams.data ?? []}
+            onRead={setReading}
+          />
+          )}
+
+          {/* Points bloquants */}
+          {!actions && (
+            <BlockersBoard
+              blockers={blockers.data}
+              isError={blockers.isError}
+              defaultTeam={defaultBlockerTeam}
+              onOpenArchive={() => setArchiveOpen(true)}
+              order={ORDER.blo}
+              className="col-span-12"
+            />
+          )}
+
+          {/* Indicateurs */}
+          {!actions && (
+            <IndicatorsBoard
+              metrics={metrics.data}
+              isError={metrics.isError}
+              email={myEmail}
+              order={ORDER.ind}
+              className="col-span-12"
+            />
+          )}
+        </div>
+      </main>
+      <BlockerArchive open={archiveOpen} onClose={() => setArchiveOpen(false)} />
+      {publishAsk && (
+        <PublishConfirm
+          title={publishAsk.draft ? publishAsk.draft.title : title.trim()}
+          pending={publishNow.isPending || publishDraft.isPending}
+          onCancel={() => setPublishAsk(null)}
+          onConfirm={() => (publishAsk.draft ? publishDraft.mutate(publishAsk.draft.id) : publishNow.mutate())}
+        />
+      )}
+      <SubmissionReader
+        submission={reading}
+        onClose={() => setReading(null)}
+        onReject={reading && canReview && reading.status === "en attente" ? () => startReject(reading) : undefined}
+        onApprove={
+          reading && canReview && reading.status === "en attente"
+            ? () => review.mutate({ id: reading.id, status: "validée" })
+            : undefined
+        }
+        approving={review.isPending}
+      />
+      {rejecting && (
+        <Modal title="Refuser la soumission" onClose={() => setRejecting(null)}>
+          <form
+            noValidate
+            className="space-y-sm"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const res = validate(rejectionSchema, rejectForm);
+              if (!res.ok) return setRejectErrors(res.errors);
+              setRejectErrors({});
+              review.mutate({ id: rejecting.id, status: "refusée", ...res.data });
+            }}
+          >
+            <p className="max-h-48 overflow-y-auto border border-outline-variant bg-surface-container-low p-xs text-body-sm italic text-on-surface-variant whitespace-pre-line wrap-anywhere rounded-lg">“{rejecting.content}”</p>
+            <ErrorSummary errors={rejectErrors} />
+            <Field label="Motif du refus" error={rejectErrors.rejection_category}>
+              <select
+                className="w-full border border-outline-variant bg-card p-xs text-body-sm rounded-lg"
+                value={rejectForm.rejection_category}
+                onChange={(e) => setRejectForm({ ...rejectForm, rejection_category: e.target.value })}
+              >
+                <option value="">— Choisir un motif —</option>
+                {REJECTION_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Raison du refus (obligatoire)" error={rejectErrors.rejection_note}>
+              <TextArea
+                rows={4}
+                value={rejectForm.rejection_note}
+                placeholder="Explique au collaborateur pourquoi sa soumission est refusée…"
+                onChange={(e) => setRejectForm({ ...rejectForm, rejection_note: e.target.value })}
+              />
+              <CharCounter value={rejectForm.rejection_note} max={500} />
+            </Field>
+            <FormActions pending={review.isPending} onCancel={() => setRejecting(null)} />
+          </form>
+        </Modal>
+      )}
+      {submissionForm && (
+        <Modal title="Soumettre une idée" onClose={() => setSubmissionForm(null)}>
+          <form onSubmit={sendSubmission} className="space-y-sm" noValidate>
+            <ErrorSummary errors={submissionErrors} />
+            <Field label="Votre nom" error={submissionErrors.author_name}>
+              <TextInput
+                value={submissionForm.author_name}
+                maxLength={80}
+                onChange={(e) => setSubmissionForm({ ...submissionForm, author_name: e.target.value })}
+              />
+            </Field>
+            {role === "manager" && (
+              <Field label="Équipe" error={submissionErrors.team}>
+                <select
+                  required
+                  value={submissionForm.team}
+                  onChange={(e) => setSubmissionForm({ ...submissionForm, team: e.target.value })}
+                  className="w-full border border-outline-variant bg-surface px-sm py-xs font-body-md rounded-lg"
+                >
+                  <option value="">Choisissez une de vos équipes</option>
+                  {myTeams.data?.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
+            <Field label="Votre idée" error={submissionErrors.title}>
+              <TextInput
+                value={submissionForm.title ?? ""}
+                maxLength={120}
+                placeholder="Le titre de votre idée"
+                onChange={(e) => setSubmissionForm({ ...submissionForm, title: e.target.value })}
+              />
+            </Field>
+            <Field label="Décrivez votre idée" error={submissionErrors.content}>
+              <TextArea
+                rows={5}
+                value={submissionForm.content}
+                placeholder="Qu'est-ce qui changerait pour le cabinet ?"
+                onChange={(e) => setSubmissionForm({ ...submissionForm, content: e.target.value })}
+              />
+              <CharCounter value={submissionForm.content} max={2000} min={5} />
+            </Field>
+            <IdeaAttachment
+              file={attachment}
+              error={submissionErrors.attachment}
+              onChange={setAttachment}
+              onError={(message) => {
+                const { attachment: _a, ...rest } = submissionErrors;
+                setSubmissionErrors(message ? { ...rest, attachment: message } : rest);
+              }}
+            />
+            <FormActions
+              pending={submit.isPending}
+              submitLabel="Envoyer"
+              onCancel={() => setSubmissionForm(null)}
+            />
+          </form>
+        </Modal>
+      )}
+    </div>
+  );
+}

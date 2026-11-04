@@ -14,11 +14,14 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ChoisirRoleRouteImport } from './routes/choisir-role'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedActionsRouteImport } from './routes/_authenticated/actions'
 import { Route as AuthenticatedManageRouteImport } from './routes/_authenticated/manage'
+import { Route as AuthenticatedVueRouteImport } from './routes/_authenticated/vue'
 import { Route as AuthenticatedManageIndexRouteImport } from './routes/_authenticated/manage.index'
 import { Route as AuthenticatedManageBlockersRouteImport } from './routes/_authenticated/manage.blockers'
 import { Route as AuthenticatedManageMetricsRouteImport } from './routes/_authenticated/manage.metrics'
 import { Route as AuthenticatedManageNewsRouteImport } from './routes/_authenticated/manage.news'
+import { Route as AuthenticatedManageRemindersRouteImport } from './routes/_authenticated/manage.reminders'
 import { Route as AuthenticatedManageSubmissionsRouteImport } from './routes/_authenticated/manage.submissions'
 import { Route as AuthenticatedManageUsersRouteImport } from './routes/_authenticated/manage.users'
 
@@ -46,9 +49,19 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedActionsRoute = AuthenticatedActionsRouteImport.update({
+  id: '/actions',
+  path: '/actions',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedManageRoute = AuthenticatedManageRouteImport.update({
   id: '/manage',
   path: '/manage',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVueRoute = AuthenticatedVueRouteImport.update({
+  id: '/vue',
+  path: '/vue',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedManageIndexRoute =
@@ -74,6 +87,12 @@ const AuthenticatedManageNewsRoute = AuthenticatedManageNewsRouteImport.update({
   path: '/news',
   getParentRoute: () => AuthenticatedManageRoute,
 } as any)
+const AuthenticatedManageRemindersRoute =
+  AuthenticatedManageRemindersRouteImport.update({
+    id: '/reminders',
+    path: '/reminders',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
 const AuthenticatedManageSubmissionsRoute =
   AuthenticatedManageSubmissionsRouteImport.update({
     id: '/submissions',
@@ -92,10 +111,13 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/choisir-role': typeof ChoisirRoleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/actions': typeof AuthenticatedActionsRoute
   '/manage': typeof AuthenticatedManageRouteWithChildren
+  '/vue': typeof AuthenticatedVueRoute
   '/manage/blockers': typeof AuthenticatedManageBlockersRoute
   '/manage/metrics': typeof AuthenticatedManageMetricsRoute
   '/manage/news': typeof AuthenticatedManageNewsRoute
+  '/manage/reminders': typeof AuthenticatedManageRemindersRoute
   '/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
   '/manage/users': typeof AuthenticatedManageUsersRoute
   '/manage/': typeof AuthenticatedManageIndexRoute
@@ -104,10 +126,13 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/choisir-role': typeof ChoisirRoleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/actions': typeof AuthenticatedActionsRoute
+  '/vue': typeof AuthenticatedVueRoute
   '/': typeof AuthenticatedIndexRoute
   '/manage/blockers': typeof AuthenticatedManageBlockersRoute
   '/manage/metrics': typeof AuthenticatedManageMetricsRoute
   '/manage/news': typeof AuthenticatedManageNewsRoute
+  '/manage/reminders': typeof AuthenticatedManageRemindersRoute
   '/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
   '/manage/users': typeof AuthenticatedManageUsersRoute
   '/manage': typeof AuthenticatedManageIndexRoute
@@ -118,11 +143,14 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/choisir-role': typeof ChoisirRoleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/actions': typeof AuthenticatedActionsRoute
   '/_authenticated/manage': typeof AuthenticatedManageRouteWithChildren
+  '/_authenticated/vue': typeof AuthenticatedVueRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/manage/blockers': typeof AuthenticatedManageBlockersRoute
   '/_authenticated/manage/metrics': typeof AuthenticatedManageMetricsRoute
   '/_authenticated/manage/news': typeof AuthenticatedManageNewsRoute
+  '/_authenticated/manage/reminders': typeof AuthenticatedManageRemindersRoute
   '/_authenticated/manage/submissions': typeof AuthenticatedManageSubmissionsRoute
   '/_authenticated/manage/users': typeof AuthenticatedManageUsersRoute
   '/_authenticated/manage/': typeof AuthenticatedManageIndexRoute
@@ -134,10 +162,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/choisir-role'
     | '/sitemap.xml'
+    | '/actions'
     | '/manage'
+    | '/vue'
     | '/manage/blockers'
     | '/manage/metrics'
     | '/manage/news'
+    | '/manage/reminders'
     | '/manage/submissions'
     | '/manage/users'
     | '/manage/'
@@ -146,10 +177,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/choisir-role'
     | '/sitemap.xml'
+    | '/actions'
+    | '/vue'
     | '/'
     | '/manage/blockers'
     | '/manage/metrics'
     | '/manage/news'
+    | '/manage/reminders'
     | '/manage/submissions'
     | '/manage/users'
     | '/manage'
@@ -159,11 +193,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/choisir-role'
     | '/sitemap.xml'
+    | '/_authenticated/actions'
     | '/_authenticated/manage'
+    | '/_authenticated/vue'
     | '/_authenticated/'
     | '/_authenticated/manage/blockers'
     | '/_authenticated/manage/metrics'
     | '/_authenticated/manage/news'
+    | '/_authenticated/manage/reminders'
     | '/_authenticated/manage/submissions'
     | '/_authenticated/manage/users'
     | '/_authenticated/manage/'
@@ -213,11 +250,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/actions': {
+      id: '/_authenticated/actions'
+      path: '/actions'
+      fullPath: '/actions'
+      preLoaderRoute: typeof AuthenticatedActionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manage': {
       id: '/_authenticated/manage'
       path: '/manage'
       fullPath: '/manage'
       preLoaderRoute: typeof AuthenticatedManageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/vue': {
+      id: '/_authenticated/vue'
+      path: '/vue'
+      fullPath: '/vue'
+      preLoaderRoute: typeof AuthenticatedVueRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/manage/': {
@@ -248,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManageNewsRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
+    '/_authenticated/manage/reminders': {
+      id: '/_authenticated/manage/reminders'
+      path: '/reminders'
+      fullPath: '/manage/reminders'
+      preLoaderRoute: typeof AuthenticatedManageRemindersRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
     '/_authenticated/manage/submissions': {
       id: '/_authenticated/manage/submissions'
       path: '/submissions'
@@ -269,6 +327,7 @@ interface AuthenticatedManageRouteChildren {
   AuthenticatedManageBlockersRoute: typeof AuthenticatedManageBlockersRoute
   AuthenticatedManageMetricsRoute: typeof AuthenticatedManageMetricsRoute
   AuthenticatedManageNewsRoute: typeof AuthenticatedManageNewsRoute
+  AuthenticatedManageRemindersRoute: typeof AuthenticatedManageRemindersRoute
   AuthenticatedManageSubmissionsRoute: typeof AuthenticatedManageSubmissionsRoute
   AuthenticatedManageUsersRoute: typeof AuthenticatedManageUsersRoute
   AuthenticatedManageIndexRoute: typeof AuthenticatedManageIndexRoute
@@ -278,6 +337,7 @@ const AuthenticatedManageRouteChildren: AuthenticatedManageRouteChildren = {
   AuthenticatedManageBlockersRoute: AuthenticatedManageBlockersRoute,
   AuthenticatedManageMetricsRoute: AuthenticatedManageMetricsRoute,
   AuthenticatedManageNewsRoute: AuthenticatedManageNewsRoute,
+  AuthenticatedManageRemindersRoute: AuthenticatedManageRemindersRoute,
   AuthenticatedManageSubmissionsRoute: AuthenticatedManageSubmissionsRoute,
   AuthenticatedManageUsersRoute: AuthenticatedManageUsersRoute,
   AuthenticatedManageIndexRoute: AuthenticatedManageIndexRoute,
@@ -287,12 +347,16 @@ const AuthenticatedManageRouteWithChildren =
   AuthenticatedManageRoute._addFileChildren(AuthenticatedManageRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedActionsRoute: typeof AuthenticatedActionsRoute
   AuthenticatedManageRoute: typeof AuthenticatedManageRouteWithChildren
+  AuthenticatedVueRoute: typeof AuthenticatedVueRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedActionsRoute: AuthenticatedActionsRoute,
   AuthenticatedManageRoute: AuthenticatedManageRouteWithChildren,
+  AuthenticatedVueRoute: AuthenticatedVueRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 

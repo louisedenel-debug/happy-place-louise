@@ -55,18 +55,18 @@ function EntreePage() {
     <div className="min-h-dvh w-full bg-background flex flex-col">
       <BrandHeader />
       <main className="flex flex-1 items-center justify-center px-md py-lg">
-        <section className="w-[min(100%,28rem)] border border-outline-variant bg-surface-container-lowest p-lg shadow-sm">
+        <section className="w-[min(100%,28rem)] border border-outline-variant bg-surface-container-lowest p-lg shadow-sm rounded-xl">
           <h1 className="font-headline-lg text-headline-lg text-primary">Happy Place</h1>
           {error ? (
             <>
-              <p className="mt-md border border-error bg-error-container p-sm font-body-sm text-on-error-container" role="alert">
+              <p className="mt-md border border-error bg-error-container p-sm font-body-sm text-on-error-container rounded-lg" role="alert">
                 {error}
               </p>
               <Button
                 onClick={() => setAttempt((n) => n + 1)}
-                className="mt-md h-12 w-full rounded-none font-label-md text-xs uppercase text-on-primary"
+                className="mt-md min-h-12 w-full rounded-lg text-base font-semibold text-on-primary"
               >
-                RÉESSAYER
+                Réessayer
               </Button>
             </>
           ) : (

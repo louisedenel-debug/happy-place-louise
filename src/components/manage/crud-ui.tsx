@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import type { FieldErrors } from "@/lib/manage-schemas";
+import { btnDanger, btnPrimary, btnSecondary } from "@/lib/button-styles";
 
 export function ManageIcon({ name, className = "" }: { name: string; className?: string }) {
   return (
@@ -10,7 +11,7 @@ export function ManageIcon({ name, className = "" }: { name: string; className?:
 }
 
 const inputBase =
-  "w-full bg-card border border-outline-variant focus:border-primary focus:outline-none p-sm font-body-md text-on-surface";
+  "w-full rounded-lg bg-card border border-outline-variant focus:border-primary focus:outline-none p-sm font-body-md text-on-surface";
 
 export function Field({
   label,
@@ -63,7 +64,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="w-full max-w-2xl bg-surface-container-lowest border border-outline p-md space-y-md"
+        className="w-full max-w-2xl bg-surface-container-lowest border border-outline p-md space-y-md rounded-xl"
       >
         <div className="flex items-center justify-between border-b border-outline-variant pb-sm">
           <h2 className="font-headline-sm text-headline-sm text-primary">{title}</h2>
@@ -85,7 +86,7 @@ export function Modal({
 export function FormActions({
   pending,
   onCancel,
-  submitLabel = "ENREGISTRER",
+  submitLabel = "Enregistrer",
 }: {
   pending?: boolean;
   onCancel: () => void;
@@ -96,14 +97,14 @@ export function FormActions({
       <button
         type="button"
         onClick={onCancel}
-        className="px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container"
+        className={btnSecondary}
       >
-        ANNULER
+        Annuler
       </button>
       <button
         type="submit"
         disabled={pending}
-        className="px-lg py-xs bg-primary text-on-primary font-label-md text-label-md disabled:opacity-50"
+        className={btnPrimary}
       >
         {pending ? "…" : submitLabel}
       </button>
@@ -115,7 +116,7 @@ export function ErrorSummary({ errors }: { errors: FieldErrors }) {
   const count = Object.keys(errors).length;
   if (!count) return null;
   return (
-    <div role="alert" className="text-body-sm text-error border border-error/40 bg-error-container/30 p-sm wrap-anywhere">
+    <div role="alert" className="text-body-sm text-error border border-error/40 bg-error-container/30 p-sm wrap-anywhere rounded-lg">
       <p>{count} champ{count > 1 ? "s" : ""} à corriger avant l'enregistrement.</p>
       <ul className="mt-xs list-disc pl-md">
         {Object.entries(errors).map(([k, m]) => (
@@ -136,21 +137,21 @@ export function RowActions({
   deleting?: boolean;
 }) {
   return (
-    <div className="flex gap-xs shrink-0">
+    <div className="flex shrink-0 gap-2">
       <button
         type="button"
         onClick={onEdit}
-        className="px-sm py-1 border border-outline text-primary font-label-sm text-label-sm hover:bg-surface-container"
+        className="inline-flex min-h-12 items-center rounded-lg border border-primary px-5 text-base font-semibold text-primary hover:bg-surface-container"
       >
-        MODIFIER
+        Modifier
       </button>
       <button
         type="button"
         onClick={onDelete}
         disabled={deleting}
-        className="px-sm py-1 border border-error text-error font-label-sm text-label-sm hover:bg-error-container disabled:opacity-50"
+        className="inline-flex min-h-12 items-center rounded-lg border border-sev-crit px-5 text-base font-semibold text-sev-crit hover:bg-sev-crit-tint disabled:opacity-50"
       >
-        SUPPRIMER
+        Supprimer
       </button>
     </div>
   );
@@ -177,19 +178,62 @@ export function ConfirmDelete({
         <button
           type="button"
           onClick={onCancel}
-          className="px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container"
+          className={btnSecondary}
         >
-          ANNULER
+          Annuler
         </button>
         <button
           type="button"
           onClick={onConfirm}
           disabled={pending}
-          className="px-lg py-xs bg-error text-on-error font-label-md text-label-md disabled:opacity-50"
+          className={btnDanger}
         >
-          {pending ? "SUPPRESSION…" : "SUPPRIMER"}
+          {pending ? "Suppression…" : "Supprimer"}
         </button>
       </div>
     </Modal>
   );
+}
+
+/**
+ * Confirmation dans l'app, à la place de la boîte du navigateur (qui peut ne pas s'afficher du tout).
+ * Usage : const [ask, confirmDialog] = useConfirm(); … if (await ask({ title, message })) …; puis {confirmDialog} dans le rendu.
+ */
+export function useConfirm() {
+  const [state, setState] = useState<{
+    title: string;
+    message: ReactNode;
+    confirmLabel: string;
+    danger: boolean;
+    resolve: (ok: boolean) => void;
+  } | null>(null);
+
+  const ask = useCallback(
+    (o: { title: string; message: ReactNode; confirmLabel?: string; danger?: boolean }) =>
+      new Promise<boolean>((resolve) =>
+        setState({ title: o.title, message: o.message, confirmLabel: o.confirmLabel ?? "Confirmer", danger: !!o.danger, resolve }),
+      ),
+    [],
+  );
+
+  const close = (ok: boolean) => {
+    state?.resolve(ok);
+    setState(null);
+  };
+
+  const dialog = state ? (
+    <Modal title={state.title} onClose={() => close(false)}>
+      <p className="font-body-md text-on-surface wrap-anywhere">{state.message}</p>
+      <div className="flex justify-end gap-2 pt-sm">
+        <button type="button" onClick={() => close(false)} className={btnSecondary}>
+          Annuler
+        </button>
+        <button type="button" onClick={() => close(true)} className={state.danger ? btnDanger : btnPrimary}>
+          {state.confirmLabel}
+        </button>
+      </div>
+    </Modal>
+  ) : null;
+
+  return [ask, dialog] as const;
 }

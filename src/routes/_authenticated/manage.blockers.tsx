@@ -104,8 +104,8 @@ function ManageBlockers() {
 
   return (
     <section className="space-y-md">
-      <div className="flex items-center justify-between">
-        <h2 className="font-headline-sm text-headline-sm text-primary">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-bold leading-snug text-primary">
           Points bloquants ({list.data?.length ?? 0})
         </h2>
         <button
@@ -114,9 +114,9 @@ function ManageBlockers() {
             setErrors({});
             setForm({ ...empty });
           }}
-          className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md"
+          className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-primary px-5 text-base font-semibold text-on-primary hover:opacity-90"
         >
-          + NOUVEAU POINT BLOQUANT
+          <span aria-hidden="true" className="material-symbols-outlined">add</span>Nouveau point bloquant
         </button>
       </div>
 
@@ -125,17 +125,32 @@ function ManageBlockers() {
         <p className="text-body-sm text-error">Impossible de charger les points bloquants.</p>
       )}
 
-      <div className="space-y-xs">
+      <div className="flex flex-col gap-4">
         {list.data?.map((b) => (
           <article
             key={b.id}
-            className="flex items-start justify-between gap-sm p-sm bg-card border border-outline-variant"
+            className={`flex flex-wrap items-start justify-between gap-x-4 gap-y-3 rounded-[12px] border border-l-[6px] border-outline-variant bg-[#FAFAF7] p-5 ${
+              b.severity === "critical" ? "border-l-sev-crit" : "border-l-sev-alert"
+            }`}
           >
-            <div>
-              <p className="font-body-md text-primary font-bold">{b.title}</p>
-              <p className="text-body-sm text-on-surface-variant">{b.description}</p>
-              <p className="text-[11px] font-label-sm text-on-surface-variant uppercase mt-xs">
-                 {b.department} • {severityLabels[b.severity] ?? b.severity} • {b.status} • {timeAgo(b.updated_at)}
+            <div className="flex min-w-0 flex-1 basis-80 flex-col gap-1.5">
+              <p className="font-semibold wrap-anywhere">{b.title}</p>
+              <p className="wrap-anywhere">{b.description}</p>
+              <p className="flex flex-wrap items-center gap-2 text-sm text-on-surface-variant">
+                <span>{b.department}</span>
+                <span
+                  className={`rounded-lg border px-2.5 py-1 font-semibold ${
+                    b.severity === "critical"
+                      ? "border-sev-crit bg-sev-crit-tint text-sev-crit"
+                      : "border-sev-alert bg-sev-alert-tint text-sev-alert"
+                  }`}
+                >
+                  {b.severity === "critical" ? "Critique" : "Alerte"}
+                </span>
+                <span className="rounded-lg border border-outline px-2.5 py-1 font-semibold text-on-surface">
+                  {b.status.charAt(0) + b.status.slice(1).toLowerCase()}
+                </span>
+                <span>Mis à jour {timeAgo(b.updated_at)}</span>
               </p>
             </div>
             <RowActions

@@ -2,7 +2,8 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Linkify } from "@/components/linkify";
 import { AttachmentLink } from "@/components/attachment-link";
 import { formatExactDate } from "@/components/expandable-card";
-import type { Submission } from "@/lib/dashboard";
+import { ideaTitle, type Submission } from "@/lib/dashboard";
+import { btnPrimary, btnSecondary } from "@/lib/button-styles";
 
 /** Grande fenêtre de lecture d'une soumission (focus piégé, Échap, clic fond). */
 export function SubmissionReader({
@@ -26,15 +27,15 @@ export function SubmissionReader({
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
         {s && (
           <DialogPrimitive.Content
-            className="fixed z-50 inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[min(48rem,calc(100vw-2rem))] h-dvh md:h-auto md:max-h-[85vh] flex flex-col bg-surface-container-lowest border border-outline shadow-lg focus:outline-none"
+            className="fixed z-50 inset-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[min(48rem,calc(100vw-2rem))] h-dvh md:h-auto md:max-h-[85vh] flex flex-col bg-surface-container-lowest border border-outline shadow-lg focus:outline-none md:rounded-xl md:overflow-hidden"
           >
             <div className="flex items-start justify-between gap-sm border-b border-outline-variant p-md">
               <div className="min-w-0">
                 <DialogPrimitive.Title className="font-headline-sm text-headline-sm text-primary wrap-anywhere">
-                  {s.author_name}
+                  {ideaTitle(s)}
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Description className="font-label-sm text-label-sm text-on-surface-variant">
-                  {s.team} • {(statusLabel ?? s.status).toUpperCase()} • Soumise le {formatExactDate(s.created_at)}
+                  {s.author_name} • {s.team} • {(statusLabel ?? s.status).toUpperCase()} • Soumise le {formatExactDate(s.created_at)}
                 </DialogPrimitive.Description>
               </div>
               <DialogPrimitive.Close
@@ -62,9 +63,9 @@ export function SubmissionReader({
                   <button
                     type="button"
                     onClick={onReject}
-                    className="flex-1 py-sm border border-outline text-primary font-label-sm text-label-sm hover:bg-surface-container transition-colors"
+                    className="flex-1 py-sm border border-outline text-primary font-label-sm text-label-sm hover:bg-surface-container transition-colors rounded-lg"
                   >
-                    REFUSER
+                    Refuser
                   </button>
                 )}
                 {onApprove && (
@@ -72,9 +73,9 @@ export function SubmissionReader({
                     type="button"
                     disabled={approving}
                     onClick={onApprove}
-                    className="flex-1 py-sm bg-primary text-on-primary font-label-sm text-label-sm hover:opacity-90 transition-colors disabled:opacity-60"
+                    className={`${btnPrimary} flex-1`}
                   >
-                    VALIDER
+                    Valider
                   </button>
                 )}
               </div>

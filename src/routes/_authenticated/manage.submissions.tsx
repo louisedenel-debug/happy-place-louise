@@ -29,6 +29,7 @@ import {
   type Submission,
   type SubmissionInput,
 } from "@/lib/dashboard";
+import { btnPrimary } from "@/lib/button-styles";
 
 export const Route = createFileRoute("/_authenticated/manage/submissions")({
   head: () => ({
@@ -119,7 +120,7 @@ function ManageSubmissions() {
             setErrors({});
             setForm({ ...empty });
           }}
-          className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md"
+          className={btnPrimary}
         >
           + NOUVELLE SOUMISSION
         </button>
@@ -134,7 +135,7 @@ function ManageSubmissions() {
         {list.data?.map((s) => (
           <article
             key={s.id}
-            className="flex min-w-0 overflow-hidden items-start justify-between gap-sm p-sm bg-card border border-outline-variant"
+            className="flex min-w-0 overflow-hidden items-start justify-between gap-sm p-sm bg-card border border-outline-variant rounded-lg"
           >
             <div className="min-w-0 flex-1">
               <p className="font-body-md text-primary font-bold wrap-anywhere">

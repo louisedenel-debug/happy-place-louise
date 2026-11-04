@@ -2280,5 +2280,291 @@ REVOKE ALL ON FUNCTION public.choisir_mon_role(public.app_role, text, text, text
 GRANT EXECUTE ON FUNCTION public.choisir_mon_role(public.app_role, text, text, text) TO authenticated;
 COMMIT;
 
+-- Tranche 2 : parcours des idées (titre, validation automatique des managers, pièces jointes image)
+BEGIN;
+ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS title text;
+ALTER TABLE public.submissions DROP CONSTRAINT IF EXISTS submissions_title_length_check;
+ALTER TABLE public.submissions
+  ADD CONSTRAINT submissions_title_length_check CHECK (title IS NULL OR char_length(btrim(title)) BETWEEN 1 AND 120);
+
+CREATE OR REPLACE FUNCTION private.set_submission_owner()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public', 'private'
+AS $function$
+DECLARE
+  _email text := lower(auth.jwt() ->> 'email');
+  _role public.app_role;
+  _team text;
+  _uid uuid;
+  _chosen text;
+BEGIN
+  NEW.submitted_by_email := _email;
+  SELECT r.role, u.team, u.id INTO _role, _team, _uid
+  FROM public.allowed_users u
+  LEFT JOIN public.allowed_user_roles r ON r.allowed_user_id = u.id
+  WHERE u.email = _email;
+  IF _role IN ('collaborateur', 'manager') AND (NEW.title IS NULL OR btrim(NEW.title) = '') THEN
+    RAISE EXCEPTION 'Le titre de l''idée est obligatoire.';
+  END IF;
+  IF _role = 'collaborateur' THEN
+    IF _team IS NULL OR btrim(_team) = '' THEN
+      RAISE EXCEPTION 'Aucune équipe n''est associée à ton compte. Contacte un administrateur.';
+    END IF;
+    NEW.team := _team;
+  ELSIF _role = 'manager' THEN
+    SELECT mt.team INTO _chosen FROM public.manager_teams mt
+     WHERE mt.allowed_user_id = _uid AND lower(btrim(mt.team)) = lower(btrim(coalesce(NEW.team, '')))
+     LIMIT 1;
+    IF _chosen IS NULL THEN
+      RAISE EXCEPTION 'Choisis une de tes équipes pour cette demande.';
+    END IF;
+    NEW.team := _chosen;
+    -- Validation automatique (ce trigger passe après set_revalidate_at : on pose l'échéance ici).
+    NEW.status := 'validée';
+    NEW.rejection_category := NULL;
+    NEW.rejection_note := NULL;
+    NEW.revalidate_at := now() + interval '1 year';
+  ELSIF _role = 'admin' THEN
+    NEW.team := 'Admin';
+  END IF;
+  RETURN NEW;
+END $function$;
+
+CREATE OR REPLACE FUNCTION private.enforce_submission_review()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public', 'private'
+AS $function$
+BEGIN
+  IF private.current_app_role() = 'manager'::public.app_role THEN
+    IF NEW.author_name IS DISTINCT FROM OLD.author_name
+       OR NEW.team IS DISTINCT FROM OLD.team
+       OR NEW.content IS DISTINCT FROM OLD.content
+       OR NEW.title IS DISTINCT FROM OLD.title
+       OR NEW.created_at IS DISTINCT FROM OLD.created_at
+       OR NEW.status NOT IN ('validée'::public.submission_status, 'refusée'::public.submission_status)
+       OR OLD.status <> 'en attente'::public.submission_status
+       OR NOT private.can_review_team(OLD.team) THEN
+      RAISE EXCEPTION 'Un manager peut uniquement valider ou refuser une soumission en attente de ses équipes';
+    END IF;
+  END IF;
+  RETURN NEW;
+END
+$function$;
+
+-- Le trigger fixe le statut d'un manager à « validée » : la politique d'insertion doit l'accepter.
+DROP POLICY IF EXISTS "Allowed create pending submissions" ON public.submissions;
+CREATE POLICY "Allowed create pending submissions"
+ON public.submissions FOR INSERT TO authenticated
+WITH CHECK (
+  private.is_allowed()
+  AND (
+    status = 'en attente'::public.submission_status
+    OR (status = 'validée'::public.submission_status AND private.current_app_role() = 'manager'::public.app_role)
+  )
+);
+
+UPDATE storage.buckets
+SET allowed_mime_types = ARRAY['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+WHERE id = 'submission-attachments';
+
+DROP POLICY IF EXISTS "Allowed users upload own submission PDF" ON storage.objects;
+CREATE POLICY "Allowed users upload own submission PDF"
+ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (
+  bucket_id = 'submission-attachments'
+  AND private.is_allowed()
+  AND (storage.foldername(name))[1] = auth.uid()::text
+  AND lower(storage.extension(name)) IN ('pdf', 'jpg', 'jpeg', 'png', 'webp')
+);
+
+COMMIT;
+
+BEGIN;
+-- Smoke tests : les idées ont maintenant un titre, et celles d'un manager sont validées d'office.
+CREATE OR REPLACE FUNCTION private.run_smoke_tests()
+ RETURNS TABLE(test text, ok boolean, detail text)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'private'
+AS $function$
+DECLARE
+  _res jsonb := '[]'::jsonb;
+  _collab uuid; _mgr uuid; _adm uuid;
+  _s1 uuid; _s2 uuid; _s3 uuid; _b uuid; _n uuid;
+  _st text; _cnt int; _err text;
+  _team text := 'ZZ Test fumée';
+BEGIN
+  BEGIN
+    INSERT INTO teams(name) VALUES (_team) ON CONFLICT DO NOTHING;
+    INSERT INTO allowed_users(email, team) VALUES ('smoke.collab@test.invalid', _team) RETURNING id INTO _collab;
+    INSERT INTO allowed_user_roles(allowed_user_id, role) VALUES (_collab, 'collaborateur');
+    INSERT INTO allowed_users(email) VALUES ('smoke.manager@test.invalid') RETURNING id INTO _mgr;
+    INSERT INTO allowed_user_roles(allowed_user_id, role) VALUES (_mgr, 'manager');
+    INSERT INTO manager_teams(allowed_user_id, team) VALUES (_mgr, _team);
+    INSERT INTO allowed_users(email) VALUES ('smoke.admin@test.invalid') RETURNING id INTO _adm;
+    INSERT INTO allowed_user_roles(allowed_user_id, role) VALUES (_adm, 'admin');
+
+    -- Collaborateur : soumission
+    PERFORM set_config('request.jwt.claims', '{"email":"smoke.collab@test.invalid"}', true);
+    INSERT INTO submissions(title, author_name, team, content) VALUES ('Idée 1', 'Smoke', 'x', 'Demande de test 1') RETURNING id, status::text INTO _s1, _st;
+    _res := _res || jsonb_build_object('t', 'Soumission créée « en attente », dans l''équipe du collaborateur',
+      'ok', _st = 'en attente' AND (SELECT team FROM submissions WHERE id = _s1) = _team, 'd', _st);
+    INSERT INTO submissions(title, author_name, team, content) VALUES ('Idée 2', 'Smoke', 'x', 'Demande de test 2') RETURNING id INTO _s2;
+    BEGIN
+      INSERT INTO submissions(author_name, team, content) VALUES ('Smoke', 'x', 'Demande sans titre');
+      _res := _res || jsonb_build_object('t', 'Une idée sans titre est refusée', 'ok', false, 'd', 'accepté à tort');
+    EXCEPTION WHEN OTHERS THEN
+      _res := _res || jsonb_build_object('t', 'Une idée sans titre est refusée', 'ok', true, 'd', 'refusé par la base');
+    END;
+
+    -- Manager : validation et refus
+    PERFORM set_config('request.jwt.claims', '{"email":"smoke.manager@test.invalid"}', true);
+    BEGIN
+      UPDATE submissions SET status = 'validée' WHERE id = _s1;
+      _res := _res || jsonb_build_object('t', 'Le manager valide une demande en attente', 'ok', true, 'd', 'validée');
+    EXCEPTION WHEN OTHERS THEN
+      _res := _res || jsonb_build_object('t', 'Le manager valide une demande en attente', 'ok', false, 'd', SQLERRM);
+    END;
+    BEGIN
+      UPDATE submissions SET status = 'refusée', rejection_category = 'doublon', rejection_note = 'Test' WHERE id = _s2;
+      _res := _res || jsonb_build_object('t', 'Le manager refuse une demande avec un motif', 'ok', true, 'd', 'refusée');
+    EXCEPTION WHEN OTHERS THEN
+      _res := _res || jsonb_build_object('t', 'Le manager refuse une demande avec un motif', 'ok', false, 'd', SQLERRM);
+    END;
+    BEGIN
+      UPDATE submissions SET status = 'refusée' WHERE id = _s1;
+      _res := _res || jsonb_build_object('t', 'Le manager ne peut pas revenir sur une demande validée', 'ok', false, 'd', 'accepté à tort');
+    EXCEPTION WHEN OTHERS THEN
+      _res := _res || jsonb_build_object('t', 'Le manager ne peut pas revenir sur une demande validée', 'ok', true, 'd', 'refusé par la base');
+    END;
+    SELECT count(*) INTO _cnt FROM submission_status_history WHERE submission_id IN (_s1, _s2);
+    _res := _res || jsonb_build_object('t', 'Historique : 4 lignes (2 créations, 1 validation, 1 refus)', 'ok', _cnt = 4, 'd', _cnt || ' ligne(s)');
+
+    -- Idée soumise par un manager : validée automatiquement
+    BEGIN
+      INSERT INTO submissions(title, author_name, team, content, status)
+      VALUES ('Idée du manager', 'Smoke', _team, 'Idée de test du manager', 'en attente') RETURNING id, status::text INTO _s3, _st;
+      _res := _res || jsonb_build_object('t', 'Idée d''un manager : validée automatiquement, échéance posée', 'ok',
+        _st = 'validée' AND (SELECT revalidate_at IS NOT NULL FROM submissions WHERE id = _s3), 'd', _st);
+    EXCEPTION WHEN OTHERS THEN
+      _res := _res || jsonb_build_object('t', 'Idée d''un manager : validée automatiquement, échéance posée', 'ok', false, 'd', SQLERRM);
+    END;
+
+    -- Revalidation annuelle
+    PERFORM set_config('request.jwt.claims', '', true);
+    UPDATE submissions SET revalidate_at = now() - interval '1 day' WHERE id = _s1;
+    PERFORM private.expire_revalidations();
+    SELECT status::text INTO _st FROM submissions WHERE id = _s1;
+    _res := _res || jsonb_build_object('t', 'Revalidation annuelle : une demande validée échue repasse « en attente »', 'ok', _st = 'en attente', 'd', _st);
+
+    -- Points bloquants
+    PERFORM set_config('request.jwt.claims', '{"email":"smoke.admin@test.invalid"}', true);
+    INSERT INTO blockers(title, department) VALUES ('Blocage de test', 'Test') RETURNING id, status::text INTO _b, _st;
+    _res := _res || jsonb_build_object('t', 'Point bloquant créé au statut OUVERT', 'ok', _st = 'OUVERT', 'd', _st);
+    BEGIN
+      UPDATE blockers SET status = 'RÉSOLU' WHERE id = _b;
+      _res := _res || jsonb_build_object('t', 'OUVERT → RÉSOLU refusé', 'ok', false, 'd', 'accepté à tort');
+    EXCEPTION WHEN OTHERS THEN
+      _res := _res || jsonb_build_object('t', 'OUVERT → RÉSOLU refusé', 'ok', true, 'd', 'refusé par la base');
+    END;
+    BEGIN
+      UPDATE blockers SET status = 'EN COURS' WHERE id = _b;
+      UPDATE blockers SET status = 'SURVEILLANCE' WHERE id = _b;
+      UPDATE blockers SET status = 'RÉSOLU' WHERE id = _b;
+      _res := _res || jsonb_build_object('t', 'OUVERT → EN COURS → SURVEILLANCE → RÉSOLU accepté', 'ok', true, 'd', 'RÉSOLU');
+    EXCEPTION WHEN OTHERS THEN
+      _res := _res || jsonb_build_object('t', 'OUVERT → EN COURS → SURVEILLANCE → RÉSOLU accepté', 'ok', false, 'd', SQLERRM);
+    END;
+
+    -- Actualités
+    PERFORM set_config('request.jwt.claims', '{"email":"smoke.manager@test.invalid"}', true);
+    INSERT INTO news(title, body, author, status) VALUES ('Actu de test', 'Corps', 'Smoke', 'brouillon') RETURNING id INTO _n;
+    UPDATE news SET status = 'publiée' WHERE id = _n;
+    _res := _res || jsonb_build_object('t', 'Actualité : brouillon puis publiée, échéance de revalidation posée', 'ok',
+      (SELECT revalidate_at IS NOT NULL FROM news WHERE id = _n), 'd', (SELECT status::text FROM news WHERE id = _n));
+
+    -- Référentiel des équipes
+    PERFORM set_config('request.jwt.claims', '', true);
+    BEGIN
+      UPDATE teams SET name = 'ZZ Test fumée 2' WHERE name = _team;
+      _res := _res || jsonb_build_object('t', 'Référentiel : renommer une équipe met à jour utilisateurs, managers et demandes', 'ok',
+        (SELECT team FROM allowed_users WHERE id = _collab) = 'ZZ Test fumée 2'
+        AND (SELECT team FROM manager_teams WHERE allowed_user_id = _mgr) = 'ZZ Test fumée 2'
+        AND (SELECT team FROM submissions WHERE id = _s1) = 'ZZ Test fumée 2', 'd', 'ZZ Test fumée 2');
+      _team := 'ZZ Test fumée 2';
+    EXCEPTION WHEN OTHERS THEN
+      _res := _res || jsonb_build_object('t', 'Référentiel : renommer une équipe met à jour utilisateurs, managers et demandes', 'ok', false, 'd', SQLERRM);
+    END;
+    BEGIN
+      DELETE FROM teams WHERE name = _team;
+      _res := _res || jsonb_build_object('t', 'Référentiel : supprimer une équipe encore utilisée est refusé', 'ok', false, 'd', 'accepté à tort');
+    EXCEPTION
+      WHEN foreign_key_violation THEN
+        _res := _res || jsonb_build_object('t', 'Référentiel : supprimer une équipe encore utilisée est refusé', 'ok', true, 'd', 'refusé par la base');
+      WHEN OTHERS THEN
+        _res := _res || jsonb_build_object('t', 'Référentiel : supprimer une équipe encore utilisée est refusé', 'ok', false, 'd', SQLERRM);
+    END;
+
+    RAISE EXCEPTION 'HP_SMOKE_ROLLBACK';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM <> 'HP_SMOKE_ROLLBACK' THEN
+      _res := _res || jsonb_build_object('t', 'Exécution du test de fumée', 'ok', false, 'd', 'Erreur inattendue : ' || SQLERRM);
+    END IF;
+  END;
+
+  SELECT count(*) INTO _cnt FROM private.audit_enum_literals();
+  _res := _res || jsonb_build_object('t', 'Aucune valeur d''ENUM obsolète dans les fonctions', 'ok', _cnt = 0, 'd', _cnt || ' anomalie(s)');
+
+  RETURN QUERY SELECT x->>'t', (x->>'ok')::boolean, x->>'d' FROM jsonb_array_elements(_res) x;
+END;
+$function$;
+
+COMMIT;
+
 -- Vérification finale : toutes les lignes doivent indiquer ok = true
 SELECT * FROM private.run_smoke_tests();
+
+-- Actualité publiée d'office quand un point bloquant passe RÉSOLU
+-- Une seule actualité par point bloquant : le lien est conservé dans news.blocker_id.
+ALTER TABLE public.news
+  ADD COLUMN IF NOT EXISTS blocker_id uuid REFERENCES public.blockers(id) ON DELETE SET NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS news_blocker_id_key ON public.news (blocker_id) WHERE blocker_id IS NOT NULL;
+
+CREATE OR REPLACE FUNCTION private.publish_news_on_blocker_resolved()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'private'
+AS $function$
+DECLARE
+  _team text := CASE WHEN upper(btrim(NEW.department)) IN ('', 'GENERAL', 'GÉNÉRAL')
+                     THEN 'L''équipe concernée'
+                     ELSE 'L''équipe ' || btrim(NEW.department) END;
+BEGIN
+  IF NEW.status = 'RÉSOLU'::public.blocker_status AND OLD.status <> 'RÉSOLU'::public.blocker_status THEN
+    INSERT INTO public.news (title, body, author, status, blocker_id)
+    VALUES (
+      'Point bloquant résolu : ' || NEW.title,
+      'Le point bloquant « ' || NEW.title || ' » est résolu.'
+        || CASE WHEN coalesce(btrim(NEW.description), '') <> '' THEN E'\n\n' || btrim(NEW.description) ELSE '' END,
+      _team,
+      'publiée'::public.news_status,
+      NEW.id
+    )
+    ON CONFLICT (blocker_id) WHERE blocker_id IS NOT NULL DO NOTHING;
+  END IF;
+  RETURN NEW;
+END
+$function$;
+
+REVOKE ALL ON FUNCTION private.publish_news_on_blocker_resolved() FROM public, anon, authenticated;
+
+DROP TRIGGER IF EXISTS publish_news_on_blocker_resolved ON public.blockers;
+CREATE TRIGGER publish_news_on_blocker_resolved
+  AFTER UPDATE OF status ON public.blockers
+  FOR EACH ROW EXECUTE FUNCTION private.publish_news_on_blocker_resolved();

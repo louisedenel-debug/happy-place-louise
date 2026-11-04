@@ -1,0 +1,1907 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Happy Place : dashboard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@500&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.hp{font-family:Inter,system-ui,sans-serif;font-size:var(--fs-body);line-height:1.5;color:var(--ink);background:var(--bg);min-height:100%}
+.hp *{box-sizing:border-box}
+.hp h1,.hp h2,.hp h3,.hp p{margin:0}
+.hp button{font:inherit;cursor:pointer}
+.hp button:focus-visible,.hp a:focus-visible,.hp input:focus-visible,.hp textarea:focus-visible,.hp select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.ttl{font-family:'Bodoni Moda',Georgia,serif;font-weight:500;letter-spacing:-0.01em}
+.meta{font-size:var(--fs-meta);color:var(--meta);text-transform:var(--tt);letter-spacing:var(--ls);line-height:1.4}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--btn-h);padding:0 var(--btn-px);border:1px solid var(--ink);border-radius:var(--r-btn);background:transparent;font-size:var(--fs-btn);font-weight:600;text-transform:var(--tt);letter-spacing:var(--ls);text-decoration:none;color:var(--ink)}
+.btn-p{background:var(--ink);color:#fff}
+.btn-s:hover{background:var(--hover)}
+.btn-link{border:0;background:none;color:var(--ink);text-decoration:underline;padding:0 4px;font-weight:600;font-size:var(--fs-btn);min-height:var(--btn-h);text-transform:var(--tt);letter-spacing:var(--ls)}
+.mod{background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden}
+.mod-h{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:var(--pad);border-bottom:1px solid var(--border)}
+.mod-t{font-size:var(--fs-title);line-height:1.15}
+.mod-b{padding:var(--pad);display:flex;flex-direction:column;gap:var(--item-gap)}
+.item{background:var(--item-bg);border:1px solid var(--item-border);border-radius:var(--r-item);padding:var(--item-pad)}
+.field{width:100%;border:1px solid var(--border-strong);border-radius:var(--r-btn);background:#fff;padding:var(--field-pad);font:inherit;color:var(--ink)}
+.lbl{display:block;font-size:var(--fs-meta);color:var(--meta);text-transform:var(--tt);letter-spacing:var(--ls);margin-bottom:6px}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tile{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;color:#fff;flex:none}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:var(--chip-pad);border-radius:var(--r-chip);font-size:var(--fs-meta);font-weight:600;text-transform:var(--tt);letter-spacing:var(--ls);border:1px solid transparent;line-height:1.3}
+.rowbtn{display:flex;width:100%;text-align:left;color:var(--ink);background:none;border:0;padding:var(--item-pad);gap:16px;align-items:flex-start}
+.step{padding:4px 10px;border:1px solid var(--border-strong);border-radius:var(--r-chip);font-size:var(--fs-meta);color:var(--meta);text-transform:var(--tt);letter-spacing:var(--ls)}
+.step.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+.fchip{min-height:44px;padding:0 16px;border:1px solid var(--border-strong);border-radius:var(--r-btn);background:#fff;font-size:var(--fs-body);font-weight:600;color:var(--ink)}
+.fchip.on{background:var(--m-demandes);border-color:var(--m-demandes);color:#fff}
+.type{display:flex;flex-direction:column;gap:8px;text-align:left;width:100%;height:100%;padding:16px;border-radius:var(--r-item);color:var(--ink)}
+.btn-aide{background:var(--m-actus);border-color:var(--m-actus);color:#fff;transition:background .15s}
+.btn-aide:hover{background:#8A3A8C;border-color:#8A3A8C}
+.btn-aide[aria-expanded="true"]{background:#4F1A51;border-color:#4F1A51}
+.btn-aide[aria-expanded="true"]:hover{background:#5E2060;border-color:#5E2060}
+.btn-idee{background:var(--m-demandes);border-color:var(--m-demandes);color:#fff;transition:background .15s}
+.btn-idee:hover{background:#5A4DB8;border-color:#5A4DB8}
+.btn-prof{border-color:var(--ink)}
+.disc{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:var(--r-item);padding:12px;margin:-12px;width:calc(100% + 24px);color:var(--ink);cursor:pointer}
+.disc-t{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--m-demandes);border-radius:var(--r-btn);background:#fff;color:inherit;padding:6px 14px;margin:-6px 0;cursor:pointer}
+.disc-t:hover{background:#DCD7F3;border-color:var(--m-demandes)}
+.tab{min-height:44px;padding:0 16px;border:1px solid var(--border-strong);border-radius:var(--r-btn);background:#fff;font-weight:600;color:var(--ink)}
+.tab:hover{background:var(--hover)}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.nav{min-height:44px;padding:0 16px;border:0;border-bottom:3px solid transparent;background:none;font-weight:600;color:var(--ink);display:inline-flex;gap:8px;align-items:center}
+.nav:hover{background:var(--hover)}
+.nav.on{border-bottom-color:var(--ink)}
+.mi{display:flex;width:100%;min-height:44px;padding:0 12px;border:0;background:none;text-align:left;border-radius:6px;font-weight:600;align-items:center;gap:10px;color:var(--ink)}
+.mi:hover{background:var(--hover)}
+.mi.on{background:#ECEBE6}
+.st-ok{background:#E3F3E8;color:#14582F;border-color:#14582F}
+.st-ko{background:#FBE7E5;color:#8F120C;border-color:#8F120C}
+.st-wait{background:#ECEBE6;color:#3F4141;border-color:#6B6E6E}
+.btn-ok{background:#14582F;border-color:#14582F;color:#fff}
+.btn-ok:hover{background:#1B6E3B;border-color:#1B6E3B}
+.btn-ko{background:#8F120C;border-color:#8F120C;color:#fff}
+.btn-ko:hover{background:#A8241C;border-color:#A8241C}
+.tipw{position:relative}
+.tip{display:none;position:absolute;left:0;top:calc(100% + 8px);z-index:20;width:340px;max-width:86vw;background:var(--t-actus);border:1px solid var(--m-actus);border-radius:var(--r-item);padding:16px;box-shadow:0 4px 16px rgba(0,0,0,.18)}
+.tip-r{left:auto;right:0}
+.tipw:hover>.tip,.tipw:focus-within>.tip{display:block}
+.pbtn{min-height:36px;padding:0 14px;border:1px solid #fff;border-radius:6px;background:transparent;color:#fff;font-size:14px;font-weight:600}
+.pbtn.on{background:#fff;color:#1b1c1c}
+</style>
+</helmet>
+<div class="hp" style="{{rootVars}}">
+
+  <div style="background:#1b1c1c;color:#fff;padding:12px 32px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;font-size:14px;line-height:1.4">
+    <strong style="letter-spacing:.08em;font-size:12px">PROTOTYPE · {{versionLabel}}</strong>
+    <div role="group" aria-label="Parcours à tester" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="pbtn {{rcCls}}" aria-pressed="{{rcPressed}}" onClick="{{pickRc}}">1 · Léa, Relation clients</button>
+      <button class="pbtn {{mgrCls}}" aria-pressed="{{mgrPressed}}" onClick="{{pickMgr}}">2 · Julien, Manager</button>
+      <sc-if value="{{apres}}" hint-placeholder-val="{{ true }}">
+        <button class="pbtn {{admCls}}" aria-pressed="{{admPressed}}" onClick="{{pickAdm}}">3 · Marc, Admin</button>
+      </sc-if>
+    </div>
+    <p style="margin:0;flex:1 1 360px">{{missionText}}</p>
+    <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+      <p role="status" style="margin:0;font-weight:700;color:#fff;background:#14582F;padding:6px 12px;border-radius:6px">Mission réussie en {{doneSecs}} s · {{doneClicks}} clics</p>
+    </sc-if>
+    <button class="pbtn" onClick="{{restart}}">Recommencer</button>
+  </div>
+
+  <div onClick="{{countClick}}">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 32px;border-bottom:1px solid var(--border);background:var(--card)">
+      <strong style="letter-spacing:.14em;font-size:13px">BIGGER BOAT</strong>
+      <sc-if value="{{isAdmin}}" hint-placeholder-val="{{ false }}">
+      <nav aria-label="Navigation principale" style="display:flex;gap:8px;align-items:center;margin:0 auto 0 32px">
+        <button class="nav {{navOverCls}}" aria-current="{{navOverCur}}" onClick="{{goOverview}}">Vue d'ensemble</button>
+        <button class="nav {{navDataCls}}" aria-current="{{navDataCur}}" onClick="{{tabRap}}">Gérer les données</button>
+        <button class="nav {{navAdmActCls}}" aria-current="{{navAdmActCur}}" onClick="{{tabPoints}}">Vos actions</button>
+      </nav>
+      </sc-if>
+      <sc-if value="{{isNav}}" hint-placeholder-val="{{ false }}">
+      <nav aria-label="Navigation principale" style="display:flex;gap:8px;align-items:center;margin:0 auto 0 32px">
+        <button class="nav {{navVueCls}}" aria-current="{{navVueCur}}" onClick="{{goVue}}">Vue d'ensemble</button>
+        <button class="nav {{navActCls}}" aria-current="{{navActCur}}" onClick="{{goActions}}">Vos actions</button>
+      </nav>
+      </sc-if>
+      <sc-if value="{{layoutStd}}" hint-placeholder-val="{{ false }}"><span class="meta">Happy Place</span></sc-if>
+          <sc-if value="{{isApres}}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative">
+            <button class="btn btn-s btn-prof" aria-expanded="{{profileOpen}}" aria-controls="menu-profil" onClick="{{toggleProfile}}" style="gap:10px;padding-left:8px">
+              <span style="width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex:none;overflow:hidden;color:#fff;font-weight:700;font-size:13px;background:{{avatarBg}}">
+                <sc-if value="{{hasPhoto}}" hint-placeholder-val="{{ false }}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:22px;height:22px;fill:#fff;stroke:none"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 21c.7-4.6 4.2-7 8.5-7s7.8 2.4 8.5 7z"/></svg></sc-if>
+                <sc-if value="{{noPhoto}}" hint-placeholder-val="{{ true }}"><span>{{profInitials}}</span></sc-if>
+              </span>
+              Profil
+              <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <sc-if value="{{profileOpen}}" hint-placeholder-val="{{ true }}">
+              <div id="menu-profil" style="position:absolute;right:0;top:calc(100% + 8px);z-index:40;width:340px;max-width:86vw;background:#fff;border:1px solid var(--border-strong);border-radius:var(--r-card);box-shadow:0 4px 16px rgba(0,0,0,.18);padding:20px;display:flex;flex-direction:column;gap:16px">
+                <div style="display:flex;gap:16px;align-items:center">
+                <div style="position:relative;flex:none">
+                  <span style="width:72px;height:72px;border-radius:50%;display:grid;place-items:center;flex:none;overflow:hidden;color:#fff;font-weight:700;font-size:24px;background:{{avatarBg}}">
+                <sc-if value="{{hasPhoto}}" hint-placeholder-val="{{ false }}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:50px;height:50px;fill:#fff;stroke:none"><circle cx="12" cy="8" r="4.5"/><path d="M3.5 21c.7-4.6 4.2-7 8.5-7s7.8 2.4 8.5 7z"/></svg></sc-if>
+                <sc-if value="{{noPhoto}}" hint-placeholder-val="{{ true }}"><span>{{profInitials}}</span></sc-if>
+              </span>
+                  <button aria-label="{{photoLabel}}" onClick="{{openPhoto}}" style="position:absolute;right:-6px;bottom:-6px;width:32px;height:32px;border-radius:50%;border:2px solid #fff;background:var(--m-actus);color:#fff;display:grid;place-items:center;padding:0">
+                    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                  </button>
+                </div>
+                <div style="min-width:0">
+                  <p style="font-weight:700;font-size:18px;line-height:1.3">{{profName}}</p>
+                  <p>{{profRole}}</p>
+                  <p class="meta">Équipe {{profTeam}}</p>
+                </div>
+                </div>
+                <div style="border-top:1px solid var(--border);padding-top:16px;display:flex;flex-direction:column;gap:8px">
+                  <button class="btn btn-s" style="width:100%" onClick="{{notInTest}}">
+                    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+                    Exporter mes idées
+                  </button>
+                  <button class="btn btn-s" style="width:100%" onClick="{{notInTest}}">
+                    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+                    Déconnexion
+                  </button>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+          </sc-if>
+    </div>
+
+    <div style="max-width:1280px;margin:0 auto;padding:32px 32px 96px;display:flex;flex-direction:column;gap:var(--gap)">
+
+      <sc-if value="{{showHead}}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-end;justify-content:space-between">
+        <div>
+          <sc-if value="{{showKicker}}" hint-placeholder-val="{{ true }}"><p class="meta">Vue d'ensemble</p></sc-if>
+          <h1 class="ttl" style="font-size:var(--fs-h1);line-height:1.1;margin-top:{{kickerGap}}">Happy Place</h1>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+          <sc-if value="{{layoutStd}}" hint-placeholder-val="{{ false }}"><span class="meta">{{userLine}}</span></sc-if>
+          <sc-if value="{{layoutStd}}" hint-placeholder-val="{{ false }}"><button class="btn btn-s" onClick="{{notInTest}}">Déconnexion</button></sc-if>
+          <sc-if value="{{layoutStd}}" hint-placeholder-val="{{ false }}"><button class="btn btn-s" onClick="{{notInTest}}">Exporter le rapport</button></sc-if>
+        </div>
+      </div>
+      </sc-if>
+      <sc-if value="{{showSubmit}}" hint-placeholder-val="{{ true }}">
+      <div>
+        <button class="btn btn-p" onClick="{{notInTest}}">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          Soumettre une idée
+        </button>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{layoutStd}}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:var(--gap)">
+      <div style="display:flex;flex-wrap:wrap;gap:var(--gap);align-items:flex-start">
+
+        <section class="mod" id="demandes" aria-labelledby="t-sub" style="flex:1 1 340px;min-width:0;order:var(--o-sub)">
+          <div class="mod-h" style="background:var(--t-demandes)">
+            <sc-if value="{{apres}}" hint-placeholder-val="{{ true }}">
+              <span class="tile" style="background:var(--m-demandes)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></span>
+            </sc-if>
+            <h2 class="ttl mod-t" id="t-sub" style="color:var(--m-demandes);flex:1 1 auto">Soumissions en attente</h2>
+            <sc-if value="{{pending}}" hint-placeholder-val="{{ true }}">
+              <span class="chip" style="background:var(--chip-bg);color:var(--chip-fg)">1 nouvelle</span>
+            </sc-if>
+          </div>
+          <div class="mod-b">
+            <sc-if value="{{pending}}" hint-placeholder-val="{{ true }}">
+              <div class="item" style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                  <div>
+                    <p style="font-weight:600">{{requesterName}}</p>
+                    <p class="meta">Relation clients</p>
+                  </div>
+                  <span class="meta">il y a 7 jours</span>
+                </div>
+                <p style="font-style:italic">« Je propose un scoreboard mensuel pour suivre les profils PM Junior. »</p>
+                <p style="display:flex;align-items:center;gap:8px">
+                  <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--m-demandes)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                  <span style="text-decoration:underline">Scoreboard-PM Junior.pdf</span>
+                </p>
+                <sc-if value="{{isMgr}}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;gap:8px">
+                    <button class="btn btn-s" style="flex:1" onClick="{{askRefuse}}">Refuser</button>
+                    <button class="btn btn-p" style="flex:1" onClick="{{validate}}">Valider</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{isRc}}" hint-placeholder-val="{{ false }}">
+                  <p class="meta">En attente de validation par votre manager.</p>
+                </sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{notPending}}" hint-placeholder-val="{{ false }}">
+              <p class="meta">Aucune soumission en attente.</p>
+            </sc-if>
+          </div>
+        </section>
+
+        <section class="mod" id="actus" aria-labelledby="t-actus" style="flex:2 1 640px;min-width:0;order:var(--o-actus)">
+          <div class="mod-h" style="background:var(--t-actus)">
+            <sc-if value="{{apres}}" hint-placeholder-val="{{ true }}">
+              <span class="tile" style="background:var(--m-actus)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg></span>
+            </sc-if>
+            <h2 class="ttl mod-t" id="t-actus" style="color:var(--m-actus);flex:1 1 auto">Actualités du cabinet</h2>
+            <sc-if value="{{isMgr}}" hint-placeholder-val="{{ true }}">
+              <span class="meta">{{draftCountText}}</span>
+            </sc-if>
+          </div>
+          <div class="mod-b">
+            <sc-if value="{{isMgr}}" hint-placeholder-val="{{ true }}">
+              <div>
+                <label class="lbl" for="actu-titre">Titre</label>
+                <input class="field" id="actu-titre" type="text" value="{{editorTitle}}" onChange="{{onTitle}}" placeholder="Saisir un titre">
+              </div>
+              <div>
+                <label class="lbl" for="actu-contenu">Contenu</label>
+                <textarea class="field" id="actu-contenu" rows="4" value="{{editorBody}}" onChange="{{onBody}}" placeholder="Rédiger l'actualité" style="resize:vertical"></textarea>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="btn btn-s" onClick="{{notInTest}}">Ajouter un média</button>
+                  <button class="btn btn-s" onClick="{{notInTest}}">Ajouter un lien</button>
+                </div>
+                <button class="btn btn-p" onClick="{{saveDraft}}">Enregistrer le brouillon</button>
+              </div>
+              <sc-if value="{{hasDrafts}}" hint-placeholder-val="{{ true }}">
+                <p class="meta" style="margin-top:8px">Brouillons</p>
+                <sc-for list="{{drafts}}" as="d" hint-placeholder-count="1">
+                  <div class="item" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+                    <div style="flex:1 1 280px;min-width:0">
+                      <p style="font-weight:600">{{d.title}}</p>
+                      <p class="meta">{{d.saved}}</p>
+                    </div>
+                    <button class="btn btn-s" onClick="{{d.ask}}">Publier</button>
+                  </div>
+                </sc-for>
+              </sc-if>
+            </sc-if>
+            <p class="meta" style="margin-top:8px">Publiées récemment</p>
+            <sc-for list="{{published}}" as="a" hint-placeholder-count="3">
+              <div class="item">
+                <p style="font-weight:600">{{a.title}}</p>
+                <p class="meta">{{a.when}} · par {{a.by}}</p>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+
+      <section class="mod" aria-labelledby="t-val">
+        <div class="mod-h" style="background:var(--t-demandes)">
+          <sc-if value="{{apres}}" hint-placeholder-val="{{ true }}">
+            <span class="tile" style="background:var(--m-demandes)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></span>
+          </sc-if>
+          <h2 class="ttl mod-t" id="t-val" style="color:var(--m-demandes);flex:1 1 auto">Demandes validées</h2>
+          <select class="field" aria-label="Filtrer par équipe" style="width:auto;min-width:200px" onChange="{{notInTest}}">
+            <option>Toutes les équipes</option>
+            <option>Product</option>
+            <option>Direction commerciale</option>
+          </select>
+        </div>
+        <div class="mod-b">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:var(--item-gap)">
+            <sc-for list="{{validated}}" as="v" hint-placeholder-count="6">
+              <div class="item">
+                <p style="font-weight:600">{{v.title}}</p>
+                <p class="meta">{{v.team}} · Validée le {{v.when}}</p>
+                <p style="font-style:italic;margin-top:8px">« {{v.quote}} »</p>
+              </div>
+            </sc-for>
+          </div>
+          <div>
+            <button class="btn-link" onClick="{{notInTest}}">Afficher plus (52 restantes)</button>
+          </div>
+        </div>
+      </section>
+
+      <div style="display:flex;flex-wrap:wrap;gap:var(--gap);align-items:flex-start">
+
+        <section class="mod" id="blocages" aria-labelledby="t-blo" style="flex:3 1 560px;min-width:0">
+          <div class="mod-h" style="background:var(--t-blocages)">
+            <sc-if value="{{apres}}" hint-placeholder-val="{{ true }}">
+              <span class="tile" style="background:var(--m-blocages)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg></span>
+            </sc-if>
+            <h2 class="ttl mod-t" id="t-blo" style="color:var(--m-blocages);flex:1 1 auto">Points bloquants</h2>
+            <span class="chip" style="background:var(--chip-bg);color:var(--chip-fg)">Priorité haute</span>
+            <button class="btn-link" onClick="{{notInTest}}">Voir l'archive</button>
+          </div>
+          <div class="mod-b">
+            <sc-for list="{{points}}" as="p" hint-placeholder-count="5">
+              <div class="item" style="padding:0;border-left:{{p.leftBar}}">
+                <button class="rowbtn" aria-expanded="{{p.expanded}}" onClick="{{p.toggle}}">
+                  <sc-if value="{{avant}}" hint-placeholder-val="{{ false }}">
+                    <sc-if value="{{p.isCrit}}" hint-placeholder-val="{{ false }}">
+                      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:#ba1a1a"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                    </sc-if>
+                    <sc-if value="{{p.notCrit}}" hint-placeholder-val="{{ true }}">
+                      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:#747878"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                    </sc-if>
+                  </sc-if>
+                  <span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px">
+                    <span style="font-weight:600">{{p.title}}</span>
+                    <span>{{p.desc}}</span>
+                    <span style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                      <sc-if value="{{apres}}" hint-placeholder-val="{{ true }}">
+                        <sc-if value="{{p.isCrit}}" hint-placeholder-val="{{ false }}">
+                          <span class="chip" style="color:var(--s-crit);background:var(--s-crit-t)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M12 16h.01"/><path d="M12 8v4"/><path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"/></svg>Critique</span>
+                        </sc-if>
+                        <sc-if value="{{p.notCrit}}" hint-placeholder-val="{{ true }}">
+                          <span class="chip" style="color:var(--s-alert);background:var(--s-alert-t)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Alerte</span>
+                        </sc-if>
+                        <span class="chip" style="border-color:var(--border-strong);color:var(--ink)">{{p.statusLabel}}</span>
+                      </sc-if>
+                      <span class="chip" style="background:#e3e3de;color:#1a1c19">{{p.team}}</span>
+                      <span class="meta">{{p.updated}}</span>
+                    </span>
+                  </span>
+                  <sc-if value="{{avant}}" hint-placeholder-val="{{ false }}">
+                    <span class="meta" style="color:{{p.statusColor}};font-weight:600">{{p.statusLabel}}</span>
+                  </sc-if>
+                  <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="transform:{{p.rot}}"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <sc-if value="{{p.open}}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:0 var(--item-pad) var(--item-pad);display:flex;flex-direction:column;gap:12px">
+                    <p class="meta">Suivi du statut, étape par étape</p>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                      <sc-for list="{{p.steps}}" as="s" hint-placeholder-count="4">
+                        <span class="{{s.cls}}">{{s.label}}</span>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section class="mod" id="indicateurs" aria-labelledby="t-ind" style="flex:2 1 340px;min-width:0">
+          <div class="mod-h" style="background:var(--t-indicateurs)">
+            <sc-if value="{{apres}}" hint-placeholder-val="{{ true }}">
+              <span class="tile" style="background:var(--m-indicateurs)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg></span>
+            </sc-if>
+            <h2 class="ttl mod-t" id="t-ind" style="color:var(--m-indicateurs);flex:1 1 auto">Indicateurs</h2>
+          </div>
+          <div class="mod-b" style="flex-direction:row;flex-wrap:wrap">
+            <div class="item" style="flex:1 1 200px;text-align:center;background:var(--card);border-color:var(--border)">
+              <p class="meta">Taux de placement</p>
+              <p class="ttl" style="font-size:var(--fs-kpi);line-height:1.1;margin:8px 0">40,6 %</p>
+              <p class="meta" style="display:flex;justify-content:center;align-items:center;gap:6px">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+                En hausse · +3 pts
+              </p>
+            </div>
+            <div class="item" style="flex:1 1 200px;text-align:center;background:var(--card);border-color:var(--border)">
+              <p class="meta">Missions actives</p>
+              <p class="ttl" style="font-size:var(--fs-kpi);line-height:1.1;margin:8px 0">34,2</p>
+              <p class="meta" style="display:flex;justify-content:center;align-items:center;gap:6px">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+                En baisse · −10,8
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{layoutRc}}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:var(--gap)">
+
+        <sc-if value="{{rcAct}}" hint-placeholder-val="{{ true }}">
+        <section class="mod" id="demandes" aria-labelledby="t-idees">
+          <div class="mod-h" style="background:var(--t-demandes)">
+            <span class="tile" style="background:var(--m-demandes)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></span>
+            <h2 class="ttl mod-t" id="t-idees" style="color:var(--m-demandes);flex:0 1 auto">Mes idées</h2>
+            <button class="btn btn-idee" style="margin-left:auto" onClick="{{openIdea}}">
+              <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+              Soumettre une idée
+            </button>
+          </div>
+          <div class="mod-b">
+            <div style="display:flex;gap:16px;align-items:flex-start">
+              <span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:12px">
+                <span>Suivez ici les idées que vous avez soumises : celles en attente de votre manager et celles qui ont été refusées.</span>
+                <span style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                  <span class="chip st-wait"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>{{pendingText}}</span>
+                  <span class="chip st-ko"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>{{refusedText}}</span>
+                </span>
+              </span>
+            </div>
+            <div id="mes-idees-liste" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:var(--item-gap)">
+              <sc-for list="{{myIdeas}}" as="i" hint-placeholder-count="2">
+                <div class="item" style="border-left:{{i.leftBar}};display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                    <sc-if value="{{i.isPending}}" hint-placeholder-val="{{ false }}">
+                      <span class="chip st-wait"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>En attente</span>
+                    </sc-if>
+                    <sc-if value="{{i.isRefused}}" hint-placeholder-val="{{ false }}">
+                      <span class="chip st-ko"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>Refusée</span>
+                    </sc-if>
+                  </div>
+                  <p style="font-weight:600">{{i.title}}</p>
+                  <p class="meta">{{i.meta}}</p>
+                  <p style="font-style:italic">« {{i.quote}} »</p>
+                  <sc-if value="{{i.hasFile}}" hint-placeholder-val="{{ false }}">
+                    <p style="display:flex;align-items:center;gap:8px">
+                      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--m-demandes)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                      <span style="text-decoration:underline">{{i.fileName}}</span>
+                    </p>
+                  </sc-if>
+                  <sc-if value="{{i.isPending}}" hint-placeholder-val="{{ false }}">
+                    <p class="meta">En attente de validation par votre manager.</p>
+                  </sc-if>
+                  <sc-if value="{{i.isRefused}}" hint-placeholder-val="{{ false }}">
+                    <p style="background:var(--s-crit-t);border:1px solid var(--s-crit);border-radius:var(--r-btn);padding:12px"><strong style="color:var(--s-crit)">Motif du refus :</strong> {{i.motif}}</p>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+        </sc-if>
+
+        <sc-if value="{{rcOver}}" hint-placeholder-val="{{ true }}">
+        <section class="mod" id="validees" aria-labelledby="t-valid" style="order:3">
+          <div class="mod-h" style="background:var(--t-demandes)">
+            <span class="tile" style="background:var(--m-demandes)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></span>
+            <h2 class="ttl mod-t" id="t-valid" style="color:var(--m-demandes);flex:1 1 auto">Idées validées</h2>
+            <label class="meta" for="f-ideas-team">Équipe</label>
+            <select class="field" id="f-ideas-team" style="width:auto;min-width:220px" value="{{ideaTeam}}" onChange="{{onIdeaTeam}}">
+              <option value="all">Toutes les équipes</option>
+              <option value="Relation clients">Relation clients</option>
+              <option value="Product">Product</option>
+              <option value="Happiness Office">Happiness Office</option>
+              <option value="Direction commerciale">Direction commerciale</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <div class="mod-b">
+            <p>Toutes les idées validées du cabinet. Les vôtres sont repérées par la pastille « Votre idée ».</p>
+            <sc-if value="{{noValidIdeas}}" hint-placeholder-val="{{ false }}">
+              <p class="meta">Aucune idée validée pour cette équipe.</p>
+            </sc-if>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:var(--item-gap)">
+              <sc-for list="{{validIdeas}}" as="i" hint-placeholder-count="6">
+                <div class="item" style="border-left:{{i.leftBar}};display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                    <sc-if value="{{i.isMine}}" hint-placeholder-val="{{ false }}">
+                      <span class="chip" style="background:var(--m-demandes);color:#fff">Votre idée</span>
+                    </sc-if>
+                    <sc-if value="{{i.isMine}}" hint-placeholder-val="{{ false }}">
+                      <span class="chip st-ok"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="m5 12 5 5L20 7"/></svg>Validée</span>
+                    </sc-if>
+                  </div>
+                  <p style="font-weight:600">{{i.title}}</p>
+                  <p class="meta">{{i.meta}}</p>
+                  <p style="font-style:italic">« {{i.quote}} »</p>
+                </div>
+              </sc-for>
+            </div>
+            <div>
+              <sc-if value="{{showMoreLink}}" hint-placeholder-val="{{ true }}"><button class="btn-link" aria-expanded="{{moreOpen}}" onClick="{{toggleMore}}">{{moreLabel}}</button></sc-if>
+            </div>
+          </div>
+        </section>
+
+        <section class="mod" id="blocages" aria-labelledby="t-blo2" style="order:4">
+          <div class="mod-h" style="background:var(--t-blocages)">
+            <span class="tile" style="background:var(--m-blocages)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg></span>
+            <h2 class="ttl mod-t" id="t-blo2" style="color:var(--m-blocages);flex:1 1 auto">Points bloquants</h2>
+            <span class="chip" style="background:var(--chip-bg);color:var(--chip-fg)">Priorité haute</span>
+            <label class="meta" for="f-team">Équipe</label>
+            <select class="field" id="f-team" style="width:auto;min-width:220px" value="{{teamFilter}}" onChange="{{onTeam}}">
+              <option value="all">Toutes les équipes</option>
+              <option value="Relation clients">Relation clients</option>
+              <option value="Product">Product</option>
+              <option value="Product team">Product team</option>
+              <option value="RH">RH</option>
+              <option value="Bureau d'études">Bureau d'études</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Happiness Office">Happiness Office</option>
+              <option value="Direction recrutement">Direction recrutement</option>
+            </select>
+          </div>
+          <div class="mod-b">
+            <div style="display:flex;gap:12px;align-items:flex-start;background:var(--t-blocages);border:1px solid var(--m-blocages);border-radius:var(--r-item);padding:12px 16px">
+              <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--m-blocages);margin-top:2px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              <p>{{pointsNote}}</p>
+            </div>
+            <sc-if value="{{noPoints}}" hint-placeholder-val="{{ false }}">
+              <p class="meta">Aucun point bloquant pour cette équipe.</p>
+            </sc-if>
+            <sc-for list="{{pointsShown}}" as="p" hint-placeholder-count="5">
+              <div class="item" style="padding:0;border-left:{{p.leftBar}}">
+                <button class="rowbtn" aria-expanded="{{p.expanded}}" onClick="{{p.toggle}}">
+                  <span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px">
+                    <span style="font-weight:600">{{p.title}}</span>
+                    <span>{{p.desc}}</span>
+                    <span style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                      <sc-if value="{{p.isCrit}}" hint-placeholder-val="{{ false }}">
+                        <span class="chip" style="color:var(--s-crit);background:var(--s-crit-t)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M12 16h.01"/><path d="M12 8v4"/><path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"/></svg>Critique</span>
+                      </sc-if>
+                      <sc-if value="{{p.notCrit}}" hint-placeholder-val="{{ true }}">
+                        <span class="chip" style="color:var(--s-alert);background:var(--s-alert-t)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Alerte</span>
+                      </sc-if>
+                      <span class="chip" style="border-color:var(--border-strong);color:var(--ink)">{{p.statusLabel}}</span>
+                      <span class="chip" style="background:#e3e3de;color:#1a1c19">{{p.team}}</span>
+                      <span class="meta">{{p.updated}}</span>
+                    </span>
+                  </span>
+                  <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="transform:{{p.rot}}"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <sc-if value="{{p.open}}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:0 var(--item-pad) var(--item-pad);display:flex;flex-direction:column;gap:12px">
+                    <p class="meta">Suivi du statut, étape par étape</p>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                      <sc-for list="{{p.steps}}" as="s" hint-placeholder-count="4">
+                        <span class="{{s.cls}}">{{s.label}}</span>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <div style="display:contents">
+
+          <section class="mod" id="actus" aria-labelledby="t-actus2" style="order:1;min-width:0">
+            <div class="mod-h" style="background:var(--t-actus)">
+              <span class="tile" style="background:var(--m-actus)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg></span>
+              <h2 class="ttl mod-t" id="t-actus2" style="color:var(--m-actus);flex:1 1 auto">Actualités du cabinet</h2>
+            </div>
+            <div class="mod-b">
+              <p class="meta">Publiées récemment</p>
+              <sc-for list="{{published}}" as="a" hint-placeholder-count="3">
+                <div class="item">
+                  <p style="font-weight:600">{{a.title}}</p>
+                  <p class="meta">{{a.when}} · par {{a.by}}</p>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+
+          <section class="mod" id="indicateurs" aria-labelledby="t-ind2" style="order:2;min-width:0">
+            <div class="mod-h" style="background:var(--t-indicateurs)">
+              <span class="tile" style="background:var(--m-indicateurs)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg></span>
+              <h2 class="ttl mod-t" id="t-ind2" style="color:var(--m-indicateurs);flex:1 1 auto">Indicateurs</h2>
+            </div>
+            <div class="mod-b" style="flex-direction:row;flex-wrap:wrap">
+              <div class="item" style="flex:1 1 200px;text-align:center;background:var(--card);border-color:var(--border)">
+                <p class="meta">Taux de placement</p>
+                <p class="ttl" style="font-size:var(--fs-kpi);line-height:1.1;margin:8px 0">40,6 %</p>
+                <p style="display:flex;justify-content:center"><span class="chip" style="background:#E3F3E8;color:#14582F;border-color:#14582F;font-size:16px;padding:6px 12px">
+                  <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+                  En hausse · +3 pts
+                </span></p>
+              </div>
+              <div class="item" style="flex:1 1 200px;text-align:center;background:var(--card);border-color:var(--border)">
+                <p class="meta">Missions actives</p>
+                <p class="ttl" style="font-size:var(--fs-kpi);line-height:1.1;margin:8px 0">34,2</p>
+                <p style="display:flex;justify-content:center"><span class="chip" style="background:#FBE7E5;color:#8F120C;border-color:#8F120C;font-size:16px;padding:6px 12px">
+                  <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+                  En baisse · −10,8
+                </span></p>
+              </div>
+            </div>
+          </section>
+        </div>
+        </sc-if>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{layoutMgr}}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:var(--gap)">
+
+
+        <sc-if value="{{showActions}}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{notAdmin}}" hint-placeholder-val="{{ true }}">
+        <section class="mod" id="actus" aria-labelledby="t-actus3">
+          <div class="mod-h" style="background:var(--t-actus)">
+            <span class="tile" style="background:var(--m-actus)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg></span>
+            <h2 class="ttl mod-t" id="t-actus3" style="color:var(--m-actus);flex:1 1 auto">Actualités du cabinet</h2>
+            <button class="btn btn-aide" aria-expanded="{{helpOpen}}" aria-controls="aide-redac" onClick="{{toggleHelp}}">
+              <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+              Aide à la rédaction
+            </button>
+          </div>
+          <div class="mod-b" style="flex-direction:row;flex-wrap:wrap;gap:var(--gap);align-items:flex-start">
+            <div style="flex:3 1 480px;min-width:0;max-width:860px;display:flex;flex-direction:column;gap:var(--item-gap)">
+              <div style="display:flex;align-items:center;gap:8px">
+                <h3 style="font-size:20px;font-weight:700;line-height:1.3">Rédiger une actualité</h3>
+                <div class="tipw">
+                  <button aria-label="Une bonne actualité" style="display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--m-actus);background:#fff;color:var(--m-actus);padding:0">
+                    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                  </button>
+                  <div class="tip" role="tooltip" style="top:calc(100% + 8px)">
+                    <p style="font-size:18px;font-weight:700;line-height:1.3;color:var(--m-actus);margin-bottom:10px">Une bonne actualité</p>
+                    <ul style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:6px">
+                      <li>La nouvelle est dans la première phrase.</li>
+                      <li>Entre 60 et 120 mots.</li>
+                      <li>Des personnes nommées, pas « l'équipe » seule.</li>
+                      <li>Une phrase sur ce que ça change pour le lecteur.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <p style="max-width:640px">Trois minutes suffisent pour faire connaître votre équipe : ses réussites sont vues, ses nouveaux visages accueillis, et chacun sait vers qui se tourner. Ce que vous partagez donne envie aux autres équipes d'en faire autant.</p>
+              <sc-if value="{{helpOpen}}" hint-placeholder-val="{{ true }}">
+                <div id="aide-redac" style="display:flex;flex-direction:column;gap:12px">
+                  <p style="font-weight:600">1. Que voulez-vous annoncer ? Un exemple se place dans le texte, à vous de l'adapter.</p>
+                  <div role="radiogroup" aria-label="Type d'actualité" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+                  <div class="tipw"><button class="type" role="radio" aria-checked="{{arrOn}}" onClick="{{helpArr}}" style="{{arrStyle}}">
+                    <span style="display:flex;align-items:center;gap:10px"><span class="tile" style="width:36px;height:36px;background:var(--m-actus)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg></span><span style="font-size:18px;font-weight:700;line-height:1.3">Une arrivée</span></span>
+                    <span>Un nouveau collègue.</span>
+                    <span class="meta">Tout le monde sait qui contacter.</span>
+                  </button>
+                    <div class="tip " role="tooltip">
+                      <p style="font-size:18px;font-weight:700;line-height:1.3;color:var(--m-actus);margin-bottom:10px">Dans une annonce d'arrivée</p>
+                      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px">
+                        <sc-for list="{{arrChecks}}" as="c" hint-placeholder-count="5">
+                          <li style="display:flex;gap:10px;align-items:flex-start"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;color:var(--m-actus);margin-top:3px"><path d="m5 12 5 5L20 7"/></svg><span><strong>{{c.label}}</strong><br><span class="meta">{{c.hint}}</span></span></li>
+                        </sc-for>
+                      </ul>
+                    </div></div>
+                  <div class="tipw"><button class="type" role="radio" aria-checked="{{resOn}}" onClick="{{helpRes}}" style="{{resStyle}}">
+                    <span style="display:flex;align-items:center;gap:10px"><span class="tile" style="width:36px;height:36px;background:var(--m-actus)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span><span style="font-size:18px;font-weight:700;line-height:1.3">Un résultat</span></span>
+                    <span>Un objectif atteint.</span>
+                    <span class="meta">On reconnaît le travail fait.</span>
+                  </button>
+                    <div class="tip " role="tooltip">
+                      <p style="font-size:18px;font-weight:700;line-height:1.3;color:var(--m-actus);margin-bottom:10px">Dans une annonce de résultat</p>
+                      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px">
+                        <sc-for list="{{resChecks}}" as="c" hint-placeholder-count="5">
+                          <li style="display:flex;gap:10px;align-items:flex-start"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;color:var(--m-actus);margin-top:3px"><path d="m5 12 5 5L20 7"/></svg><span><strong>{{c.label}}</strong><br><span class="meta">{{c.hint}}</span></span></li>
+                        </sc-for>
+                      </ul>
+                    </div></div>
+                  <div class="tipw"><button class="type" role="radio" aria-checked="{{conOn}}" onClick="{{helpCon}}" style="{{conStyle}}">
+                    <span style="display:flex;align-items:center;gap:10px"><span class="tile" style="width:36px;height:36px;background:var(--m-actus)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-4"/></svg></span><span style="font-size:18px;font-weight:700;line-height:1.3">Un contrat signé</span></span>
+                    <span>Un nouveau client.</span>
+                    <span class="meta">On voit ce que ça change.</span>
+                  </button>
+                    <div class="tip tip-r" role="tooltip">
+                      <p style="font-size:18px;font-weight:700;line-height:1.3;color:var(--m-actus);margin-bottom:10px">Dans une annonce de contrat</p>
+                      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px">
+                        <sc-for list="{{conChecks}}" as="c" hint-placeholder-count="5">
+                          <li style="display:flex;gap:10px;align-items:flex-start"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px;color:var(--m-actus);margin-top:3px"><path d="m5 12 5 5L20 7"/></svg><span><strong>{{c.label}}</strong><br><span class="meta">{{c.hint}}</span></span></li>
+                        </sc-for>
+                      </ul>
+                    </div></div>
+                  </div>
+                  <p class="meta" style="display:flex;align-items:center;gap:8px"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>Exemples d'illustration : remplacez les noms, dates et chiffres par les vôtres.</p>
+                  <p style="font-weight:600;margin-top:4px">2. Rédigez votre actualité</p>
+                </div>
+              </sc-if>
+              <div>
+                <label class="lbl" for="actu-titre-m">Titre de l'actualité</label>
+                <input class="field" id="actu-titre-m" type="text" value="{{editorTitle}}" onChange="{{onTitle}}">
+                <sc-if value="{{titleError}}" hint-placeholder-val="{{ false }}">
+                  <p role="alert" style="margin-top:8px;font-weight:600;color:var(--s-crit);font-size:var(--fs-meta)">Ajoutez un titre pour publier.</p>
+                </sc-if>
+              </div>
+              <div>
+                <label class="lbl" for="actu-contenu-m">Contenu de l'actualité</label>
+                <textarea class="field" id="actu-contenu-m" rows="8" value="{{editorBody}}" onChange="{{onBody}}" style="resize:vertical"></textarea>
+                <sc-if value="{{helpOpen}}" hint-placeholder-val="{{ true }}">
+                  <p class="meta" style="margin-top:6px">{{wordText}}</p>
+                </sc-if>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+                  <p class="lbl" style="margin:0">Pièces jointes</p>
+                  <button aria-label="Ajouter une pièce jointe" onClick="{{openAtt}}" style="display:grid;place-items:center;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--m-actus);background:#fff;color:var(--m-actus);padding:0">
+                    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                  </button>
+                  <sc-for list="{{attachments}}" as="f" hint-placeholder-count="1">
+                    <span style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-strong);border-radius:var(--r-chip);padding:4px 6px 4px 10px;background:#fff;font-size:var(--fs-meta)">
+                      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;color:var(--m-actus)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>{{f.name}}
+                      <button aria-label="{{f.label}}" onClick="{{f.remove}}" style="display:grid;place-items:center;width:24px;height:24px;border:0;background:none;color:var(--ink);padding:0"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+                    </span>
+                  </sc-for>
+                </div>
+                <sc-if value="{{helpHasType}}" hint-placeholder-val="{{ true }}">
+                  <p class="meta">{{helpAtt}}</p>
+                </sc-if>
+              </div>
+              <div style="display:flex;justify-content:flex-end">
+                <button class="btn btn-p" style="min-height:56px;padding:0 32px" onClick="{{askPublish}}">
+                  <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                  Publier
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+        </sc-if>
+
+
+        <section class="mod" id="demandes" aria-labelledby="t-dem3">
+          <div class="mod-h" style="background:var(--t-demandes)">
+            <span class="tile" style="background:var(--m-demandes)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></span>
+            <h2 class="ttl mod-t" id="t-dem3" style="color:var(--m-demandes);flex:1 1 auto">Idées de votre équipe à traiter</h2>
+            <span class="chip" style="background:#e3e3de;color:#1a1c19">Aide IA · V2</span>
+          </div>
+          <div class="mod-b">
+            <button class="disc" aria-expanded="{{demOpen}}" aria-controls="dem-liste" onClick="{{toggleDem}}">
+              <span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:12px">
+                <sc-if value="{{isAdmin}}" hint-placeholder-val="{{ false }}"><span style="max-width:860px">Les idées de toutes les équipes arrivent ici. Dans la V2, l'IA valide ou refuse automatiquement celles qui respectent les critères. Vous gardez la main : vous traitez celles qu'elle n'a pas pu trancher.</span></sc-if>
+                <sc-if value="{{notAdmin}}" hint-placeholder-val="{{ true }}"><span style="max-width:860px">Votre équipe vous soumet ses idées. Dans la V2, l'IA valide ou refuse automatiquement celles qui respectent vos critères. Vous gardez la main : vous traitez ici celles qu'elle n'a pas pu trancher.</span></sc-if>
+                <span style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                  <span class="chip st-wait"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>{{todoText}}</span>
+                  <span class="chip st-ok"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="m5 12 5 5L20 7"/></svg>{{procOkText}}</span>
+                  <span class="chip st-ko"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>{{procKoText}}</span>
+                </span>
+              </span>
+              <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:28px;height:28px;color:var(--m-demandes);transform:{{demRot}};transition:transform .2s"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <sc-if value="{{demOpen}}" hint-placeholder-val="{{ true }}">
+            <div id="dem-liste" style="display:flex;flex-direction:column;gap:var(--item-gap)">
+            <h3 style="font-size:20px;font-weight:700;line-height:1.3;margin-top:8px">À traiter par vous</h3>
+            <sc-if value="{{noToDo}}" hint-placeholder-val="{{ false }}">
+              <p class="meta">Rien à traiter pour le moment : toutes les idées ont été traitées.</p>
+            </sc-if>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:var(--item-gap)">
+              <sc-for list="{{toDo}}" as="m" hint-placeholder-count="3">
+                <div class="item" style="display:flex;flex-direction:column;gap:12px;border-left:6px solid var(--m-demandes)">
+                  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                    <span class="chip" style="border-color:var(--border-strong);color:var(--ink)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>L'IA n'a pas pu trancher</span>
+                    <span class="meta">{{m.when}}</span>
+                  </div>
+                  <div>
+                    <p style="font-weight:600">{{m.title}}</p>
+                    <p class="meta">{{m.from}} · {{m.team}}</p>
+                  </div>
+                  <p style="font-style:italic">« {{m.quote}} »</p>
+                  <sc-if value="{{m.hasFile}}" hint-placeholder-val="{{ false }}">
+                    <p style="display:flex;align-items:center;gap:8px">
+                      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--m-demandes)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                      <span style="text-decoration:underline">{{m.file}}</span>
+                    </p>
+                  </sc-if>
+                  <p class="meta">Raison : {{m.reason}}</p>
+                  <div style="display:flex;gap:16px;flex-wrap:wrap">
+                    <button class="btn btn-ko" onClick="{{m.askRefuse}}">Refuser</button>
+                    <button class="btn btn-ok" onClick="{{m.validate}}">Valider</button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <h3 style="font-size:20px;font-weight:700;line-height:1.3;margin-top:16px">Déjà traitées</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:var(--item-gap)">
+              <sc-for list="{{processed}}" as="r" hint-placeholder-count="3">
+                <div class="item" style="display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                    <sc-if value="{{r.isValid}}" hint-placeholder-val="{{ true }}">
+                      <span class="chip st-ok"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="m5 12 5 5L20 7"/></svg>{{r.chipLabel}}</span>
+                    </sc-if>
+                    <sc-if value="{{r.isRefused}}" hint-placeholder-val="{{ false }}">
+                      <span class="chip st-ko"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>{{r.chipLabel}}</span>
+                    </sc-if>
+                  </div>
+                  <p style="font-weight:600">{{r.title}}</p>
+                  <p class="meta">{{r.meta}}</p>
+                  <p>{{r.detail}}</p>
+                  <sc-if value="{{r.isAuto}}" hint-placeholder-val="{{ false }}">
+                    <div><button class="btn btn-s" onClick="{{notInTest}}">Reprendre la main</button></div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+            </div>
+            </sc-if>
+          </div>
+        </section>
+
+        <sc-if value="{{isMgrNav}}" hint-placeholder-val="{{ false }}">
+        <section class="mod" id="mes-idees" aria-labelledby="t-idees-m">
+          <div class="mod-h" style="background:var(--t-demandes)">
+            <span class="tile" style="background:var(--m-demandes)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></span>
+            <h2 class="ttl mod-t" id="t-idees-m" style="color:var(--m-demandes);flex:0 1 auto">Mes idées</h2>
+            <button class="btn btn-idee" style="margin-left:auto" onClick="{{openIdea}}">
+              <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+              Soumettre une idée
+            </button>
+          </div>
+          <div class="mod-b">
+            <button class="disc" aria-expanded="{{myOpen}}" aria-controls="mes-idees-liste-m" onClick="{{toggleMy}}">
+              <span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:12px">
+                <span>Vos idées sont validées automatiquement : en tant que manager, elles rejoignent « Idées validées » dès leur envoi, sans passer par une validation.</span>
+                <span style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                  <span class="chip st-ok"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="m5 12 5 5L20 7"/></svg>{{mgrAutoText}}</span>
+                </span>
+              </span>
+              <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:28px;height:28px;color:var(--m-demandes);transform:{{myRot}};transition:transform .2s"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <sc-if value="{{myOpen}}" hint-placeholder-val="{{ true }}">
+            <div id="mes-idees-liste-m" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:var(--item-gap)">
+              <sc-if value="{{noMgrIdeas}}" hint-placeholder-val="{{ false }}"><p class="meta">Vous n'avez pas encore soumis d'idée.</p></sc-if>
+              <sc-for list="{{mgrIdeas}}" as="i" hint-placeholder-count="1">
+                <div class="item" style="border-left:6px solid #14582F;display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                    <span class="chip st-ok"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="m5 12 5 5L20 7"/></svg>Validée automatiquement</span>
+                  </div>
+                  <p style="font-weight:600">{{i.title}}</p>
+                  <p class="meta">{{i.meta}}</p>
+                  <p style="font-style:italic">« {{i.quote}} »</p>
+                  <sc-if value="{{i.hasFile}}" hint-placeholder-val="{{ false }}">
+                    <p style="display:flex;align-items:center;gap:8px">
+                      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--m-demandes)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                      <span style="text-decoration:underline">{{i.fileName}}</span>
+                    </p>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+            </sc-if>
+          </div>
+        </section>
+        </sc-if>
+        </sc-if>
+
+        <sc-if value="{{showOverview}}" hint-placeholder-val="{{ true }}">
+        <section class="mod" id="actus-publiees" aria-labelledby="t-pub" style="order:{{ordPub}}">
+          <div class="mod-h" style="background:var(--t-actus)">
+            <span class="tile" style="background:var(--m-actus)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg></span>
+            <h2 class="ttl mod-t" id="t-pub" style="color:var(--m-actus);flex:1 1 auto">{{pubTitle}}</h2>
+          </div>
+          <div class="mod-b">
+            <sc-if value="{{isAdmin}}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <h3 style="font-size:20px;font-weight:700;line-height:1.3">Brouillons en attente ({{draftsCount}})</h3>
+                <sc-if value="{{noDrafts}}" hint-placeholder-val="{{ false }}"><p class="meta">Aucun brouillon.</p></sc-if>
+                <sc-for list="{{drafts}}" as="d" hint-placeholder-count="1">
+                  <div class="item" style="display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;justify-content:space-between">
+                    <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                      <span style="font-weight:600">{{d.title}}</span>
+                      <span class="meta">{{d.saved}}</span>
+                    </span>
+                    <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                      <button class="btn-link" onClick="{{notInTest}}">Modifier</button>
+                      <button class="btn-link" style="color:var(--s-crit)" onClick="{{notInTest}}">Supprimer</button>
+                      <button class="btn btn-p" onClick="{{d.ask}}">Publier</button>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+              <h3 style="font-size:20px;font-weight:700;line-height:1.3">Déjà publiées</h3>
+            </sc-if>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:var(--item-gap);align-items:start">
+              <sc-for list="{{publishedM}}" as="a" hint-placeholder-count="3">
+                <div class="item" style="padding:0">
+                  <button class="rowbtn" aria-expanded="{{a.expanded}}" onClick="{{a.toggle}}">
+                    <span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px">
+                      <span style="font-weight:600">{{a.title}}</span>
+                      <span class="meta">{{a.when}} · par {{a.by}}</span>
+                    </span>
+                    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="transform:{{a.rot}}"><path d="m6 9 6 6 6-6"/></svg>
+                  </button>
+                  <sc-if value="{{a.open}}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:0 var(--item-pad) var(--item-pad);display:flex;flex-direction:column;gap:12px">
+                      <sc-if value="{{a.hasBody}}" hint-placeholder-val="{{ true }}">
+                        <p style="white-space:pre-line">{{a.body}}</p>
+                      </sc-if>
+                      <sc-if value="{{a.hasFiles}}" hint-placeholder-val="{{ false }}">
+                        <div style="display:flex;flex-direction:column;gap:6px">
+                          <sc-for list="{{a.files}}" as="g" hint-placeholder-count="1">
+                            <p style="display:flex;align-items:center;gap:8px"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--m-actus)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span style="text-decoration:underline">{{g.name}}</span></p>
+                          </sc-for>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+
+        <section class="mod" id="validees3" aria-labelledby="t-valid3" style="order:{{ordVal}}">
+          <div class="mod-h" style="background:var(--t-demandes)">
+            <span class="tile" style="background:var(--m-demandes)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></span>
+            <h2 class="ttl mod-t" id="t-valid3" style="color:var(--m-demandes);flex:1 1 auto">Idées validées</h2>
+            <label class="meta" for="f-ideas-team3">Équipe</label>
+            <select class="field" id="f-ideas-team3" style="width:auto;min-width:220px" value="{{ideaTeam}}" onChange="{{onIdeaTeam}}">
+              <option value="all">Toutes les équipes</option>
+              <option value="Relation clients">Relation clients</option>
+              <option value="Product">Product</option>
+              <option value="Happiness Office">Happiness Office</option>
+              <option value="Direction commerciale">Direction commerciale</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <div class="mod-b">
+            <p>Toutes les idées validées du cabinet. Choisissez une équipe dans le filtre pour cibler ses idées.</p>
+            <sc-if value="{{noValidIdeas}}" hint-placeholder-val="{{ false }}">
+              <p class="meta">Aucune idée validée pour cette équipe.</p>
+            </sc-if>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:var(--item-gap)">
+              <sc-for list="{{validIdeas}}" as="i" hint-placeholder-count="6">
+                <div class="item" style="border-left:{{i.leftBar}};display:flex;flex-direction:column;gap:8px">
+                  <p style="font-weight:600">{{i.title}}</p>
+                  <p class="meta">{{i.meta}}</p>
+                  <p style="font-style:italic">« {{i.quote}} »</p>
+                </div>
+              </sc-for>
+            </div>
+            <div>
+              <sc-if value="{{showMoreLink}}" hint-placeholder-val="{{ true }}"><button class="btn-link" aria-expanded="{{moreOpen}}" onClick="{{toggleMore}}">{{moreLabel}}</button></sc-if>
+            </div>
+          </div>
+        </section>
+
+        <div style="display:{{rowDisp}};order:3;flex-wrap:wrap;gap:var(--gap);align-items:flex-start">
+
+          <section class="mod" id="blocages" aria-labelledby="t-blo3" style="flex:{{floBlo}};min-width:0;order:{{ordBlo}}">
+            <div class="mod-h" style="background:var(--t-blocages)">
+              <span class="tile" style="background:var(--m-blocages)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg></span>
+              <h2 class="ttl mod-t" id="t-blo3" style="color:var(--m-blocages);flex:1 1 auto">Points bloquants</h2>
+              <span class="chip" style="background:var(--chip-bg);color:var(--chip-fg)">Priorité haute</span>
+              <label class="meta" for="f-team3">Équipe</label>
+              <select class="field" id="f-team3" style="width:auto;min-width:220px" value="{{teamFilter}}" onChange="{{onTeam}}">
+                <option value="all">Toutes les équipes</option>
+                <option value="Relation clients">Relation clients</option>
+                <option value="Product">Product</option>
+                <option value="Product team">Product team</option>
+                <option value="RH">RH</option>
+                <option value="Bureau d'études">Bureau d'études</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Happiness Office">Happiness Office</option>
+                <option value="Direction recrutement">Direction recrutement</option>
+              </select>
+            </div>
+            <div class="mod-b">
+              <div style="display:flex;gap:12px;align-items:flex-start;background:var(--t-blocages);border:1px solid var(--m-blocages);border-radius:var(--r-item);padding:12px 16px">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--m-blocages);margin-top:2px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <p>{{pointsNote}}</p>
+              </div>
+              <sc-if value="{{noPoints}}" hint-placeholder-val="{{ false }}">
+                <p class="meta">Aucun point bloquant pour cette équipe.</p>
+              </sc-if>
+              <sc-for list="{{pointsShown}}" as="p" hint-placeholder-count="5">
+                <div class="item" style="padding:0;border-left:{{p.leftBar}}">
+                  <button class="rowbtn" aria-expanded="{{p.expanded}}" onClick="{{p.toggle}}">
+                    <span style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px">
+                      <span style="font-weight:600">{{p.title}}</span>
+                      <span>{{p.desc}}</span>
+                      <span style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                        <sc-if value="{{p.isCrit}}" hint-placeholder-val="{{ false }}">
+                          <span class="chip" style="color:var(--s-crit);background:var(--s-crit-t)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M12 16h.01"/><path d="M12 8v4"/><path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"/></svg>Critique</span>
+                        </sc-if>
+                        <sc-if value="{{p.notCrit}}" hint-placeholder-val="{{ true }}">
+                          <span class="chip" style="color:var(--s-alert);background:var(--s-alert-t)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Alerte</span>
+                        </sc-if>
+                        <span class="chip" style="border-color:var(--border-strong);color:var(--ink)">{{p.statusLabel}}</span>
+                        <span class="chip" style="background:#e3e3de;color:#1a1c19">{{p.team}}</span>
+                        <span class="meta">{{p.updated}}</span>
+                      </span>
+                    </span>
+                    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="transform:{{p.rot}}"><path d="m6 9 6 6 6-6"/></svg>
+                  </button>
+                  <sc-if value="{{p.open}}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:0 var(--item-pad) var(--item-pad);display:flex;flex-direction:column;gap:12px">
+                      <p class="meta">Suivi du statut, étape par étape</p>
+                      <div style="display:flex;flex-wrap:wrap;gap:8px">
+                        <sc-for list="{{p.steps}}" as="s" hint-placeholder-count="4">
+                          <span class="{{s.cls}}">{{s.label}}</span>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+
+          <section class="mod" id="indicateurs" aria-labelledby="t-ind3" style="flex:{{floInd}};min-width:0;order:{{ordInd}}">
+            <div class="mod-h" style="background:var(--t-indicateurs)">
+              <span class="tile" style="background:var(--m-indicateurs)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg></span>
+              <h2 class="ttl mod-t" id="t-ind3" style="color:var(--m-indicateurs);flex:1 1 auto">Indicateurs</h2>
+            </div>
+            <div class="mod-b" style="flex-direction:row;flex-wrap:wrap">
+              <div class="item" style="flex:1 1 200px;text-align:center;background:var(--card);border-color:var(--border)">
+                <p class="meta">Taux de placement</p>
+                <p class="ttl" style="font-size:var(--fs-kpi);line-height:1.1;margin:8px 0">40,6 %</p>
+                <p style="display:flex;justify-content:center"><span class="chip" style="background:#E3F3E8;color:#14582F;border-color:#14582F;font-size:16px;padding:6px 12px">
+                  <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+                  En hausse · +3 pts
+                </span></p>
+              </div>
+              <div class="item" style="flex:1 1 200px;text-align:center;background:var(--card);border-color:var(--border)">
+                <p class="meta">Missions actives</p>
+                <p class="ttl" style="font-size:var(--fs-kpi);line-height:1.1;margin:8px 0">34,2</p>
+                <p style="display:flex;justify-content:center"><span class="chip" style="background:#FBE7E5;color:#8F120C;border-color:#8F120C;font-size:16px;padding:6px 12px">
+                  <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:18px;height:18px"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+                  En baisse · −10,8
+                </span></p>
+              </div>
+            </div>
+          </section>
+        </div>
+        </sc-if>
+
+      </div>
+      </sc-if>
+
+      <sc-if value="{{layoutData}}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:var(--gap)">
+        <div style="display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-end;justify-content:space-between">
+          <div>
+            <p class="meta">{{pageGroup}}</p>
+            <h1 class="ttl" style="font-size:var(--fs-h1);line-height:1.1;margin-top:8px">{{pageTitle}}</h1>
+          </div>
+          <button class="btn btn-s" onClick="{{goOverview}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Retour à la vue d'ensemble</button>
+        </div>
+        <section class="mod" id="gestion-donnees" aria-labelledby="t-gest">
+          <div class="mod-b">
+            <div role="tablist" aria-label="{{tabsLabel}}" style="display:flex;flex-wrap:wrap;gap:8px">
+              <sc-if value="{{grpData}}" hint-placeholder-val="{{ true }}">
+              <button class="tab {{tRapCls}}" role="tab" aria-selected="{{tRapSel}}" onClick="{{tabRap}}">Rappels de départ</button>
+              <button class="tab {{tUsersCls}}" role="tab" aria-selected="{{tUsersSel}}" onClick="{{tabUsers}}">Utilisateurs autorisés</button>
+              </sc-if>
+              <sc-if value="{{grpAct}}" hint-placeholder-val="{{ false }}">
+              <button class="tab {{tPointsCls}}" role="tab" aria-selected="{{tPointsSel}}" onClick="{{tabPoints}}">Points bloquants</button>
+              <button class="tab {{tIndCls}}" role="tab" aria-selected="{{tIndSel}}" onClick="{{tabInd}}">Indicateurs</button>
+              <button class="tab {{tActusCls}}" role="tab" aria-selected="{{tActusSel}}" onClick="{{tabActus}}">Actualités</button>
+              </sc-if>
+            </div>
+
+            <sc-if value="{{pageIsRap}}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:var(--item-gap)">
+                <h3 style="font-size:20px;font-weight:700;line-height:1.3">Rappels de départ ({{remindText}})</h3>
+            <sc-if value="{{noReminders}}" hint-placeholder-val="{{ false }}"><p>Tous les départs ont été pris en compte.</p></sc-if>
+            <sc-for list="{{reminders}}" as="r" hint-placeholder-count="3">
+              <div class="item" style="border-left:6px solid var(--s-alert);display:flex;flex-direction:column;gap:12px">
+                <p><strong>Rappel :</strong> {{r.text}}</p>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <sc-if value="{{r.hasDocs}}" hint-placeholder-val="{{ false }}">
+                    <button class="btn btn-s" onClick="{{notInTest}}">Voir les documents</button>
+                    <button class="btn btn-s" onClick="{{notInTest}}">Tout télécharger (.zip)</button>
+                    <button class="btn btn-p" onClick="{{r.ack}}">J'ai téléchargé les documents</button>
+                  </sc-if>
+                  <sc-if value="{{r.noDocs}}" hint-placeholder-val="{{ true }}">
+                    <button class="btn btn-p" onClick="{{r.ack}}">J'ai pris note</button>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{pageIsPoints}}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:var(--item-gap)">
+                <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+                  <h3 style="font-size:20px;font-weight:700;line-height:1.3">Points bloquants ({{nAdminPoints}})</h3>
+                  <button class="btn btn-p" onClick="{{notInTest}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>Nouveau point bloquant</button>
+                </div>
+                <sc-for list="{{adminPoints}}" as="p" hint-placeholder-count="4">
+                  <div class="item" style="display:flex;flex-wrap:wrap;gap:12px 16px;justify-content:space-between;align-items:flex-start;border-left:{{p.leftBar}}">
+                    <span style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 320px">
+                      <span style="font-weight:600">{{p.title}}</span>
+                      <span>{{p.desc}}</span>
+                      <span style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                        <span class="meta">{{p.team}}</span>
+                        <sc-if value="{{p.isCrit}}" hint-placeholder-val="{{ false }}"><span class="chip" style="color:var(--s-crit);background:var(--s-crit-t)">Critique</span></sc-if>
+                        <sc-if value="{{p.notCrit}}" hint-placeholder-val="{{ true }}"><span class="chip" style="color:var(--s-alert);background:var(--s-alert-t)">Alerte</span></sc-if>
+                        <span class="chip" style="border-color:var(--border-strong);color:var(--ink)">{{p.statusLabel}}</span>
+                        <span class="meta">{{p.updated}}</span>
+                      </span>
+                    </span>
+                    <span style="display:flex;gap:8px">
+                      <button class="btn btn-s" onClick="{{notInTest}}">Modifier</button>
+                      <button class="btn btn-s" style="color:var(--s-crit);border-color:var(--s-crit)" onClick="{{notInTest}}">Supprimer</button>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{pageIsUsers}}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:var(--item-gap)">
+                <h3 style="font-size:20px;font-weight:700;line-height:1.3">Équipes</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+                  <div style="flex:1 1 240px;max-width:360px">
+                    <label class="lbl" for="new-team">Nouvelle équipe</label>
+                    <input class="field" id="new-team" type="text" value="{{newTeam}}" onChange="{{onNewTeam}}">
+                  </div>
+                  <button class="btn btn-p" onClick="{{addTeam}}">Ajouter</button>
+                </div>
+                <sc-for list="{{teamsV}}" as="m" hint-placeholder-count="4">
+                  <div class="item" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center">
+                    <span style="display:flex;align-items:center;gap:8px">
+                      <sc-if value="{{m.locked}}" hint-placeholder-val="{{ false }}"><svg class="ic" viewBox="0 0 24 24" aria-label="Équipe protégée"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></sc-if>
+                      <strong>{{m.label}}</strong><span class="meta">{{m.count}}</span>
+                    </span>
+                    <sc-if value="{{m.canEdit}}" hint-placeholder-val="{{ true }}">
+                      <span style="display:flex;gap:8px">
+                        <button class="btn btn-s" onClick="{{notInTest}}">Renommer</button>
+                        <button class="btn btn-s" style="color:var(--s-crit);border-color:var(--s-crit)" onClick="{{m.remove}}">Supprimer</button>
+                      </span>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{pageIsActus}}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:var(--item-gap)">
+                <h3 style="font-size:20px;font-weight:700;line-height:1.3">Actualités ({{nAdminNews}})</h3>
+                <sc-for list="{{adminNews}}" as="a" hint-placeholder-count="3">
+                  <div class="item" style="display:flex;flex-wrap:wrap;gap:12px 16px;justify-content:space-between;align-items:center;border-left:6px solid var(--m-actus)">
+                    <span style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 320px">
+                      <span style="font-weight:600">{{a.title}}</span>
+                      <span class="meta">{{a.when}} · par {{a.by}}</span>
+                    </span>
+                    <span style="display:flex;gap:8px">
+                      <button class="btn btn-s" onClick="{{notInTest}}">Modifier</button>
+                      <button class="btn btn-s" style="color:var(--s-crit);border-color:var(--s-crit)" onClick="{{notInTest}}">Supprimer</button>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{pageIsSoum}}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:var(--item-gap)">
+                <h3 style="font-size:20px;font-weight:700;line-height:1.3">Soumissions ({{nAdminSubs}})</h3>
+                <sc-for list="{{adminSubs}}" as="s" hint-placeholder-count="4">
+                  <div class="item" style="display:flex;flex-wrap:wrap;gap:12px 16px;justify-content:space-between;align-items:center;border-left:6px solid var(--m-demandes)">
+                    <span style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 320px">
+                      <span style="font-weight:600">{{s.title}}</span>
+                      <span class="meta">{{s.meta}}</span>
+                      <span><span class="chip {{s.statusCls}}">{{s.statusText}}</span></span>
+                    </span>
+                    <span style="display:flex;gap:8px">
+                      <button class="btn btn-s" onClick="{{notInTest}}">Modifier</button>
+                      <button class="btn btn-s" style="color:var(--s-crit);border-color:var(--s-crit)" onClick="{{notInTest}}">Supprimer</button>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{pageIsInd}}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:var(--item-gap)">
+                <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+                  <h3 style="font-size:20px;font-weight:700;line-height:1.3">Indicateurs ({{nAdminInds}})</h3>
+                  <button class="btn btn-p" onClick="{{notInTest}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>Nouvel indicateur</button>
+                </div>
+                <sc-for list="{{adminInds}}" as="i" hint-placeholder-count="2">
+                  <div class="item" style="display:flex;flex-wrap:wrap;gap:12px 16px;justify-content:space-between;align-items:center;border-left:6px solid var(--m-indicateurs)">
+                    <span style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 320px">
+                      <span style="font-weight:600">{{i.label}}</span>
+                      <span style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><span class="ttl" style="font-size:28px;line-height:1.1">{{i.value}}</span><span class="chip" style="background:{{i.bg}};color:{{i.fg}};border-color:{{i.fg}}">{{i.evo}}</span></span>
+                    </span>
+                    <span style="display:flex;gap:8px">
+                      <button class="btn btn-s" onClick="{{notInTest}}">Modifier</button>
+                      <button class="btn btn-s" style="color:var(--s-crit);border-color:var(--s-crit)" onClick="{{notInTest}}">Supprimer</button>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </section>
+      </div>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{modalRefuse}}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed;inset:0;background:rgba(27,28,28,.55);display:grid;place-items:center;padding:16px;z-index:50">
+        <div role="dialog" aria-modal="true" aria-labelledby="m-ref" style="background:#fff;border-radius:var(--r-card);width:100%;max-width:520px;padding:var(--pad);display:flex;flex-direction:column;gap:16px;border:1px solid var(--ink)">
+          <h2 class="ttl" id="m-ref" style="font-size:var(--fs-title);color:var(--m-demandes)">Refuser la demande</h2>
+          <p>Indiquez le motif du refus. Il sera conservé dans l'historique des statuts.</p>
+          <div>
+            <label class="lbl" for="motif">Motif du refus (obligatoire)</label>
+            <textarea class="field" id="motif" rows="4" value="{{motif}}" onChange="{{onMotif}}"></textarea>
+            <sc-if value="{{motifError}}" hint-placeholder-val="{{ false }}">
+              <p role="alert" style="margin-top:8px;font-weight:600;color:var(--s-crit);font-size:var(--fs-meta)">Le motif est obligatoire pour refuser une demande.</p>
+            </sc-if>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+            <button class="btn btn-s" onClick="{{closeModal}}">Annuler</button>
+            <button class="btn btn-ko" onClick="{{confirmRefuse}}">Refuser</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{modalPhoto}}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed;inset:0;background:rgba(27,28,28,.55);display:grid;place-items:center;padding:16px;z-index:50">
+        <div role="dialog" aria-modal="true" aria-labelledby="m-photo" style="background:#fff;border-radius:var(--r-card);width:100%;max-width:480px;padding:var(--pad);display:flex;flex-direction:column;gap:16px;border:1px solid var(--ink)">
+          <h2 class="ttl" id="m-photo" style="font-size:var(--fs-title);color:var(--m-actus)">Ajouter une photo de profil</h2>
+          <p>Choisissez une image : elle s'affichera dans le menu Profil.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">
+            <button class="btn btn-s" onClick="{{closeModal}}">Annuler</button>
+            <button class="btn btn-p" onClick="{{choosePhoto}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>Choisir une image</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{modalIdea}}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed;inset:0;background:rgba(27,28,28,.55);display:grid;place-items:center;padding:16px;z-index:50">
+        <div role="dialog" aria-modal="true" aria-labelledby="m-idea" style="background:#fff;border-radius:var(--r-card);width:100%;max-width:560px;max-height:calc(100vh - 32px);overflow:auto;padding:var(--pad);display:flex;flex-direction:column;gap:16px;border:1px solid var(--ink)">
+          <h2 class="ttl" id="m-idea" style="font-size:var(--fs-title);color:var(--m-demandes)">Soumettre une idée</h2>
+          <div>
+            <label class="lbl" for="idea-name">Votre nom</label>
+            <input class="field" id="idea-name" type="text" value="{{ideaName}}" onChange="{{onIdeaName}}">
+          </div>
+          <div>
+            <label class="lbl" for="idea-title">Votre idée</label>
+            <input class="field" id="idea-title" type="text" value="{{ideaTitle}}" onChange="{{onIdeaTitle}}">
+          </div>
+          <div>
+            <label class="lbl" for="idea-text">Décrivez votre idée</label>
+            <textarea class="field" id="idea-text" rows="6" value="{{ideaText}}" onChange="{{onIdeaText}}" style="resize:vertical"></textarea>
+            <sc-if value="{{ideaError}}" hint-placeholder-val="{{ false }}">
+              <p role="alert" style="margin-top:8px;font-weight:600;color:var(--s-crit);font-size:var(--fs-meta)">Renseignez le titre et la description de votre idée pour l'envoyer.</p>
+            </sc-if>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+              <button class="btn btn-s" onClick="{{addIdeaFile}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>Ajouter une pièce jointe</button>
+              <span class="meta">PDF ou image</span>
+            </div>
+            <sc-for list="{{ideaFilesV}}" as="f" hint-placeholder-count="1">
+              <span style="display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-strong);border-radius:var(--r-chip);padding:4px 6px 4px 10px;background:#fff;font-size:var(--fs-meta);align-self:flex-start">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;color:var(--m-demandes)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>{{f.name}}
+                <button aria-label="{{f.label}}" onClick="{{f.remove}}" style="display:grid;place-items:center;width:24px;height:24px;border:0;background:none;color:var(--ink);padding:0"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+              </span>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+            <button class="btn btn-s" onClick="{{closeModal}}">Annuler</button>
+            <button class="btn btn-idee" onClick="{{submitIdea}}">Envoyer</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{modalAtt}}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed;inset:0;background:rgba(27,28,28,.55);display:grid;place-items:center;padding:16px;z-index:50">
+        <div role="dialog" aria-modal="true" aria-labelledby="m-att" style="background:#fff;border-radius:var(--r-card);width:100%;max-width:480px;padding:var(--pad);display:flex;flex-direction:column;gap:16px;border:1px solid var(--ink)">
+          <h2 class="ttl" id="m-att" style="font-size:var(--fs-title);color:var(--m-actus)">Ajouter une pièce jointe</h2>
+          <p>Ajoutez un fichier, une image…</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <button class="btn btn-s" onClick="{{addFile}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Un fichier</button>
+            <button class="btn btn-s" onClick="{{addImage}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>Une image</button>
+          </div>
+          <div style="display:flex;justify-content:flex-end">
+            <button class="btn btn-s" onClick="{{closeModal}}">Annuler</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{modalPublish}}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed;inset:0;background:rgba(27,28,28,.55);display:grid;place-items:center;padding:16px;z-index:50">
+        <div role="dialog" aria-modal="true" aria-labelledby="m-pub" style="background:#fff;border-radius:var(--r-card);width:100%;max-width:520px;padding:var(--pad);display:flex;flex-direction:column;gap:16px;border:1px solid var(--ink)">
+          <h2 class="ttl" id="m-pub" style="font-size:var(--fs-title);color:var(--m-actus)">Publier pour toute l'entreprise ?</h2>
+          <p style="font-weight:600">{{publishTitle}}</p>
+          <p>Toutes les équipes verront cette actualité dans le fil.</p>
+          <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+            <button class="btn btn-s" onClick="{{closeModal}}">Annuler</button>
+            <button class="btn btn-p" onClick="{{confirmPublish}}">Publier</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+      <div role="status" aria-live="polite" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;max-width:calc(100% - 32px);display:flex;align-items:center;gap:12px;background:{{toastBg}};color:{{toastFg}};padding:12px 16px;border-radius:var(--r-btn);border-left:6px solid {{toastColor}};box-shadow:0 2px 8px rgba(0,0,0,.18)">
+        <sc-if value="{{toastIcon}}" hint-placeholder-val="{{ false }}">
+          <span class="tile" style="width:36px;height:36px;background:{{toastColor}}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span>
+        </sc-if>
+        <span style="font-weight:600">{{toastText}}</span>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variant":{"editor":"enum","options":["apres","avant"],"default":"apres"},"$preview":{"width":1360,"height":3300}}'>
+const HELP_EX = {
+  arr: {
+    title: "Bienvenue à Inès Lambert, nouvelle conseillère Relation clients",
+    body: "Inès rejoint l'équipe Relation clients le lundi 9 novembre. Elle a passé quatre ans dans un cabinet de conseil à Lyon, où elle accompagnait des clients sur leurs projets de transformation.\n\nElle prendra en charge le portefeuille des clients de la région Ouest, avec Camille comme référente pendant son premier mois.\n\nPour l'accueillir, nous organisons un petit-déjeuner d'équipe à 9 h 30 en salle Horizon. Passez lui dire bonjour !",
+    checkTitle: "Dans une annonce d'arrivée",
+    checks: [
+      { label: "Qui arrive", hint: "Prénom, nom et poste." },
+      { label: "Quand", hint: "La date de début." },
+      { label: "Son parcours", hint: "Une phrase sur ce qu'elle a fait avant." },
+      { label: "Son rôle", hint: "Ce qu'elle va prendre en charge et avec qui." },
+      { label: "Comment l'accueillir", hint: "Un moment prévu ou un message à lui envoyer." }
+    ],
+    att: "Conseillé : une photo d'Inès."
+  },
+  res: {
+    title: "L'équipe Relation clients dépasse son objectif de satisfaction",
+    body: "Au troisième trimestre, la satisfaction client de l'équipe atteint 92 %, pour un objectif de 88 %. Le délai moyen de première réponse est passé de 6 h à 3 h 30.\n\nCe résultat vient de deux changements : la réponse sous 4 h et le suivi partagé des dossiers sensibles. Merci à toute l'équipe, et en particulier à Hugo et Sofia, qui ont mis en place ce suivi.\n\nProchain objectif : 90 % au quatrième trimestre.",
+    checkTitle: "Dans une annonce de résultat",
+    checks: [
+      { label: "Le chiffre", hint: "Le résultat, et l'objectif à comparer." },
+      { label: "L'évolution", hint: "Avant et après, pour que le gain se voie." },
+      { label: "La cause", hint: "Ce qui a permis ce résultat." },
+      { label: "Des remerciements", hint: "Les personnes qui y ont contribué, par leur nom." },
+      { label: "La suite", hint: "Le prochain objectif." }
+    ],
+    att: "Conseillé : le graphique du trimestre."
+  },
+  con: {
+    title: "Contrat signé avec Maison Delorme",
+    body: "Nous avons signé un contrat de trois ans avec Maison Delorme, qui nous confie le suivi de ses 40 points de vente. Le contrat démarre le 1er janvier.\n\nKarim pilotera le projet, avec Sofia et Hugo. Ce contrat change trois choses pour nous : une équipe dédiée de quatre personnes, un point hebdomadaire avec le client, et un nouveau tableau de bord de suivi.\n\nBravo à Karim et à toute l'équipe pour ce résultat.",
+    checkTitle: "Dans une annonce de contrat",
+    checks: [
+      { label: "Le client", hint: "Son nom, si le contrat n'est pas confidentiel." },
+      { label: "Le contrat", hint: "La durée, le périmètre et la date de début." },
+      { label: "Qui pilote", hint: "Les personnes en charge du projet." },
+      { label: "Ce que ça change", hint: "L'effet concret pour les collègues." },
+      { label: "Des remerciements", hint: "Ceux qui ont mené la négociation." }
+    ],
+    att: "Conseillé : le logo ou une photo de la signature."
+  }
+};
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = this.initState('rc');
+    this.toastTimer = null;
+  }
+
+  initState(persona) {
+    return {
+      persona: persona,
+      ackIds: {},
+      adminPage: 'overview',
+      dataMenu: false,
+      newTeam: '',
+      teams: [{ name: 'Admin', n: 1, locked: true }, { name: 'Direction commerciale', n: 6 }, { name: 'Direction recrutement', n: 3 }, { name: 'Finance', n: 3 }, { name: 'Happiness Office', n: 2 }, { name: 'Legal', n: 1 }, { name: 'Marketing', n: 4 }, { name: 'Opérations', n: 2 }, { name: 'Product', n: 5 }, { name: 'Relation clients', n: 4 }],
+      start: Date.now(),
+      clicks: 0,
+      doneSecs: null,
+      doneClicks: 0,
+      request: 'pending',
+      motif: '',
+      motifError: false,
+      modal: null,
+      publishId: null,
+      critOpened: false,
+      publishedNew: false,
+      openIds: {},
+      drafts: [{ id: 'd1', title: 'Nouveau pôle Cybersécurité : ouverture des mandats', saved: 'Enregistré il y a 4 jours' }],
+      published: [],
+      validated: [],
+      editorTitle: '',
+      editorBody: '',
+      helpOpen: false,
+      profileOpen: false,
+      photo: false,
+      helpType: null,
+      ideaFilter: 'all',
+      ideaTeam: 'all',
+      myOpen: false,
+      demOpen: false,
+      moreOpen: false,
+      mgrTab: 'actions',
+      ideaName: persona === 'manager' ? 'Julien Morel' : (persona === 'admin' ? 'Marc Simon' : 'Léa Martin'),
+      ideaText: '',
+      ideaTitle: '',
+      rcSubmitted: [],
+      ideaFiles: [],
+      ideaError: false,
+      newIdeas: [],
+      teamFilter: persona === 'admin' ? 'all' : 'Relation clients',
+      queueStatus: {},
+      refuseId: 'r1',
+      openPubs: {},
+      attachments: [],
+      titleError: false,
+      toast: null
+    };
+  }
+
+  addAttachment(names) {
+    const cur = this.state.attachments;
+    const name = names.find((n) => cur.indexOf(n) === -1) || names[0].replace(/(\.\w+)$/, '-' + (cur.length + 1) + '$1');
+    this.setState({ attachments: cur.concat([name]), modal: null });
+  }
+
+  pickHelp(k) {
+    this.setState({ helpType: k, editorTitle: HELP_EX[k].title, editorBody: HELP_EX[k].body, titleError: false });
+  }
+
+  validateItem(m) {
+    if (m.id === 'r1') {
+      this.commit({
+        request: 'validated',
+        validated: [{ title: 'Scoreboard-PM Junior', team: 'Relation clients', when: "2 novembre 2026, à l'instant", quote: 'Un scoreboard mensuel pour suivre les profils PM Junior.' }].concat(this.state.validated)
+      });
+    } else if (m.id.charAt(0) === 'n') {
+      this.commit({ rcSubmitted: this.state.rcSubmitted.map((x) => x.id === m.id ? Object.assign({}, x, { status: 'validated' }) : x) });
+    } else {
+      const q = Object.assign({}, this.state.queueStatus);
+      q[m.id] = 'validated';
+      this.commit({ queueStatus: q });
+    }
+    this.showToast('demandes', 'Idée validée.');
+  }
+
+  commit(partial) {
+    const s = Object.assign({}, this.state, partial);
+    const out = Object.assign({}, partial);
+    if (s.doneSecs == null) {
+      const ok = s.persona === 'rc' ? s.critOpened : (s.persona === 'admin' ? Object.keys(s.ackIds).length > 0 : (s.request !== 'pending' && s.publishedNew));
+      if (ok) {
+        out.doneSecs = Math.max(1, Math.round((Date.now() - s.start) / 1000));
+        out.doneClicks = s.clicks + 1;
+      }
+    }
+    this.setState(out);
+  }
+
+  showToast(mod, text) {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.setState({ toast: { mod: mod, text: text } });
+    this.toastTimer = setTimeout(() => this.setState({ toast: null }), 4500);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const apres = (this.props.variant || 'apres') !== 'avant';
+    const mgr = s.persona === 'manager';
+    const adm = s.persona === 'admin';
+
+    const common = {
+      '--ink': '#1b1c1c', '--card': '#ffffff', '--focus': '#1b1c1c'
+    };
+    const theme = apres ? {
+      '--bg': '#F5F5F0', '--meta': '#4A4D4D', '--border': '#C9CBC5', '--border-strong': '#6B6E6E', '--hover': '#EFEDED',
+      '--fs-body': '16px', '--fs-meta': '14px', '--fs-title': '28px', '--fs-h1': '48px', '--fs-kpi': '44px', '--fs-btn': '16px',
+      '--gap': '32px', '--pad': '24px', '--item-gap': '16px', '--item-pad': '20px', '--field-pad': '12px', '--chip-pad': '4px 10px',
+      '--r-card': '12px', '--r-btn': '8px', '--r-item': '10px', '--r-chip': '8px', '--btn-h': '48px', '--btn-px': '20px',
+      '--tt': 'none', '--ls': '0', '--item-bg': '#FAFAF7', '--item-border': '#C9CBC5',
+      '--m-actus': '#6E2470', '--t-actus': '#F4E8F4',
+      '--m-demandes': '#42359A', '--t-demandes': '#ECE9F8',
+      '--m-blocages': '#17468C', '--t-blocages': '#E4EDF9',
+      '--m-indicateurs': '#0A525C', '--t-indicateurs': '#E0F0F2',
+      '--s-crit': '#8F120C', '--s-crit-t': '#FBE7E5', '--s-alert': '#7A4300', '--s-alert-t': '#FDF0DC',
+      '--chip-bg': '#FBE7E5', '--chip-fg': '#8F120C',
+      '--o-sub': '1', '--o-actus': '2'
+    } : {
+      '--bg': '#F5F3F3', '--meta': '#747878', '--border': '#C4C7C7', '--border-strong': '#C4C7C7', '--hover': '#EFEDED',
+      '--fs-body': '13px', '--fs-meta': '10px', '--fs-title': '18px', '--fs-h1': '36px', '--fs-kpi': '34px', '--fs-btn': '10px',
+      '--gap': '16px', '--pad': '16px', '--item-gap': '8px', '--item-pad': '12px', '--field-pad': '10px', '--chip-pad': '3px 8px',
+      '--r-card': '0', '--r-btn': '0', '--r-item': '0', '--r-chip': '0', '--btn-h': '30px', '--btn-px': '14px',
+      '--tt': 'uppercase', '--ls': '0.06em', '--item-bg': '#ECEBE6', '--item-border': 'transparent',
+      '--m-actus': '#1b1c1c', '--t-actus': 'transparent',
+      '--m-demandes': '#1b1c1c', '--t-demandes': 'transparent',
+      '--m-blocages': '#1b1c1c', '--t-blocages': 'transparent',
+      '--m-indicateurs': '#1b1c1c', '--t-indicateurs': 'transparent',
+      '--s-crit': '#ba1a1a', '--s-crit-t': '#ffdad6', '--s-alert': '#5d5f5b', '--s-alert-t': '#e0e0db',
+      '--chip-bg': '#f3d6cf', '--chip-fg': '#3b2728',
+      '--o-sub': '2', '--o-actus': '1'
+    };
+    const all = Object.assign({}, common, theme);
+    const rootVars = Object.keys(all).map((k) => k + ':' + all[k]).join(';') + ';';
+
+    const POINTS = [
+      { id: 'p1', title: 'Refonte home page', desc: "Refonte de la homepage, trop d'infos pas nécessaires.", team: 'RH', updated: 'Mis à jour il y a 5 jours', status: 1, sev: 'alerte' },
+      { id: 'p8', title: 'Fiches clients non à jour dans le CRM', desc: 'Plusieurs fiches clients ont des contacts obsolètes, ce qui ralentit les relances.', team: 'Relation clients', updated: 'Mis à jour il y a 3 jours', status: 1, sev: 'alerte' },
+      { id: 'p2', title: 'Revue des notes de calcul sans créneau fixe', desc: 'Les validations de notes de calcul se font au couloir, personne ne sait qui valide quoi.', team: "Bureau d'études", updated: 'Mis à jour il y a 6 jours', status: 0, sev: 'critique' },
+      { id: 'p3', title: 'Slack hs', desc: 'Slack est hors service suite à une mise à jour ratée.', team: 'Product', updated: 'Mis à jour il y a 6 jours', status: 0, sev: 'critique' },
+      { id: 'p4', title: 'Discovery HP', desc: 'Entretiens de discovery de la nouvelle homepage à planifier.', team: 'Marketing', updated: 'Mis à jour il y a 6 jours', status: 1, sev: 'alerte' },
+      { id: 'p5', title: 'Machine à café HS, Floor 7', desc: "La machine à café du floor 7 ne marche plus ou est vide. Il faut contacter le prestataire.", team: 'Happiness Office', updated: 'Mis à jour il y a 7 jours', status: 1, sev: 'alerte' },
+      { id: 'p6', title: 'Capacité limitée sur le pôle Cybersécurité', desc: 'Deux nouveaux mandats nécessitent un renfort temporaire en sourcing spécialisé.', team: 'Direction recrutement', updated: 'Mis à jour il y a 7 jours', status: 1, sev: 'alerte' },
+      { id: 'p7', title: 'Brief client incomplet, Head of Product', desc: 'Les critères de séniorité et le périmètre managérial doivent être clarifiés avant la reprise du sourcing.', team: 'Product team', updated: 'Mis à jour il y a 7 jours', status: 0, sev: 'alerte' }
+    ];
+    const STATUS = ['Ouvert', 'En cours', 'Surveillance', 'Résolu'];
+    const points = POINTS.map((p) => {
+      const open = !!s.openIds[p.id];
+      const crit = p.sev === 'critique';
+      let leftBar = 'none';
+      if (apres) leftBar = '6px solid ' + (crit ? '#8F120C' : '#7A4300');
+      else if (crit) leftBar = '3px solid #1b1c1c';
+      return {
+        id: p.id, title: p.title, desc: p.desc, team: p.team, updated: p.updated,
+        statusLabel: STATUS[p.status],
+        statusColor: (!apres && crit) ? '#ba1a1a' : '#747878',
+        isCrit: crit, notCrit: !crit,
+        open: open, expanded: open ? 'true' : 'false',
+        rot: open ? 'rotate(180deg)' : 'none',
+        leftBar: leftBar,
+        steps: STATUS.map((label, i) => ({ label: label, cls: i === p.status ? 'step on' : 'step' })),
+        toggle: () => {
+          const o = Object.assign({}, this.state.openIds);
+          o[p.id] = !o[p.id];
+          this.commit({ openIds: o, critOpened: this.state.critOpened || !!o[p.id] });
+        }
+      };
+    });
+
+    const BASE_VALIDATED = [
+      { title: 'Atelier discovery trimestriel', team: 'Product', when: '1 novembre 2026 à 14:35', quote: 'Un atelier d\'une demi-journée avec les équipes clients.' },
+      { title: 'Salle de calme au 2e étage', team: 'Happiness Office', when: '1 novembre 2026 à 14:33', quote: 'Aménager une salle sans écran pour les pauses.' },
+      { title: 'Scorecard mensuel par équipe', team: 'Direction commerciale', when: '28 octobre 2026 à 19:05', quote: 'Partager un scorecard mensuel avec les managers.' },
+      { title: 'Partage des acquisitions', team: 'Direction commerciale', when: '28 octobre 2026 à 19:05', quote: 'Partager les nouvelles d\'une acquisition de société.' },
+      { title: 'Template de brief client', team: 'Product', when: '28 octobre 2026 à 15:30', quote: 'Un modèle unique de brief, pièce jointe réservée à l\'équipe.' },
+      { title: 'Parrainage des nouvelles recrues', team: 'Admin', when: '28 octobre 2026 à 11:22', quote: 'Un parrain par recrue pendant les trois premiers mois.' }
+    ];
+    const validated = s.validated.concat(BASE_VALIDATED);
+
+    const pointsShown = points.filter((p) => s.teamFilter === 'all' || p.team === s.teamFilter)
+      .map((p, i) => ({ p: p, i: i })).sort((a, b) => (b.p.isCrit - a.p.isCrit) || (a.i - b.i)).map((x) => x.p);
+
+    const MINE = [
+      { title: 'Scoreboard-PM Junior', status: 'pending', meta: 'Soumise il y a 7 jours · Relation clients', quote: 'Un scoreboard mensuel pour suivre les profils PM Junior.', hasFile: true },
+      { title: 'Café des idées du vendredi', status: 'refused', meta: 'Refusée le 14 octobre 2026 à 09:50 · Relation clients', quote: 'Un temps informel chaque vendredi pour partager des idées.', hasFile: false, motif: "Déjà couvert par le point d'équipe du lundi. Vous pouvez en reparler lors de ce point." },
+      { title: 'Modèle de compte rendu client', status: 'valid', meta: 'Validée le 21 octobre 2026 à 10:12 · Relation clients', quote: 'Un modèle unique pour les comptes rendus de rendez-vous clients.', hasFile: false },
+      { title: 'Point mensuel Relation clients et Product', status: 'valid', meta: 'Validée le 7 octobre 2026 à 16:40 · Relation clients', quote: 'Un point mensuel pour remonter les retours clients au Product.', hasFile: false }
+    ].map((x) => Object.assign({ isMine: true }, x));
+    const isMgrP = s.persona === 'manager';
+    const mine0 = (isMgrP ? s.newIdeas : (s.persona === 'rc' ? s.rcSubmitted : [])).map((x) => {
+      const st0 = isMgrP ? 'valid' : ({ pending: 'pending', validated: 'valid', refused: 'refused' })[x.status];
+      return { title: x.title, status: st0, isMine: true, ts: Date.now() - 1, motif: x.motif || '', meta: isMgrP ? "Validée automatiquement à l'instant · Relation clients" : ({ pending: "Soumise à l'instant", valid: "Validée à l'instant", refused: "Refusée à l'instant" })[st0] + ' · Relation clients', quote: x.text, hasFile: x.files.length > 0, fileName: x.files.join(', ') };
+    });
+    const mine = isMgrP ? mine0 : mine0.concat(MINE.map((x) => Object.assign({ fileName: 'Scoreboard-PM Junior.pdf' }, x)));
+    const teamValid = isMgrP ? MINE.filter((x) => x.status === 'valid').map((x) => Object.assign({}, x, { isMine: false })) : [];
+    const others = BASE_VALIDATED.map((v) => ({
+      isMine: false, status: 'valid', title: v.title, meta: 'Validée le ' + v.when + ' · ' + v.team, quote: v.quote, hasFile: false
+    }));
+    const allIdeas = mine.concat(others);
+    const myIdeas = mine.filter((x) => x.status !== 'valid').map((x) => ({
+      title: x.title, meta: x.meta, quote: x.quote, hasFile: x.hasFile, fileName: x.fileName, motif: x.motif || '',
+      isPending: x.status === 'pending', isRefused: x.status === 'refused',
+      leftBar: x.status === 'refused' ? '6px solid #8F120C' : '6px solid #42359A'
+    }));
+    const validAll = mine.concat(teamValid).filter((x) => x.status === 'valid').map((x) => Object.assign({}, x, { team: 'Relation clients' })).concat(BASE_VALIDATED.map((v) => ({
+      isMine: false, status: 'valid', title: v.title, team: v.team, meta: 'Validée le ' + v.when + ' · ' + v.team, quote: v.quote
+    })));
+    const validIdeas = validAll.filter((x) => s.ideaTeam === 'all' || x.team === s.ideaTeam).map((x) => ({
+      title: x.title, meta: x.meta, quote: x.quote, isMine: x.isMine,
+      leftBar: x.isMine ? '6px solid #42359A' : 'none'
+    }));
+    const nPending = mine.filter((x) => x.status === 'pending').length;
+    const nRefused = mine.filter((x) => x.status === 'refused').length;
+    const nValid = mine.length - nPending - nRefused;
+    const ideas = (s.ideaFilter === 'mine' ? mine : (s.ideaFilter === 'others' ? others : allIdeas)).map((x) => ({
+      title: x.title, meta: x.meta, quote: x.quote, hasFile: x.hasFile, isMine: x.isMine,
+      isPending: x.status === 'pending', isValid: x.status === 'valid', isRefused: x.status === 'refused', motif: x.motif || '',
+      leftBar: x.status === 'refused' ? '6px solid #8F120C' : (x.isMine ? '6px solid #42359A' : 'none')
+    }));
+
+    const BASE_PUBLISHED = [
+      { title: 'Bienvenue aux quatre recrues de novembre', when: 'Publiée il y a 10 jours', by: 'Marc S.', body: "Quatre nouvelles personnes rejoignent le cabinet ce mois-ci. Présentez-vous lors du point d'équipe du lundi.", files: [] },
+      { title: 'Rappel : saisir les NPS candidats avant le 15', when: 'Publiée il y a 12 jours', by: 'Marc S.', body: 'Merci de renseigner le NPS de chaque candidat placé avant le 15 du mois.', files: [] },
+      { title: 'Nouvelle procédure de départ : documents à télécharger', when: 'Publiée il y a 3 semaines', by: 'Admin', body: "Les documents d'un collaborateur sont à télécharger avant son départ, puis anonymisés.", files: ['Procedure-depart.pdf'] }
+    ];
+    const published = s.published.concat(BASE_PUBLISHED);
+
+    const publishedM = published.map((a) => {
+      const open = !!s.openPubs[a.title];
+      const files = (a.files || []).map((f) => ({ name: f }));
+      return {
+        title: a.title, when: a.when, by: a.by, body: a.body || '', hasBody: !!a.body,
+        files: files, hasFiles: files.length > 0,
+        open: open, expanded: open ? 'true' : 'false', rot: open ? 'rotate(180deg)' : 'none',
+        toggle: () => {
+          const o = Object.assign({}, this.state.openPubs);
+          o[a.title] = !o[a.title];
+          this.setState({ openPubs: o });
+        }
+      };
+    });
+
+    const ATT_NAMES = ['Programme-seminaire.pdf', 'Organigramme-2026.pdf', 'Planning-novembre.pdf'];
+    const IMG_NAMES = ['Photo-equipe.jpg', 'Photo-evenement.jpg', 'Illustration.png'];
+    const attachments = s.attachments.map((name, i) => ({
+      name: name,
+      label: 'Retirer ' + name,
+      remove: () => this.setState({ attachments: this.state.attachments.filter((x, j) => j !== i) })
+    }));
+
+    const MANUAL = [
+      { id: 'r1', from: 'Léa', team: 'Relation clients', title: 'Scoreboard-PM Junior', when: 'il y a 7 jours', quote: 'Un scoreboard mensuel pour suivre les profils PM Junior.', file: 'Scoreboard-PM Junior.pdf', reason: 'pièce jointe impossible à analyser (PDF scanné).' },
+      { id: 'r2', from: 'Hugo', team: 'Relation clients', title: 'Créneau de formation mensuel', when: 'il y a 5 jours', quote: "Un créneau mensuel de deux heures pour se former aux outils de la Direction commerciale.", file: '', reason: 'idée qui concerne deux équipes.' },
+      { id: 'r3', from: 'Camille', team: 'Relation clients', title: 'Abonnement à un outil de veille clients', when: 'il y a 2 jours', quote: "S'abonner à un outil de veille pour suivre les actualités de nos clients.", file: 'Devis-outil-veille.pdf', reason: "budget au-dessus du seuil d'auto-validation." }
+    ].concat(s.rcSubmitted.map((x) => ({ id: x.id, from: 'Léa', team: 'Relation clients', title: x.title, when: "à l'instant", quote: x.text, file: x.files.join(', '), reason: 'idée soumise par un collaborateur, à valider par vous.' })));
+    const rcItem = (id) => s.rcSubmitted.find((x) => x.id === id);
+    const statusOf = (id) => id === 'r1' ? s.request : (id.charAt(0) === 'n' ? ({ pending: 'pending', validated: 'validated', refused: 'refused' })[rcItem(id).status] : (s.queueStatus[id] || 'pending'));
+    const toDo = MANUAL.filter((m) => statusOf(m.id) === 'pending').map((m) => ({
+      id: m.id, from: m.from, team: m.team, title: m.title, when: m.when, quote: m.quote, file: m.file, hasFile: !!m.file, reason: m.reason,
+      validate: () => this.validateItem(m),
+      askRefuse: () => this.setState({ modal: 'refuse', refuseId: m.id, motif: '', motifError: false })
+    }));
+    const handledM = MANUAL.filter((m) => statusOf(m.id) !== 'pending').map((m) => {
+      const ok = statusOf(m.id) === 'validated';
+      return { title: m.title, meta: m.from + ' · ' + m.team, isValid: ok, isRefused: !ok, isAuto: false,
+        chipLabel: ok ? 'Validée par vous' : 'Refusée par vous', detail: "Traitée à l'instant." };
+    });
+    const AI_DONE = [
+      { title: 'Tableau de relances clients', meta: 'Sofia · Relation clients', isValid: true, isRefused: false, isAuto: true, chipLabel: 'Validée automatiquement', detail: 'Critères remplis : dans le budget, une seule équipe concernée.' },
+      { title: 'Salle de visio supplémentaire', meta: 'Karim · Relation clients', isValid: false, isRefused: true, isAuto: true, chipLabel: 'Refusée automatiquement', detail: 'Doublon d\'une idée déjà validée le 21 octobre.' },
+      { title: 'Newsletter clients trimestrielle', meta: 'Inès · Relation clients', isValid: true, isRefused: false, isAuto: true, chipLabel: 'Validée automatiquement', detail: 'Critères remplis : dans le budget, une seule équipe concernée.' }
+    ];
+    const processed = handledM.concat(AI_DONE);
+
+    const nowValid = s.validated.map((v) => ({ isMine: false, status: 'valid', title: v.title, team: v.team, meta: "Validée à l'instant · " + v.team, quote: v.quote }))
+      .concat(MANUAL.filter((m) => m.id !== 'r1' && statusOf(m.id) === 'validated').map((m) => ({ isMine: false, status: 'valid', title: m.title, team: m.team, meta: "Validée à l'instant · " + m.team, quote: m.quote })));
+    const TS = {
+      'Modèle de compte rendu client': Date.UTC(2026, 9, 21, 10, 12), 'Point mensuel Relation clients et Product': Date.UTC(2026, 9, 7, 16, 40),
+      'Atelier discovery trimestriel': Date.UTC(2026, 10, 1, 14, 35), 'Salle de calme au 2e étage': Date.UTC(2026, 10, 1, 14, 33),
+      'Scorecard mensuel par équipe': Date.UTC(2026, 9, 28, 19, 5), 'Partage des acquisitions': Date.UTC(2026, 9, 28, 19, 5),
+      'Template de brief client': Date.UTC(2026, 9, 28, 15, 30), 'Parrainage des nouvelles recrues': Date.UTC(2026, 9, 28, 11, 22)
+    };
+    const validFiltered = nowValid.map((x) => Object.assign({ ts: Date.now() }, x)).concat(validAll.map((x) => Object.assign({ ts: TS[x.title] || 0 }, x)))
+      .filter((x) => s.ideaTeam === 'all' || x.team === s.ideaTeam)
+      .map((x, i) => ({ x: x, i: i })).sort((a, b) => (b.x.ts - a.x.ts) || (a.i - b.i)).map((o) => o.x);
+    const validIdeas2 = (s.moreOpen ? validFiltered : validFiltered.slice(0, 4)).map((x) => ({
+      title: x.title, meta: x.meta, quote: x.quote, isMine: x.isMine,
+      leftBar: x.isMine ? '6px solid #42359A' : 'none'
+    }));
+    const moreLeft = validFiltered.length - 4;
+
+    const drafts = s.drafts.map((d) => Object.assign({}, d, {
+      ask: () => this.setState({ modal: 'publish', publishId: d.id })
+    }));
+    const pubDraft = s.drafts.find((d) => d.id === s.publishId);
+
+    const toast = s.toast;
+    const colors = apres ? { actus: '#6E2470', demandes: '#42359A', blocages: '#17468C', indicateurs: '#0A525C', none: '#1b1c1c' } : { actus: '#1b1c1c', demandes: '#1b1c1c', blocages: '#1b1c1c', indicateurs: '#1b1c1c', none: '#1b1c1c' };
+
+    const REMINDERS = [
+      { id: 'x1', text: "Hugo Lefèvre (Relation clients) quitte Happy Place le 4 novembre 2026. Aucun document à télécharger.", docs: false },
+      { id: 'x2', text: "Théo Garnier (Marketing) quitte Happy Place le 4 novembre 2026. Aucun document à télécharger.", docs: false },
+      { id: 'x3', text: "Nina Perrin (Finance) quitte Happy Place le 4 novembre 2026 : 1 document joint à ses demandes sera alors supprimé.", docs: true }
+    ];
+    const reminders = REMINDERS.filter((r) => !s.ackIds[r.id]).map((r) => ({
+      text: r.text, hasDocs: r.docs, noDocs: !r.docs,
+      ack: () => {
+        const a = Object.assign({}, this.state.ackIds); a[r.id] = true;
+        this.commit({ ackIds: a });
+        this.showToast('demandes', 'Départ pris en compte.');
+      }
+    }));
+    const adminPoints = points.map((x) => ({ title: x.title, desc: x.desc, team: x.team, isCrit: x.isCrit, notCrit: x.notCrit, statusLabel: x.statusLabel, updated: x.updated, leftBar: x.leftBar }));
+    const teamsV = s.teams.map((x) => ({
+      label: x.name, count: x.n + ' personne(s)', locked: !!x.locked, canEdit: !x.locked,
+      remove: () => this.setState({ teams: this.state.teams.filter((y) => y.name !== x.name) })
+    }));
+    const adminSubs = MANUAL.map((m) => ({ title: m.title, meta: m.from + ' · ' + m.team, statusText: ({ pending: 'À traiter', validated: 'Validée par vous', refused: 'Refusée par vous' })[statusOf(m.id)], statusCls: ({ pending: 'st-wait', validated: 'st-ok', refused: 'st-ko' })[statusOf(m.id)] }))
+      .concat(AI_DONE.map((x) => ({ title: x.title, meta: x.meta, statusText: x.chipLabel, statusCls: x.isValid ? 'st-ok' : 'st-ko' })))
+      .concat(BASE_VALIDATED.map((v) => ({ title: v.title, meta: v.team, statusText: 'Validée', statusCls: 'st-ok' })));
+    const adminInds = [
+      { label: 'Taux de placement', value: '40,6 %', evo: 'En hausse · +3 pts', bg: '#E3F3E8', fg: '#14582F' },
+      { label: 'Missions actives', value: '34,2', evo: 'En baisse · −10,8', bg: '#FBE7E5', fg: '#8F120C' }
+    ];
+    const tabCls = (k) => s.adminPage === k ? 'on' : '';
+    const admMission = "Prenez en compte les départs annoncés dans « Gérer les données », puis vérifiez les informations publiées dans la vue d'ensemble.";
+    const rcMission = "Suivez facilement le statut de vos idées, consultez les points bloquants de votre équipe et lisez les dernières actualités.";
+    const mgrMission = "Nous sommes en fin de mois : publiez une actualité à propos de votre équipe Relation clients, puis passez en revue les soumissions d'idées qui vous ont été envoyées.";
+
+    return {
+      rootVars: rootVars,
+      apres: apres, avant: !apres,
+      versionLabel: apres ? 'VERSION APRÈS' : 'VERSION AVANT',
+      isMgr: mgr, isRc: !mgr && !adm,
+      isAdmin: adm, notAdmin: !adm,
+      rcCls: (!mgr && !adm) ? 'on' : '', mgrCls: mgr ? 'on' : '', admCls: adm ? 'on' : '',
+      rcPressed: (!mgr && !adm) ? 'true' : 'false', mgrPressed: mgr ? 'true' : 'false', admPressed: adm ? 'true' : 'false',
+      pickAdm: () => this.setState(Object.assign(this.initState('admin'), { rcSubmitted: this.state.rcSubmitted })),
+      reminders: reminders, noReminders: reminders.length === 0, remindText: reminders.length + ' à traiter',
+      draftsCount: drafts.length, noDrafts: drafts.length === 0,
+      goData: () => this.setState({ dataMenu: true }),
+      adminPoints: adminPoints, nAdminPoints: adminPoints.length, teamsV: teamsV,
+      newTeam: s.newTeam,
+      onNewTeam: (e) => this.setState({ newTeam: e.target.value }),
+      addTeam: () => {
+        const n = this.state.newTeam.trim();
+        if (!n) { this.showToast('none', "Saisissez un nom d'équipe."); return; }
+        this.setState({ teams: this.state.teams.concat([{ name: n, n: 0 }]), newTeam: '' });
+      },
+      tRapCls: tabCls('rap'), tRapSel: s.adminPage === 'rap' ? 'true' : 'false', tabRap: () => this.setState({ adminPage: 'rap', dataMenu: false }), pageIsRap: s.adminPage === 'rap',
+      tActusCls: tabCls('actus'), tSoumCls: tabCls('soum'), tPointsCls: tabCls('points'), tIndCls: tabCls('ind'), tUsersCls: tabCls('users'),
+      tActusSel: s.adminPage === 'actus' ? 'true' : 'false', tSoumSel: s.adminPage === 'soum' ? 'true' : 'false', tPointsSel: s.adminPage === 'points' ? 'true' : 'false', tIndSel: s.adminPage === 'ind' ? 'true' : 'false', tUsersSel: s.adminPage === 'users' ? 'true' : 'false',
+      tabActus: () => this.setState({ adminPage: 'actus', dataMenu: false }), tabSoum: () => this.setState({ adminPage: 'soum', dataMenu: false }), tabPoints: () => this.setState({ adminPage: 'points', dataMenu: false }), tabInd: () => this.setState({ adminPage: 'ind', dataMenu: false }), tabUsers: () => this.setState({ adminPage: 'users', dataMenu: false }),
+      pageIsPoints: s.adminPage === 'points', pageIsUsers: s.adminPage === 'users', pageIsActus: s.adminPage === 'actus', pageIsSoum: s.adminPage === 'soum', pageIsInd: s.adminPage === 'ind',
+      onSub: adm && s.adminPage !== 'overview',
+      layoutData: adm && s.adminPage !== 'overview',
+      showHead: !(adm && s.adminPage !== 'overview'),
+      pageTitle: { rap: 'Rappels de départ', actus: 'Actualités', soum: 'Soumissions', points: 'Points bloquants', ind: 'Indicateurs', users: 'Utilisateurs autorisés' }[s.adminPage] || '',
+      navOverCls: s.adminPage === 'overview' ? 'on' : '', navOverCur: s.adminPage === 'overview' ? 'page' : 'false',
+      navDataCls: (s.adminPage === 'rap' || s.adminPage === 'users') ? 'on' : '', navDataCur: (s.adminPage === 'rap' || s.adminPage === 'users') ? 'page' : 'false',
+      navAdmActCls: (s.adminPage === 'points' || s.adminPage === 'ind' || s.adminPage === 'actus') ? 'on' : '', navAdmActCur: (s.adminPage === 'points' || s.adminPage === 'ind' || s.adminPage === 'actus') ? 'page' : 'false',
+      grpData: s.adminPage === 'rap' || s.adminPage === 'users', grpAct: s.adminPage === 'points' || s.adminPage === 'ind' || s.adminPage === 'actus',
+      tabsLabel: (s.adminPage === 'rap' || s.adminPage === 'users') ? 'Données à gérer' : 'Vos actions',
+      pageGroup: (s.adminPage === 'rap' || s.adminPage === 'users') ? 'Gérer les données' : 'Vos actions',
+      dataMenuOpen: s.dataMenu,
+      toggleDataMenu: () => this.setState({ dataMenu: !this.state.dataMenu }),
+      isMgrNav: apres && mgr, isNav: apres && !adm, showKicker: !(apres && !adm && s.mgrTab === 'actions'), kickerGap: (apres && !adm && s.mgrTab === 'actions') ? '0' : '8px', rcAct: s.mgrTab === 'actions', rcOver: s.mgrTab === 'overview', showActions: !adm && (!mgr || s.mgrTab === 'actions'),
+      rowDisp: adm ? 'contents' : 'flex', floBlo: adm ? '0 0 auto' : '3 1 560px', floInd: adm ? '0 0 auto' : '2 1 340px',
+      ordPub: 1, ordInd: adm ? 2 : 4, ordVal: adm ? 3 : 2, ordBlo: adm ? 4 : 3, showOverview: !mgr || s.mgrTab === 'overview',
+      navActCls: s.mgrTab === 'actions' ? 'on' : '', navActCur: s.mgrTab === 'actions' ? 'page' : 'false',
+      navVueCls: s.mgrTab === 'overview' ? 'on' : '', navVueCur: s.mgrTab === 'overview' ? 'page' : 'false',
+      goActions: () => this.setState({ mgrTab: 'actions' }), goVue: () => this.setState({ mgrTab: 'overview' }),
+      goOverview: () => this.setState({ adminPage: 'overview', dataMenu: false }),
+      adminNews: published.map((a) => ({ title: a.title, when: a.when, by: a.by })), nAdminNews: published.length,
+      adminSubs: adminSubs, nAdminSubs: adminSubs.length,
+      adminInds: adminInds, nAdminInds: adminInds.length,
+      pointsNote: adm ? "Vous voyez les points bloquants de toutes les équipes. Choisissez une équipe dans le filtre pour cibler les siens." : "Un filtre automatique cible d'abord les points bloquants de votre équipe, Relation clients. Choisissez « Toutes les équipes » ou une autre équipe pour avoir une vision globale.",
+      pickRc: () => this.setState(Object.assign(this.initState('rc'), { rcSubmitted: this.state.rcSubmitted })),
+      pickMgr: () => this.setState(Object.assign(this.initState('manager'), { rcSubmitted: this.state.rcSubmitted })),
+      restart: () => this.setState(this.initState(this.state.persona)),
+      missionText: 'Mission : ' + (adm ? admMission : (mgr ? mgrMission : rcMission)),
+      done: s.doneSecs != null, doneSecs: s.doneSecs, doneClicks: s.doneClicks,
+      countClick: () => this.setState((p) => ({ clicks: p.clicks + 1 })),
+      notInTest: () => this.showToast('none', 'Cette action ne fait pas partie du parcours de test.'),
+      userLine: adm ? 'Marc · Administrateur' : (mgr ? 'Julien · Manager, Relation clients' : 'Léa · Collaboratrice, Relation clients'),
+      requesterName: mgr ? 'Léa' : 'Léa (vous)',
+      layoutRc: apres && !mgr && !adm, layoutMgr: apres && (mgr || (adm && s.adminPage === 'overview')), layoutStd: !apres,
+      showSubmit: !apres,
+      publishedM: publishedM,
+      attachments: attachments, noAtt: attachments.length === 0,
+      isApres: apres,
+      profileOpen: s.profileOpen,
+      toggleProfile: () => this.setState({ profileOpen: !this.state.profileOpen }),
+      profName: adm ? 'Marc Simon' : (mgr ? 'Julien Morel' : 'Léa Martin'),
+      profRole: adm ? 'Administrateur' : (mgr ? 'Manager' : 'Collaboratrice'),
+      profTeam: adm ? 'Admin' : 'Relation clients',
+      profInitials: adm ? 'MS' : (mgr ? 'JM' : 'LM'),
+      avatarBg: s.photo ? 'linear-gradient(160deg,#B58BC0,#6E2470)' : '#6E2470',
+      hasPhoto: s.photo, noPhoto: !s.photo,
+      photoLabel: s.photo ? 'Changer la photo de profil' : 'Ajouter une photo de profil',
+      openPhoto: () => this.setState({ modal: 'photo' }),
+      choosePhoto: () => this.setState({ photo: true, modal: null }),
+      modalPhoto: s.modal === 'photo',
+      openAtt: () => this.setState({ modal: 'attach' }),
+      addFile: () => this.addAttachment(ATT_NAMES),
+      addImage: () => this.addAttachment(IMG_NAMES),
+      titleError: s.titleError,
+      askPublish: () => {
+        if (!this.state.editorTitle.trim()) { this.setState({ titleError: true }); return; }
+        this.setState({ modal: 'publish', publishId: 'editor', titleError: false });
+      },
+      toDo: toDo, noToDo: toDo.length === 0, todoText: toDo.length + ' à traiter',
+      processed: processed,
+      ideas: ideas, nAll: allIdeas.length, nMine: mine.length, nOthers: others.length,
+      mineSummary: 'Vos idées : ' + nPending + ' en attente · ' + nValid + ' validée' + (nValid > 1 ? 's' : '') + ' · ' + nRefused + ' refusée' + (nRefused > 1 ? 's' : ''),
+      fAllCls: s.ideaFilter === 'all' ? 'on' : '', fMineCls: s.ideaFilter === 'mine' ? 'on' : '', fOthersCls: s.ideaFilter === 'others' ? 'on' : '',
+      fAllPressed: s.ideaFilter === 'all' ? 'true' : 'false', fMinePressed: s.ideaFilter === 'mine' ? 'true' : 'false', fOthersPressed: s.ideaFilter === 'others' ? 'true' : 'false',
+      myOpen: s.myOpen, myRot: s.myOpen ? 'rotate(180deg)' : 'none', myToggleLabel: s.myOpen ? 'Réduire' : 'Agrandir',
+      toggleMy: () => this.setState({ myOpen: !this.state.myOpen }),
+      pendingText: nPending + ' en attente', refusedText: nRefused + ' refusée' + (nRefused > 1 ? 's' : ''),
+      demOpen: s.demOpen, demRot: s.demOpen ? 'rotate(180deg)' : 'none',
+      toggleDem: () => this.setState({ demOpen: !this.state.demOpen }),
+      procOkText: processed.filter((x) => x.isValid).length + ' validée' + (processed.filter((x) => x.isValid).length > 1 ? 's' : ''),
+      procKoText: processed.filter((x) => x.isRefused).length + ' refusée' + (processed.filter((x) => x.isRefused).length > 1 ? 's' : ''),
+      showMoreLink: moreLeft > 0 || s.moreOpen, moreOpen: s.moreOpen,
+      pubTitle: mgr ? 'Actualités du cabinet' : 'Actualités publiées',
+      mgrIdeas: mine0.map((x) => ({ title: x.title, meta: x.meta, quote: x.quote, hasFile: x.hasFile, fileName: x.fileName })), noMgrIdeas: mine0.length === 0,
+      mgrAutoText: mine0.length + ' idée' + (mine0.length > 1 ? 's' : '') + ' validée' + (mine0.length > 1 ? 's' : '') + ' automatiquement',
+      moreLabel: s.moreOpen ? 'Afficher moins' : 'Afficher plus (' + moreLeft + ' restante' + (moreLeft > 1 ? 's' : '') + ')',
+      toggleMore: () => this.setState({ moreOpen: !this.state.moreOpen }),
+      myIdeas: myIdeas, validIdeas: validIdeas2, noValidIdeas: validIdeas2.length === 0,
+      ideaTeam: s.ideaTeam,
+      onIdeaTeam: (e) => this.setState({ ideaTeam: e.target.value }),
+      pickAll: () => this.setState({ ideaFilter: 'all' }),
+      pickMine: () => this.setState({ ideaFilter: 'mine' }),
+      pickOthers: () => this.setState({ ideaFilter: 'others' }),
+      teamFilter: s.teamFilter,
+      onTeam: (e) => this.setState({ teamFilter: e.target.value }),
+      pointsShown: pointsShown, noPoints: pointsShown.length === 0,
+      pending: s.request === 'pending', notPending: s.request !== 'pending',
+      points: points, validated: validated, published: published,
+      drafts: drafts, hasDrafts: drafts.length > 0,
+      draftCountText: drafts.length + ' brouillon' + (drafts.length > 1 ? 's' : '') + ' en attente',
+      editorTitle: s.editorTitle, editorBody: s.editorBody,
+      onTitle: (e) => this.setState({ editorTitle: e.target.value, titleError: false }),
+      onBody: (e) => this.setState({ editorBody: e.target.value }),
+      helpOpen: s.helpOpen,
+      helpBtnStyle: s.helpOpen ? 'background:var(--m-actus);border-color:var(--m-actus);color:#fff' : 'background:#fff;border-color:var(--m-actus);color:var(--m-actus)',
+      toggleHelp: () => this.setState({ helpOpen: !this.state.helpOpen }),
+      arrOn: s.helpType === 'arr', resOn: s.helpType === 'res', conOn: s.helpType === 'con',
+      arrStyle: s.helpType === 'arr' ? 'border:2px solid var(--m-actus);background:var(--t-actus)' : 'border:1px solid var(--border-strong);background:#fff',
+      resStyle: s.helpType === 'res' ? 'border:2px solid var(--m-actus);background:var(--t-actus)' : 'border:1px solid var(--border-strong);background:#fff',
+      conStyle: s.helpType === 'con' ? 'border:2px solid var(--m-actus);background:var(--t-actus)' : 'border:1px solid var(--border-strong);background:#fff',
+      helpArr: () => this.pickHelp('arr'),
+      helpRes: () => this.pickHelp('res'),
+      helpCon: () => this.pickHelp('con'),
+      helpHasType: !!s.helpType,
+      helpAtt: s.helpType ? HELP_EX[s.helpType].att : '',
+      arrChecks: HELP_EX.arr.checks, resChecks: HELP_EX.res.checks, conChecks: HELP_EX.con.checks,
+      wordText: (function () { const w = s.editorBody.trim() ? s.editorBody.trim().split(/\s+/).length : 0; return w + ' mots · ' + (w < 60 ? 'un peu court' : (w > 120 ? 'un peu long' : 'bonne longueur')) + ' (idéal : 60 à 120 mots)'; })(),
+      saveDraft: () => {
+        const t = this.state.editorTitle.trim();
+        if (!t) { this.showToast('actus', 'Ajoutez un titre pour enregistrer le brouillon.'); return; }
+        this.setState({
+          drafts: this.state.drafts.concat([{ id: 'd' + Date.now(), title: t, saved: "Enregistré à l'instant" }]),
+          editorTitle: '', editorBody: ''
+        });
+        this.showToast('actus', 'Brouillon enregistré.');
+      },
+      validate: () => this.validateItem({ id: 'r1' }),
+      askRefuse: () => this.setState({ modal: 'refuse', refuseId: 'r1', motif: '', motifError: false }),
+      onMotif: (e) => this.setState({ motif: e.target.value }),
+      confirmRefuse: () => {
+        if (!this.state.motif.trim()) { this.setState({ motifError: true }); return; }
+        const id = this.state.refuseId || 'r1';
+        if (id === 'r1') {
+          this.commit({ request: 'refused', modal: null });
+        } else if (id.charAt(0) === 'n') {
+          const mt = this.state.motif.trim();
+          this.commit({ rcSubmitted: this.state.rcSubmitted.map((x) => x.id === id ? Object.assign({}, x, { status: 'refused', motif: mt }) : x), modal: null });
+        } else {
+          const q = Object.assign({}, this.state.queueStatus);
+          q[id] = 'refused';
+          this.commit({ queueStatus: q, modal: null });
+        }
+        this.showToast('demandes', 'Idée refusée. Le motif est enregistré.');
+      },
+      confirmPublish: () => {
+        const st = this.state;
+        if (st.publishId === 'editor') {
+          this.commit({
+            published: [{ title: st.editorTitle.trim(), when: "Publiée à l'instant", by: (st.persona === 'admin' ? 'Marc S.' : 'Julien M.'), body: st.editorBody.trim(), files: st.attachments.slice() }].concat(st.published),
+            publishedNew: true, modal: null, publishId: null,
+            editorTitle: '', editorBody: '', helpType: null, attachments: [], titleError: false
+          });
+          this.showToast('actus', 'Actualité publiée pour toute l\'entreprise.');
+          return;
+        }
+        const d = st.drafts.find((x) => x.id === st.publishId);
+        if (!d) { this.setState({ modal: null }); return; }
+        this.commit({
+          drafts: st.drafts.filter((x) => x.id !== d.id),
+          published: [{ title: d.title, when: "Publiée à l'instant", by: (st.persona === 'admin' ? 'Marc S.' : 'Julien M.') }].concat(st.published),
+          publishedNew: true, modal: null, publishId: null
+        });
+        this.showToast('actus', 'Actualité publiée pour toute l\'entreprise.');
+      },
+      closeModal: () => this.setState({ modal: null }),
+      modalIdea: s.modal === 'idea',
+      openIdea: () => this.setState({ modal: 'idea', ideaError: false }),
+      ideaName: s.ideaName, ideaText: s.ideaText, ideaTitle: s.ideaTitle,
+      onIdeaTitle: (e) => this.setState({ ideaTitle: e.target.value, ideaError: false }), ideaError: s.ideaError,
+      onIdeaName: (e) => this.setState({ ideaName: e.target.value }),
+      onIdeaText: (e) => this.setState({ ideaText: e.target.value, ideaError: false }),
+      ideaFilesV: s.ideaFiles.map((name, i) => ({ name: name, label: 'Retirer ' + name, remove: () => this.setState({ ideaFiles: this.state.ideaFiles.filter((x, j) => j !== i) }) })),
+      addIdeaFile: () => {
+        const names = ['Presentation-idee.pdf', 'Maquette-idee.png', 'Schema-idee.jpg'];
+        const cur = this.state.ideaFiles;
+        const name = names.find((n) => cur.indexOf(n) === -1) || ('Piece-jointe-' + (cur.length + 1) + '.pdf');
+        this.setState({ ideaFiles: cur.concat([name]) });
+      },
+      submitIdea: () => {
+        const st = this.state;
+        const text = st.ideaText.trim();
+        const title = st.ideaTitle.trim();
+        if (!text || !title) { this.setState({ ideaError: true }); return; }
+        const item = { id: 'n' + Date.now(), title: title, text: text, files: st.ideaFiles.slice(), status: 'pending', motif: '' };
+        this.setState({ newIdeas: [item].concat(st.newIdeas), rcSubmitted: st.persona === 'rc' ? [item].concat(st.rcSubmitted) : st.rcSubmitted, ideaText: '', ideaTitle: '', ideaFiles: [], ideaError: false, modal: null, myOpen: true });
+        this.showToast('demandes', this.state.persona === 'manager' ? 'Idée validée automatiquement.' : 'Idée envoyée. Elle est en attente de validation.');
+      },
+      modalRefuse: s.modal === 'refuse', modalAtt: s.modal === 'attach', modalPublish: s.modal === 'publish',
+      motif: s.motif, motifError: s.motifError,
+      publishTitle: s.publishId === 'editor' ? s.editorTitle.trim() : (pubDraft ? pubDraft.title : ''),
+      hasToast: !!toast,
+      toastText: toast ? toast.text : '',
+      toastColor: toast ? colors[toast.mod] : '#1b1c1c',
+      toastIcon: !!toast && apres && toast.mod !== 'none',
+      toastBg: apres ? '#ffffff' : '#1b1c1c',
+      toastFg: apres ? '#1b1c1c' : '#ffffff'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -29,16 +29,24 @@ export const Route = createFileRoute("/_authenticated/manage")({
   component: ManageLayout,
 });
 
-const tabs = [
-  { to: "/manage/news", label: "ACTUALITÉS" },
-  { to: "/manage/submissions", label: "SOUMISSIONS" },
-  { to: "/manage/blockers", label: "POINTS BLOQUANTS" },
-  { to: "/manage/metrics", label: "INDICATEURS" },
-  { to: "/manage/users", label: "UTILISATEURS AUTORISÉS" },
+// Deux familles, comme dans le menu : « Vos actions » et « Gérer les données ».
+const actionTabs = [
+  { to: "/manage/blockers", label: "Points bloquants" },
+  { to: "/manage/metrics", label: "Indicateurs" },
+  { to: "/manage/news", label: "Actualités" },
+] as const;
+const dataTabs = [
+  { to: "/manage/reminders", label: "Rappels de départ" },
+  { to: "/manage/users", label: "Utilisateurs autorisés" },
 ] as const;
 
 function ManageLayout() {
   const qc = useQueryClient();
+  const pathname = useRouterState({ select: (st) => st.location.pathname });
+  const dataSection = pathname.startsWith("/manage/users") || pathname.startsWith("/manage/reminders");
+  const tabs = dataSection ? dataTabs : actionTabs;
+  const section = dataSection ? "Gérer les données" : "Vos actions";
+  const pageTitle = [...dataTabs, ...actionTabs].find((t) => pathname.startsWith(t.to))?.label ?? section;
   // Suppression silencieuse des pièces jointes échues, une fois par chargement de /manage
   useEffect(() => {
     processAttachmentDeletionQueue()
@@ -53,35 +61,34 @@ function ManageLayout() {
     <div className="bg-background text-on-surface font-body-md min-h-screen">
       <BrandHeader />
       <main className="w-full max-w-interface mx-auto p-sm md:p-md space-y-md">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-sm">
-          <div className="space-y-1">
-            <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">
-              Gestion des données
-            </p>
-            <h1 className="font-headline-lg text-headline-lg text-primary">Gestion des données</h1>
-          </div>
-          <Link
-            to="/"
-            className="px-md py-xs border border-outline bg-surface text-primary font-label-md text-label-md hover:bg-surface-container"
-          >
-            ← RETOUR À LA VUE D'ENSEMBLE
-          </Link>
+        <div>
+          <p className="text-sm text-on-surface-variant">{section}</p>
+          <h1 className="mt-2 font-headline-lg text-headline-lg text-primary">{pageTitle}</h1>
         </div>
 
-        <nav className="flex flex-wrap gap-xs border-b border-outline-variant pb-sm">
-          {tabs.map((t) => (
-            <Link
-              key={t.to}
-              to={t.to}
-              className="px-md py-xs border border-outline-variant font-label-md text-label-md text-on-surface-variant hover:bg-surface-container"
-              activeProps={{ className: "bg-primary text-on-primary border-primary" }}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </nav>
-
-        <Outlet />
+        <section className="space-y-md rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
+          <div role="tablist" aria-label={dataSection ? "Données à gérer" : "Vos actions"} className="flex flex-wrap gap-2">
+            {tabs.map((t) => {
+              const active = pathname.startsWith(t.to);
+              return (
+                <Link
+                  key={t.to}
+                  to={t.to}
+                  role="tab"
+                  aria-selected={active}
+                  className={`inline-flex min-h-12 items-center rounded-lg border px-5 text-base font-semibold ${
+                    active
+                      ? "border-primary bg-primary text-on-primary"
+                      : "border-outline text-primary hover:bg-surface-container"
+                  }`}
+                >
+                  {t.label}
+                </Link>
+              );
+            })}
+          </div>
+          <Outlet />
+        </section>
       </main>
     </div>
   );

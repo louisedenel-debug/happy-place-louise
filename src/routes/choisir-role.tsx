@@ -45,6 +45,7 @@ function ChoisirRolePage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [team, setTeam] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -56,7 +57,7 @@ function ChoisirRolePage() {
         const [{ data: teamRows, error: teamErr }, own, existingRole] = await Promise.all([
           supabase.from("teams").select("name").eq("is_reserved", false).order("name"),
           email
-            ? supabase.from("allowed_users").select("id, first_name, last_name, team").eq("email", email.toLowerCase()).maybeSingle()
+            ? supabase.from("allowed_users").select("id, first_name, last_name, team, contact_email").eq("email", email.toLowerCase()).maybeSingle()
             : Promise.resolve({ data: null }),
           email ? fetchOwnRole(email) : Promise.resolve(null),
         ]);
@@ -65,6 +66,7 @@ function ChoisirRolePage() {
         if (own.data) {
           setFirstName(own.data.first_name ?? "");
           setLastName(own.data.last_name ?? "");
+          setContactEmail(own.data.contact_email ?? "");
           let currentTeam = own.data.team ?? "";
           if (existingRole === "manager") {
             const { data: mt } = await supabase.from("manager_teams").select("team").eq("allowed_user_id", own.data.id).limit(1);
@@ -95,12 +97,18 @@ function ChoisirRolePage() {
       setError("Choisis une équipe.");
       return;
     }
+    const mail = contactEmail.trim().toLowerCase();
+    if (mail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) {
+      setError("Cette adresse mail n'est pas valide.");
+      return;
+    }
     setBusy(true);
     const { error: err } = await supabase.rpc("choisir_mon_role", {
       _role: role,
       _first_name: firstName.trim(),
       _last_name: lastName.trim(),
       _team: role === "admin" ? null : team,
+      _contact_email: mail || null,
     });
     if (err) {
       setBusy(false);
@@ -115,14 +123,14 @@ function ChoisirRolePage() {
   }
 
   const inputCls =
-    "mt-xs h-11 w-full border border-outline-variant bg-background px-sm font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary";
+    "mt-xs h-11 w-full rounded-lg border border-outline-variant bg-background px-sm font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary";
   const labelCls = "block font-label-sm text-label-sm uppercase text-on-surface-variant";
 
   return (
     <div className="min-h-dvh w-full bg-background flex flex-col">
       <BrandHeader />
       <main className="flex flex-1 items-center justify-center px-md py-lg">
-        <section className="w-[min(100%,34rem)] border border-outline-variant bg-surface-container-lowest p-lg shadow-sm">
+        <section className="w-[min(100%,34rem)] border border-outline-variant bg-surface-container-lowest p-lg shadow-sm rounded-xl">
           <div className="space-y-xs">
             <p className="font-label-sm text-label-sm uppercase text-on-surface-variant">
               {current ? `Rôle actuel : ${current}` : "Première connexion"}
@@ -134,7 +142,7 @@ function ChoisirRolePage() {
           </div>
 
           {error && (
-            <p className="mt-md border border-error bg-error-container p-sm font-body-sm text-on-error-container" role="alert">
+            <p className="mt-md border border-error bg-error-container p-sm font-body-sm text-on-error-container rounded-lg" role="alert">
               {error}
             </p>
           )}
@@ -154,12 +162,30 @@ function ChoisirRolePage() {
                 </label>
               </div>
 
+              <label className={labelCls}>
+                Adresse mail (facultatif)
+                <input
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  maxLength={254}
+                  autoComplete="email"
+                  placeholder="prenom.nom@exemple.fr"
+                  aria-describedby="aide-mail"
+                  className={inputCls}
+                />
+                <span id="aide-mail" className="mt-xs block font-body-sm text-body-sm normal-case text-on-surface-variant">
+                  Vous recevrez un mail de bienvenue, puis un mail à chaque nouvelle actualité. Votre adresse est transmise au
+                  service d'envoi des mails. Laissez vide pour ne rien recevoir.
+                </span>
+              </label>
+
               <fieldset className="space-y-xs">
                 <legend className={labelCls}>Rôle</legend>
                 {ROLES.map((r) => (
                   <label
                     key={r.value}
-                    className={`flex cursor-pointer gap-sm border p-sm ${
+                    className={`flex cursor-pointer gap-sm rounded-xl border p-sm ${
                       role === r.value ? "border-primary bg-surface-container" : "border-outline-variant"
                     }`}
                   >
@@ -193,8 +219,8 @@ function ChoisirRolePage() {
                 </label>
               )}
 
-              <Button type="submit" disabled={busy} className="h-12 w-full rounded-none font-label-md text-xs uppercase text-on-primary">
-                {busy ? "PATIENTE…" : current ? "CHANGER DE RÔLE" : "ENTRER DANS HAPPY PLACE"}
+              <Button type="submit" disabled={busy} className="min-h-12 w-full rounded-lg text-base font-semibold text-on-primary">
+                {busy ? "Patiente…" : current ? "Changer de rôle" : "Entrer dans Happy Place"}
               </Button>
             </form>
           )}

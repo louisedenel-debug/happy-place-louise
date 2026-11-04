@@ -5,14 +5,31 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BulkImport } from "@/components/manage/bulk-import";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { countAttachmentDeletionQueue, processAttachmentDeletionQueue } from "@/lib/dashboard";
+import { Modal, useConfirm } from "@/components/manage/crud-ui";
+import {
+  btnDangerOutlineSm,
+  btnPrimary,
+  btnPrimarySm,
+  btnSecondary,
+  btnSecondarySm,
+} from "@/lib/button-styles";
 
 export const Route = createFileRoute("/_authenticated/manage/users")({
   head: () => ({
     meta: [
       { title: "Utilisateurs autorisés — Happy Place" },
-      { name: "description", content: "Liste blanche des comptes Google autorisés à se connecter." },
+      {
+        name: "description",
+        content: "Liste blanche des comptes Google autorisés à se connecter.",
+      },
       { property: "og:title", content: "Utilisateurs autorisés — Happy Place" },
       { property: "og:description", content: "Gérer qui peut accéder à Happy Place." },
       { property: "og:type", content: "website" },
@@ -36,9 +53,14 @@ type Row = {
 };
 const nameSchema = z.string().trim().max(100, "100 caractères maximum");
 const emailSchema = z.string().trim().toLowerCase().email("Adresse email invalide").max(255);
-const teamSchema = z.string().trim().min(2, "Nom d'équipe trop court").max(60, "60 caractères maximum");
+const teamSchema = z
+  .string()
+  .trim()
+  .min(2, "Nom d'équipe trop court")
+  .max(60, "60 caractères maximum");
 
 function UsersPage() {
+  const [ask, confirmDialog] = useConfirm();
   const qc = useQueryClient();
   const { email: me } = Route.useRouteContext();
   const [email, setEmail] = useState("");
@@ -55,7 +77,9 @@ function UsersPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("allowed_users")
-        .select("id, email, first_name, last_name, team, departure_date, created_at, allowed_user_roles(role), manager_teams(team)")
+        .select(
+          "id, email, first_name, last_name, team, departure_date, created_at, allowed_user_roles(role), manager_teams(team)",
+        )
         .order("created_at");
       if (error) throw error;
       return (data ?? []).map((user) => ({
@@ -76,11 +100,17 @@ function UsersPage() {
     queryFn: async () => {
       const { data, error } = await supabase.from("teams").select("name, is_reserved");
       if (error) throw error;
-      return (data ?? []).sort((a, b) => a.name.localeCompare(b.name, "fr", { sensitivity: "base" }));
+      return (data ?? []).sort((a, b) =>
+        a.name.localeCompare(b.name, "fr", { sensitivity: "base" }),
+      );
     },
   });
-  const selectableTeams = (teamsQuery.data ?? []).filter((t) => !t.is_reserved && t.name.toLowerCase() !== "admin").map((t) => t.name);
-  const [roleDialog, setRoleDialog] = useState<{ id: string; email: string; team: string } | null>(null);
+  const selectableTeams = (teamsQuery.data ?? [])
+    .filter((t) => !t.is_reserved && t.name.toLowerCase() !== "admin")
+    .map((t) => t.name);
+  const [roleDialog, setRoleDialog] = useState<{ id: string; email: string; team: string } | null>(
+    null,
+  );
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["allowed_users"] });
     qc.invalidateQueries({ queryKey: ["teams"] });
@@ -88,13 +118,22 @@ function UsersPage() {
   const onError = (e: unknown) => toast.error((e as Error).message);
 
   const add = useMutation({
-    mutationFn: async (v: { email: string; role: AppRole; team: string | null; first_name: string | null; last_name: string | null }) => {
+    mutationFn: async (v: {
+      email: string;
+      role: AppRole;
+      team: string | null;
+      first_name: string | null;
+      last_name: string | null;
+    }) => {
       const { data, error } = await supabase
         .from("allowed_users")
         .insert({ email: v.email, team: v.team, first_name: v.first_name, last_name: v.last_name })
         .select("id")
         .single();
-      if (error) throw new Error(error.code === "23505" ? "Cet email est déjà dans la liste" : error.message);
+      if (error)
+        throw new Error(
+          error.code === "23505" ? "Cet email est déjà dans la liste" : error.message,
+        );
       const { error: roleError } = await supabase
         .from("allowed_user_roles")
         .insert({ allowed_user_id: data.id, role: v.role });
@@ -103,19 +142,37 @@ function UsersPage() {
         throw roleError;
       }
     },
-    onSuccess: () => { setEmail(""); setNewTeam(""); setFirstName(""); setLastName(""); toast.success("Utilisateur ajouté"); refresh(); },
+    onSuccess: () => {
+      setEmail("");
+      setNewTeam("");
+      setFirstName("");
+      setLastName("");
+      toast.success("Utilisateur ajouté");
+      refresh();
+    },
     onError,
   });
   const update = useMutation({
     mutationFn: async (v: { id: string; role: AppRole; team?: string }) => {
       if (v.role === "collaborateur") {
         const parsed = teamSchema.safeParse(v.team ?? "");
-        if (!parsed.success) throw new Error("Équipe requise pour un collaborateur : " + parsed.error.issues[0].message);
-        const { data, error: tErr } = await supabase.from("allowed_users").update({ team: parsed.data }).eq("id", v.id).select("id");
+        if (!parsed.success)
+          throw new Error(
+            "Équipe requise pour un collaborateur : " + parsed.error.issues[0].message,
+          );
+        const { data, error: tErr } = await supabase
+          .from("allowed_users")
+          .update({ team: parsed.data })
+          .eq("id", v.id)
+          .select("id");
         if (tErr) throw tErr;
         if (!data?.length) throw new Error("Modification refusée : vérifie que tu es admin");
       } else {
-        const { data, error: tErr } = await supabase.from("allowed_users").update({ team: null }).eq("id", v.id).select("id");
+        const { data, error: tErr } = await supabase
+          .from("allowed_users")
+          .update({ team: null })
+          .eq("id", v.id)
+          .select("id");
         if (tErr) throw tErr;
         if (!data?.length) throw new Error("Modification refusée : vérifie que tu es admin");
       }
@@ -127,7 +184,10 @@ function UsersPage() {
       if (error) throw error;
       if (!roleRows?.length) throw new Error("Modification refusée : vérifie que tu es admin");
       if (v.role !== "manager") {
-        const { error: teamError } = await supabase.from("manager_teams").delete().eq("allowed_user_id", v.id);
+        const { error: teamError } = await supabase
+          .from("manager_teams")
+          .delete()
+          .eq("allowed_user_id", v.id);
         if (teamError) throw teamError;
       }
     },
@@ -136,11 +196,17 @@ function UsersPage() {
   });
   const setDeparture = useMutation({
     mutationFn: async (v: { id: string; date: string | null }) => {
-      const { error } = await supabase.from("allowed_users").update({ departure_date: v.date }).eq("id", v.id);
+      const { error } = await supabase
+        .from("allowed_users")
+        .update({ departure_date: v.date })
+        .eq("id", v.id);
       if (error) throw error;
       return v.date;
     },
-    onSuccess: (d) => { toast.success(d ? `Départ programmé le ${formatDate(d)}` : "Départ annulé"); refresh(); },
+    onSuccess: (d) => {
+      toast.success(d ? `Départ programmé le ${formatDate(d)}` : "Départ annulé");
+      refresh();
+    },
     onError,
   });
   const formatDate = (iso: string) => iso.split("-").reverse().join("/");
@@ -149,17 +215,18 @@ function UsersPage() {
     d.setDate(d.getDate() + 7);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   })();
-  const scheduleRemoval = (u: Row) => {
+  const scheduleRemoval = async (u: Row) => {
     if (u.departure_date && u.departure_date <= minDeparture) {
       toast.info(`Départ déjà programmé le ${formatDate(u.departure_date)}`);
       return;
     }
-    if (
-      confirm(
-        `Retirer l'accès de ${u.email} ? Son accès sera supprimé le ${formatDate(minDeparture)}, dans 7 jours. Son manager et les admins sont prévenus dès maintenant et pourront télécharger ses documents d'ici là. Tu peux annuler avec « Annuler le départ ».`,
-      )
-    )
-      setDeparture.mutate({ id: u.id, date: minDeparture });
+    const ok = await ask({
+      title: "Retirer cet utilisateur ?",
+      message: `L'accès de ${u.email} sera supprimé le ${formatDate(minDeparture)}, dans 7 jours. Son manager et les admins sont prévenus dès maintenant dans « Rappels de départ » et pourront télécharger ses documents d'ici là. Tu peux annuler avec « Annuler le départ ».`,
+      confirmLabel: "Retirer l'accès",
+      danger: true,
+    });
+    if (ok) setDeparture.mutate({ id: u.id, date: minDeparture });
   };
   const [departureInputs, setDepartureInputs] = useState<Record<string, string>>({});
 
@@ -181,19 +248,21 @@ function UsersPage() {
     mutationFn: async (v: { allowedUserId: string; team: string }) => {
       const parsed = teamSchema.safeParse(v.team);
       if (!parsed.success) throw new Error(parsed.error.issues[0].message);
-      if (parsed.data.trim().toLowerCase() === "admin") throw new Error("L'équipe Admin est réservée aux admins.");
+      if (parsed.data.trim().toLowerCase() === "admin")
+        throw new Error("L'équipe Admin est réservée aux admins.");
       const { data, error } = await supabase
         .from("manager_teams")
         .insert({ allowed_user_id: v.allowedUserId, team: parsed.data })
         .select("id");
-      if (!error && !data?.length) throw new Error("Modification refusée : vérifie que tu es admin");
+      if (!error && !data?.length)
+        throw new Error("Modification refusée : vérifie que tu es admin");
       if (error)
         throw new Error(
           error.code === "23514"
             ? "L'équipe Admin est réservée aux admins."
             : error.code === "23505"
-            ? `Ce manager a déjà l'équipe « ${parsed.data} ».`
-            : error.message,
+              ? `Ce manager a déjà l'équipe « ${parsed.data} ».`
+              : error.message,
         );
     },
     onSuccess: (_, variables) => {
@@ -215,7 +284,10 @@ function UsersPage() {
       if (error) throw error;
       if (!data?.length) throw new Error("Modification refusée : vérifie que tu es admin");
     },
-    onSuccess: () => { toast.success("Équipe retirée"); refresh(); },
+    onSuccess: () => {
+      toast.success("Équipe retirée");
+      refresh();
+    },
     onError,
   });
 
@@ -234,228 +306,313 @@ function UsersPage() {
     const ln = nameSchema.safeParse(lastName);
     if (!ln.success) return setErr("Nom : " + ln.error.issues[0].message);
     setErr(null);
-    add.mutate({ email: parsed.data, role, team, first_name: fn.data || null, last_name: ln.data || null });
+    add.mutate({
+      email: parsed.data,
+      role,
+      team,
+      first_name: fn.data || null,
+      last_name: ln.data || null,
+    });
   }
 
   return (
     <div className="space-y-md">
+      {confirmDialog}
       {(queue.data ?? 0) > 0 && (
-        <div className="flex items-center justify-between gap-sm border border-error bg-surface-container-lowest p-sm">
-          <p className="text-body-sm text-error">{queue.data} document(s) en attente de suppression</p>
+        <div className="flex items-center justify-between gap-sm border border-error bg-surface-container-lowest p-sm rounded-lg">
+          <p className="text-body-sm text-error">
+            {queue.data} document(s) en attente de suppression
+          </p>
           <button
             type="button"
             onClick={() => retry.mutate()}
             disabled={retry.isPending}
-            className="px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container disabled:opacity-50"
+            className={btnSecondary}
           >
             {retry.isPending ? "…" : "Réessayer"}
           </button>
         </div>
       )}
       <TeamsSection users={list.data ?? []} teams={teamsQuery.data ?? []} onChanged={refresh} />
-      <BulkImport onImported={refresh} />
-      <form onSubmit={submit} className="flex flex-col md:flex-row gap-xs md:items-start bg-surface-container-lowest border border-outline-variant p-md">
-        <input
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          placeholder="Prénom (facultatif)"
-          aria-label="Prénom"
-          maxLength={100}
-          className="border border-outline-variant bg-surface px-sm py-xs font-body-md"
-        />
-        <input
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          placeholder="Nom (facultatif)"
-          aria-label="Nom"
-          maxLength={100}
-          className="border border-outline-variant bg-surface px-sm py-xs font-body-md"
-        />
-        <div className="flex-1">
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="prenom.nom@gmail.com"
-            aria-label="Email Google"
-            className="w-full border border-outline-variant bg-surface px-sm py-xs font-body-md"
-          />
-          {err && <p className="text-error text-sm mt-1">{err}</p>}
-        </div>
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value as Row["role"])}
-          aria-label="Rôle"
-          className="border border-outline-variant bg-surface px-sm py-xs font-body-md"
-        >
-          <option value="collaborateur">Collaborateur</option>
-          <option value="manager">Manager</option>
-          <option value="admin">Admin</option>
-        </select>
-        {role === "collaborateur" && (
-<select
-            value={newTeam}
-            onChange={(e) => setNewTeam(e.target.value)}
-            aria-label="Équipe du collaborateur"
-            className="border border-outline-variant bg-surface px-sm py-xs font-body-md"
-          >
-            <option value="">Choisir une équipe</option>
-            {selectableTeams.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-        )}
-        <button disabled={add.isPending} className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md">
-          AJOUTER
-        </button>
-      </form>
-
-      <div className="border border-outline-variant divide-y divide-outline-variant bg-surface-container-lowest">
-        {list.data?.map((u) => (
-          <div key={u.id} className="space-y-sm p-sm">
-            <div className="flex flex-wrap items-center justify-between gap-sm">
-              <span className="font-body-md text-primary">
-                {(u.first_name || u.last_name) && <span className="mr-xs">{[u.first_name, u.last_name].filter(Boolean).join(" ")} ·</span>}
-                {u.email}{u.email === me && " (toi)"}
-                {u.departure_date && (
-                  <span className="ml-xs px-xs py-[1px] border border-error text-error font-label-sm text-label-sm">
-                    Part le {u.departure_date.split("-").reverse().join("/")}
-                  </span>
-                )}
-              </span>
-              <div className="flex gap-xs">
+      <section className="space-y-md rounded-xl border border-outline-variant bg-surface-container-lowest p-md">
+        <h2 className="text-xl font-bold leading-snug text-primary">
+          Ajouter un utilisateur ou une liste
+        </h2>
+        <form onSubmit={submit} className="space-y-sm">
+          <p className="text-sm font-semibold text-on-surface-variant">Une personne</p>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <label className="block min-w-0 text-sm font-semibold text-on-surface-variant">
+              Prénom (facultatif)
+              <input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                maxLength={100}
+                className="mt-1 block min-h-12 w-full rounded-lg border border-outline-variant bg-surface px-3 font-body-md font-normal text-on-surface"
+              />
+            </label>
+            <label className="block min-w-0 text-sm font-semibold text-on-surface-variant">
+              Nom (facultatif)
+              <input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                maxLength={100}
+                className="mt-1 block min-h-12 w-full rounded-lg border border-outline-variant bg-surface px-3 font-body-md font-normal text-on-surface"
+              />
+            </label>
+            <label className="block min-w-0 text-sm font-semibold text-on-surface-variant md:col-span-2 xl:col-span-1">
+              Adresse mail Google
+              <input
+                inputMode="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="prenom.nom@gmail.com"
+                className="mt-1 block min-h-12 w-full rounded-lg border border-outline-variant bg-surface px-3 font-body-md font-normal text-on-surface"
+              />
+              {err && (
+                <span role="alert" className="mt-1 block text-sm font-semibold text-error">
+                  {err}
+                </span>
+              )}
+            </label>
+            <label className="block min-w-0 text-sm font-semibold text-on-surface-variant">
+              Rôle
               <select
-                value={u.role}
-                onChange={(e) => {
-                  const next = e.target.value as AppRole;
-                  if (next === "collaborateur") {
-                    setRoleDialog({ id: u.id, email: u.email, team: u.team ?? "" });
-                  } else update.mutate({ id: u.id, role: next }, { onSuccess: () => toast.success("Rôle modifié") });
-                }}
-                aria-label={`Rôle de ${u.email}`}
-                className="border border-outline-variant bg-surface px-sm py-xs font-body-md"
+                value={role}
+                onChange={(e) => setRole(e.target.value as Row["role"])}
+                className="mt-1 block min-h-12 w-full rounded-lg border border-outline-variant bg-surface px-3 font-body-md font-normal text-on-surface"
               >
                 <option value="collaborateur">Collaborateur</option>
                 <option value="manager">Manager</option>
                 <option value="admin">Admin</option>
               </select>
-              <button
-                onClick={() => scheduleRemoval(u)}
-                disabled={u.email === me || setDeparture.isPending}
-                title={u.email === me ? "Tu ne peux pas programmer ton propre départ" : undefined}
-                className="px-sm py-xs border border-outline text-error font-label-md text-label-md disabled:opacity-50"
-              >
-                RETIRER (J+7)
-              </button>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-xs border-t border-outline-variant pt-sm">
-              <label className="font-label-sm text-label-sm text-on-surface-variant" htmlFor={`dep-${u.id}`}>
-                Départ prévu le
+            </label>
+            {role === "collaborateur" && (
+              <label className="block min-w-0 text-sm font-semibold text-on-surface-variant">
+                Équipe
+                <select
+                  value={newTeam}
+                  onChange={(e) => setNewTeam(e.target.value)}
+                  className="mt-1 block min-h-12 w-full rounded-lg border border-outline-variant bg-surface px-3 font-body-md font-normal text-on-surface"
+                >
+                  <option value="">Choisir une équipe</option>
+                  {selectableTeams.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
               </label>
-              <input
-                id={`dep-${u.id}`}
-                type="date"
-                min={minDeparture}
-                value={departureInputs[u.id] ?? u.departure_date ?? ""}
-                onChange={(e) => setDepartureInputs((c) => ({ ...c, [u.id]: e.target.value }))}
-                className="border border-outline-variant bg-surface px-sm py-1 font-body-md"
-              />
-              <button
-                type="button"
-                disabled={setDeparture.isPending || !(departureInputs[u.id] ?? u.departure_date)}
-                onClick={() => setDeparture.mutate({ id: u.id, date: departureInputs[u.id] ?? u.departure_date ?? null })}
-                className="bg-primary text-on-primary px-sm py-1 font-label-sm text-label-sm disabled:opacity-50"
-              >
-                Enregistrer
+            )}
+            <div className="flex items-end">
+              <button disabled={add.isPending} className={`${btnPrimary} w-full md:w-auto`}>
+                Ajouter
               </button>
-              {u.departure_date && (
+            </div>
+          </div>
+        </form>
+        <BulkImport onImported={refresh} />
+      </section>
+
+      <section className="space-y-md rounded-xl border border-outline-variant bg-surface-container-lowest p-md">
+        <h2 className="text-xl font-bold leading-snug text-primary">
+          Utilisateurs ({list.data?.length ?? 0})
+        </h2>
+        <div className="divide-y divide-outline-variant overflow-hidden rounded-xl border border-outline-variant">
+          {list.data?.map((u) => (
+            <div key={u.id} className="space-y-sm p-sm">
+              <div className="flex flex-wrap items-center justify-between gap-sm">
+                <span className="font-body-md text-primary">
+                  {(u.first_name || u.last_name) && (
+                    <span className="mr-xs">
+                      {[u.first_name, u.last_name].filter(Boolean).join(" ")} ·
+                    </span>
+                  )}
+                  {u.email}
+                  {u.email === me && " (toi)"}
+                  {u.departure_date && (
+                    <span className="ml-xs px-xs py-[1px] border border-error text-error font-label-sm text-label-sm rounded-lg">
+                      Part le {u.departure_date.split("-").reverse().join("/")}
+                    </span>
+                  )}
+                </span>
+                <div className="flex gap-xs">
+                  <select
+                    value={u.role}
+                    onChange={(e) => {
+                      const next = e.target.value as AppRole;
+                      if (next === "collaborateur") {
+                        setRoleDialog({ id: u.id, email: u.email, team: u.team ?? "" });
+                      } else
+                        update.mutate(
+                          { id: u.id, role: next },
+                          { onSuccess: () => toast.success("Rôle modifié") },
+                        );
+                    }}
+                    aria-label={`Rôle de ${u.email}`}
+                    className="border border-outline-variant bg-surface px-sm py-xs font-body-md rounded-lg"
+                  >
+                    <option value="collaborateur">Collaborateur</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <button
+                    onClick={() => scheduleRemoval(u)}
+                    disabled={u.email === me || setDeparture.isPending}
+                    title={
+                      u.email === me ? "Tu ne peux pas programmer ton propre départ" : undefined
+                    }
+                    className={btnDangerOutlineSm}
+                  >
+                    RETIRER (J+7)
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-xs border-t border-outline-variant pt-sm">
+                <label
+                  className="font-label-sm text-label-sm text-on-surface-variant"
+                  htmlFor={`dep-${u.id}`}
+                >
+                  Départ prévu le
+                </label>
+                <input
+                  id={`dep-${u.id}`}
+                  type="date"
+                  min={minDeparture}
+                  value={departureInputs[u.id] ?? u.departure_date ?? ""}
+                  onChange={(e) => setDepartureInputs((c) => ({ ...c, [u.id]: e.target.value }))}
+                  className="border border-outline-variant bg-surface px-sm py-1 font-body-md rounded-lg"
+                />
                 <button
                   type="button"
-                  disabled={setDeparture.isPending}
-                  onClick={() => {
-                    setDepartureInputs((c) => ({ ...c, [u.id]: "" }));
-                    setDeparture.mutate({ id: u.id, date: null });
-                  }}
-                  className="px-sm py-1 border border-outline text-primary font-label-sm text-label-sm"
+                  disabled={setDeparture.isPending || !(departureInputs[u.id] ?? u.departure_date)}
+                  onClick={() =>
+                    setDeparture.mutate({
+                      id: u.id,
+                      date: departureInputs[u.id] ?? u.departure_date ?? null,
+                    })
+                  }
+                  className={btnPrimarySm}
                 >
-                  Annuler le départ
+                  Enregistrer
                 </button>
+                {u.departure_date && (
+                  <button
+                    type="button"
+                    disabled={setDeparture.isPending}
+                    onClick={() => {
+                      setDepartureInputs((c) => ({ ...c, [u.id]: "" }));
+                      setDeparture.mutate({ id: u.id, date: null });
+                    }}
+                    className={btnSecondarySm}
+                  >
+                    Annuler le départ
+                  </button>
+                )}
+              </div>
+              {u.role === "collaborateur" && (
+                <div className="flex flex-wrap items-center gap-xs border-t border-outline-variant pt-sm">
+                  <span className="font-label-sm text-label-sm text-on-surface-variant">
+                    ÉQUIPE :
+                  </span>
+                  <select
+                    value={memberTeams[u.id] ?? u.team ?? ""}
+                    onChange={(e) => setMemberTeams((c) => ({ ...c, [u.id]: e.target.value }))}
+                    aria-label={`Équipe de ${u.email}`}
+                    className="border border-outline-variant bg-surface px-sm py-1 font-body-md rounded-lg"
+                  >
+                    <option value="">Choisir une équipe</option>
+                    {(u.team && !selectableTeams.includes(u.team)
+                      ? [u.team, ...selectableTeams]
+                      : selectableTeams
+                    ).map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                  {(() => {
+                    const chosen = memberTeams[u.id] ?? u.team ?? "";
+                    const saving = update.isPending && update.variables?.id === u.id;
+                    return (
+                      <button
+                        type="button"
+                        disabled={!chosen || chosen === u.team || saving}
+                        onClick={() =>
+                          update.mutate(
+                            { id: u.id, role: "collaborateur", team: chosen },
+                            {
+                              onSuccess: () => {
+                                toast.success("Équipe modifiée");
+                                setMemberTeams((c) => {
+                                  const n = { ...c };
+                                  delete n[u.id];
+                                  return n;
+                                });
+                              },
+                            },
+                          )
+                        }
+                        className={btnPrimarySm}
+                      >
+                        {saving ? "…" : "Enregistrer"}
+                      </button>
+                    );
+                  })()}
+                  {!u.team && <span className="text-error text-sm">Aucune équipe définie</span>}
+                </div>
+              )}
+              {u.role === "manager" && (
+                <div className="flex flex-wrap items-center gap-xs border-t border-outline-variant pt-sm">
+                  <span className="font-label-sm text-label-sm text-on-surface-variant">
+                    ÉQUIPES :
+                  </span>
+                  {u.teams.map((team) => (
+                    <button
+                      key={team}
+                      type="button"
+                      title={`Retirer l'équipe ${team}`}
+                      onClick={() => removeTeam.mutate({ allowedUserId: u.id, team })}
+                      className="border border-outline-variant bg-surface px-xs py-1 font-label-sm text-label-sm rounded-lg"
+                    >
+                      {team} ×
+                    </button>
+                  ))}
+                  <select
+                    value={teamInputs[u.id] ?? ""}
+                    onChange={(e) =>
+                      setTeamInputs((current) => ({ ...current, [u.id]: e.target.value }))
+                    }
+                    aria-label={`Ajouter une équipe à ${u.email}`}
+                    className="border border-outline-variant bg-surface px-sm py-1 font-body-md rounded-lg"
+                  >
+                    <option value="">Choisir une équipe</option>
+                    {selectableTeams
+                      .filter((t) => !u.teams.includes(t))
+                      .map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                  </select>
+                  <button
+                    type="button"
+                    disabled={!teamInputs[u.id] || addTeam.isPending}
+                    onClick={() =>
+                      addTeam.mutate({ allowedUserId: u.id, team: teamInputs[u.id] ?? "" })
+                    }
+                    className={btnPrimarySm}
+                  >
+                    {addTeam.isPending && addTeam.variables?.allowedUserId === u.id
+                      ? "…"
+                      : "Ajouter"}
+                  </button>
+                </div>
               )}
             </div>
-            {u.role === "collaborateur" && (
-              <div className="flex flex-wrap items-center gap-xs border-t border-outline-variant pt-sm">
-                <span className="font-label-sm text-label-sm text-on-surface-variant">ÉQUIPE :</span>
-<select
-            value={memberTeams[u.id] ?? u.team ?? ""}
-            onChange={(e) => setMemberTeams((c) => ({ ...c, [u.id]: e.target.value }))}
-            aria-label={`Équipe de ${u.email}`}
-            className="border border-outline-variant bg-surface px-sm py-1 font-body-md"
-          >
-            <option value="">Choisir une équipe</option>
-            {(u.team && !selectableTeams.includes(u.team) ? [u.team, ...selectableTeams] : selectableTeams).map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-                {(() => {
-                  const chosen = memberTeams[u.id] ?? u.team ?? "";
-                  const saving = update.isPending && update.variables?.id === u.id;
-                  return (
-                    <button
-                      type="button"
-                      disabled={!chosen || chosen === u.team || saving}
-                      onClick={() =>
-                        update.mutate(
-                          { id: u.id, role: "collaborateur", team: chosen },
-                          {
-                            onSuccess: () => {
-                              toast.success("Équipe modifiée");
-                              setMemberTeams((c) => { const n = { ...c }; delete n[u.id]; return n; });
-                            },
-                          },
-                        )
-                      }
-                      className="bg-primary text-on-primary px-sm py-1 font-label-sm text-label-sm disabled:opacity-50"
-                    >
-                      {saving ? "…" : "ENREGISTRER"}
-                    </button>
-                  );
-                })()}
-                {!u.team && <span className="text-error text-sm">Aucune équipe définie</span>}
-              </div>
-            )}
-            {u.role === "manager" && (
-              <div className="flex flex-wrap items-center gap-xs border-t border-outline-variant pt-sm">
-                <span className="font-label-sm text-label-sm text-on-surface-variant">ÉQUIPES :</span>
-                {u.teams.map((team) => (
-                  <button
-                    key={team}
-                    type="button"
-                    title={`Retirer l'équipe ${team}`}
-                    onClick={() => removeTeam.mutate({ allowedUserId: u.id, team })}
-                    className="border border-outline-variant bg-surface px-xs py-1 font-label-sm text-label-sm"
-                  >
-                    {team} ×
-                  </button>
-                ))}
-<select
-            value={teamInputs[u.id] ?? ""}
-            onChange={(e) => setTeamInputs((current) => ({ ...current, [u.id]: e.target.value }))}
-            aria-label={`Ajouter une équipe à ${u.email}`}
-            className="border border-outline-variant bg-surface px-sm py-1 font-body-md"
-          >
-            <option value="">Choisir une équipe</option>
-            {selectableTeams.filter((t) => !u.teams.includes(t)).map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-                <button
-                  type="button"
-                  disabled={!teamInputs[u.id] || addTeam.isPending}
-                  onClick={() => addTeam.mutate({ allowedUserId: u.id, team: teamInputs[u.id] ?? "" })}
-                  className="bg-primary text-on-primary px-sm py-1 font-label-sm text-label-sm disabled:opacity-50"
-                >
-                  {addTeam.isPending && addTeam.variables?.allowedUserId === u.id ? "…" : "AJOUTER"}
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
-        {list.isLoading && <p className="p-sm">Chargement…</p>}
-      </div>
+          ))}
+          {list.isLoading && <p className="p-sm">Chargement…</p>}
+        </div>
+      </section>
       <Dialog open={!!roleDialog} onOpenChange={(o) => !o && setRoleDialog(null)}>
         <DialogContent>
           <DialogHeader>
@@ -465,13 +622,19 @@ function UsersPage() {
             value={roleDialog?.team ?? ""}
             onChange={(e) => roleDialog && setRoleDialog({ ...roleDialog, team: e.target.value })}
             aria-label="Équipe du collaborateur"
-            className="w-full border border-outline-variant bg-surface px-sm py-xs font-body-md"
+            className="w-full border border-outline-variant bg-surface px-sm py-xs font-body-md rounded-lg"
           >
             <option value="">Choisir une équipe</option>
-            {selectableTeams.map((t) => <option key={t} value={t}>{t}</option>)}
+            {selectableTeams.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
           </select>
           <DialogFooter>
-            <button type="button" onClick={() => setRoleDialog(null)} className="px-md py-xs border border-outline text-primary font-label-md text-label-md">Annuler</button>
+            <button type="button" onClick={() => setRoleDialog(null)} className={btnSecondary}>
+              Annuler
+            </button>
             <button
               type="button"
               disabled={!roleDialog?.team || update.isPending}
@@ -480,10 +643,15 @@ function UsersPage() {
                 if (!roleDialog?.team) return;
                 update.mutate(
                   { id: roleDialog.id, role: "collaborateur", team: roleDialog.team },
-                  { onSuccess: () => { toast.success("Rôle modifié"); setRoleDialog(null); } },
+                  {
+                    onSuccess: () => {
+                      toast.success("Rôle modifié");
+                      setRoleDialog(null);
+                    },
+                  },
                 );
               }}
-              className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md disabled:opacity-50"
+              className={btnPrimary}
             >
               {update.isPending ? "…" : "Enregistrer"}
             </button>
@@ -494,37 +662,69 @@ function UsersPage() {
   );
 }
 
-function TeamsSection({ users, teams, onChanged }: { users: Row[]; teams: { name: string; is_reserved: boolean }[]; onChanged: () => void }) {
+function TeamsSection({
+  users,
+  teams,
+  onChanged,
+}: {
+  users: Row[];
+  teams: { name: string; is_reserved: boolean }[];
+  onChanged: () => void;
+}) {
+  const [ask, confirmDialog] = useConfirm();
   const [name, setName] = useState("");
+  const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<{ from: string; to: string } | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const count = (t: string) =>
-    users.filter((u) => (u.role === "collaborateur" && u.team === t) || (u.role === "manager" && u.teams.includes(t))).length;
+    users.filter(
+      (u) =>
+        (u.role === "collaborateur" && u.team === t) ||
+        (u.role === "manager" && u.teams.includes(t)),
+    ).length;
   const onError = (e: unknown) => toast.error((e as Error).message);
 
   const create = useMutation({
     mutationFn: async (n: string) => {
       const { error } = await supabase.from("teams").insert({ name: n });
-      if (error) throw new Error(error.code === "23505" ? "Cette équipe existe déjà" : error.message);
+      if (error)
+        throw new Error(error.code === "23505" ? "Cette équipe existe déjà" : error.message);
     },
-    onSuccess: () => { setName(""); toast.success("Équipe ajoutée"); onChanged(); },
+    onSuccess: () => {
+      setName("");
+      setAdding(false);
+      toast.success("Équipe ajoutée");
+      onChanged();
+    },
     onError: (e) => setErr((e as Error).message),
   });
   const rename = useMutation({
     mutationFn: async (v: { from: string; to: string }) => {
       const { error } = await supabase.from("teams").update({ name: v.to }).eq("name", v.from);
-      if (error) throw new Error(error.code === "23505" ? "Cette équipe existe déjà" : error.message);
+      if (error)
+        throw new Error(error.code === "23505" ? "Cette équipe existe déjà" : error.message);
     },
-    onSuccess: () => { setEditing(null); toast.success("Équipe renommée"); onChanged(); },
+    onSuccess: () => {
+      setEditing(null);
+      toast.success("Équipe renommée");
+      onChanged();
+    },
     onError,
   });
   const del = useMutation({
     mutationFn: async (n: string) => {
       const { error } = await supabase.from("teams").delete().eq("name", n);
       if (error)
-        throw new Error(error.code === "23503" ? "Impossible : cette équipe est encore utilisée (personnes ou demandes). Réaffecte-les d'abord." : error.message);
+        throw new Error(
+          error.code === "23503"
+            ? "Impossible : cette équipe est encore utilisée (personnes ou demandes). Réaffecte-les d'abord."
+            : error.message,
+        );
     },
-    onSuccess: () => { toast.success("Équipe supprimée"); onChanged(); },
+    onSuccess: () => {
+      toast.success("Équipe supprimée");
+      onChanged();
+    },
     onError,
   });
 
@@ -535,26 +735,58 @@ function TeamsSection({ users, teams, onChanged }: { users: Row[]; teams: { name
     setErr(null);
     create.mutate(p.data);
   }
-  const btn = "px-sm py-1 border border-outline text-primary font-label-sm text-label-sm disabled:opacity-50";
+  const btn = btnSecondarySm;
 
   return (
-    <section className="space-y-sm bg-surface-container-lowest border border-outline-variant p-md">
-      <h2 className="font-label-md text-label-md text-primary">Équipes</h2>
-      <form onSubmit={submit} className="flex flex-wrap items-start gap-xs">
-        <div>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Nouvelle équipe"
-            aria-label="Nouvelle équipe"
-            maxLength={60}
-            className="border border-outline-variant bg-surface px-sm py-xs font-body-md"
-          />
-          {err && <p className="text-error text-sm mt-1">{err}</p>}
-        </div>
-        <button disabled={create.isPending} className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md">AJOUTER</button>
-      </form>
-      <ul className="divide-y divide-outline-variant border border-outline-variant">
+    <section className="space-y-sm bg-surface-container-lowest border border-outline-variant p-md rounded-xl">
+      {confirmDialog}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-bold leading-snug text-primary">Équipes ({teams.length})</h2>
+        <button
+          type="button"
+          className={`${btnPrimary} gap-2`}
+          onClick={() => {
+            setName("");
+            setErr(null);
+            setAdding(true);
+          }}
+        >
+          <span aria-hidden="true" className="material-symbols-outlined">
+            add
+          </span>
+          Ajouter une équipe
+        </button>
+      </div>
+      {adding && (
+        <Modal title="Ajouter une équipe" onClose={() => setAdding(false)}>
+          <form onSubmit={submit} className="space-y-sm" noValidate>
+            <label className="block text-sm font-semibold text-on-surface-variant">
+              Nom de l'équipe
+              <input
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={60}
+                className="mt-1 block min-h-12 w-full rounded-lg border border-outline-variant bg-surface px-3 font-body-md font-normal text-on-surface"
+              />
+            </label>
+            {err && (
+              <p role="alert" className="text-sm font-semibold text-error">
+                {err}
+              </p>
+            )}
+            <div className="flex justify-end gap-2 pt-sm">
+              <button type="button" className={btnSecondary} onClick={() => setAdding(false)}>
+                Annuler
+              </button>
+              <button disabled={create.isPending} className={btnPrimary}>
+                Ajouter
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+      <ul className="divide-y divide-outline-variant border border-outline-variant rounded-xl overflow-hidden">
         {teams.map((t) => (
           <li key={t.name} className="flex flex-wrap items-center justify-between gap-xs p-xs">
             {editing?.from === t.name ? (
@@ -564,11 +796,11 @@ function TeamsSection({ users, teams, onChanged }: { users: Row[]; teams: { name
                   onChange={(e) => setEditing({ ...editing, to: e.target.value })}
                   aria-label={`Nouveau nom pour ${t.name}`}
                   maxLength={60}
-                  className="border border-outline-variant bg-surface px-sm py-1 font-body-md"
+                  className="border border-outline-variant bg-surface px-sm py-1 font-body-md rounded-lg"
                 />
                 <button
                   type="button"
-                  className="bg-primary text-on-primary px-sm py-1 font-label-sm text-label-sm"
+                  className={btnPrimarySm}
                   disabled={rename.isPending}
                   onClick={() => {
                     const p = teamSchema.safeParse(editing.to);
@@ -578,22 +810,47 @@ function TeamsSection({ users, teams, onChanged }: { users: Row[]; teams: { name
                 >
                   Enregistrer
                 </button>
-                <button type="button" className={btn} onClick={() => setEditing(null)}>Annuler</button>
+                <button type="button" className={btn} onClick={() => setEditing(null)}>
+                  Annuler
+                </button>
               </span>
             ) : (
               <span className="font-body-md text-primary">
-                {t.is_reserved && <span aria-label="Équipe réservée" title="Équipe réservée" className="mr-xs">🔒</span>}
-                {t.name} <span className="text-on-surface-variant text-body-sm">· {count(t.name)} personne(s)</span>
+                {t.is_reserved && (
+                  <span aria-label="Équipe réservée" title="Équipe réservée" className="mr-xs">
+                    🔒
+                  </span>
+                )}
+                {t.name}{" "}
+                <span className="text-on-surface-variant text-body-sm">
+                  · {count(t.name)} personne(s)
+                </span>
               </span>
             )}
             {!t.is_reserved && editing?.from !== t.name && (
               <span className="flex gap-xs">
-                <button type="button" className={btn} onClick={() => setEditing({ from: t.name, to: t.name })}>Renommer</button>
+                <button
+                  type="button"
+                  className={btn}
+                  onClick={() => setEditing({ from: t.name, to: t.name })}
+                >
+                  Renommer
+                </button>
                 <button
                   type="button"
                   className={`${btn} text-error`}
                   disabled={del.isPending}
-                  onClick={() => confirm(`Supprimer l'équipe « ${t.name} » ?`) && del.mutate(t.name)}
+                  onClick={async () => {
+                    if (
+                      await ask({
+                        title: "Supprimer l'équipe ?",
+                        message: `Supprimer l'équipe « ${t.name} » ?`,
+                        confirmLabel: "Supprimer",
+                        danger: true,
+                      })
+                    )
+                      del.mutate(t.name);
+                  }}
                 >
                   Supprimer
                 </button>
