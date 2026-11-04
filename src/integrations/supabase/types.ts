@@ -48,6 +48,8 @@ export type Database = {
       }
       allowed_users: {
         Row: {
+          contact_email: string | null
+          welcome_sent_at: string | null
           created_at: string
           departure_date: string | null
           email: string
@@ -57,6 +59,8 @@ export type Database = {
           team: string | null
         }
         Insert: {
+          contact_email?: string | null
+          welcome_sent_at?: string | null
           created_at?: string
           departure_date?: string | null
           email: string
@@ -66,6 +70,8 @@ export type Database = {
           team?: string | null
         }
         Update: {
+          contact_email?: string | null
+          welcome_sent_at?: string | null
           created_at?: string
           departure_date?: string | null
           email?: string
@@ -466,6 +472,7 @@ export type Database = {
     Functions: {
       choisir_mon_role: {
         Args: {
+          _contact_email?: string | null
           _first_name: string
           _last_name: string
           _role: Database["public"]["Enums"]["app_role"]

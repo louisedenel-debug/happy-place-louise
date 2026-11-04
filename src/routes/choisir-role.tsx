@@ -45,6 +45,7 @@ function ChoisirRolePage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [team, setTeam] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -56,7 +57,7 @@ function ChoisirRolePage() {
         const [{ data: teamRows, error: teamErr }, own, existingRole] = await Promise.all([
           supabase.from("teams").select("name").eq("is_reserved", false).order("name"),
           email
-            ? supabase.from("allowed_users").select("id, first_name, last_name, team").eq("email", email.toLowerCase()).maybeSingle()
+            ? supabase.from("allowed_users").select("id, first_name, last_name, team, contact_email").eq("email", email.toLowerCase()).maybeSingle()
             : Promise.resolve({ data: null }),
           email ? fetchOwnRole(email) : Promise.resolve(null),
         ]);
@@ -65,6 +66,7 @@ function ChoisirRolePage() {
         if (own.data) {
           setFirstName(own.data.first_name ?? "");
           setLastName(own.data.last_name ?? "");
+          setContactEmail(own.data.contact_email ?? "");
           let currentTeam = own.data.team ?? "";
           if (existingRole === "manager") {
             const { data: mt } = await supabase.from("manager_teams").select("team").eq("allowed_user_id", own.data.id).limit(1);
@@ -95,12 +97,18 @@ function ChoisirRolePage() {
       setError("Choisis une équipe.");
       return;
     }
+    const mail = contactEmail.trim().toLowerCase();
+    if (mail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) {
+      setError("Cette adresse mail n'est pas valide.");
+      return;
+    }
     setBusy(true);
     const { error: err } = await supabase.rpc("choisir_mon_role", {
       _role: role,
       _first_name: firstName.trim(),
       _last_name: lastName.trim(),
       _team: role === "admin" ? null : team,
+      _contact_email: mail || null,
     });
     if (err) {
       setBusy(false);
@@ -153,6 +161,24 @@ function ChoisirRolePage() {
                   <input value={lastName} onChange={(e) => setLastName(e.target.value)} maxLength={100} autoComplete="family-name" className={inputCls} />
                 </label>
               </div>
+
+              <label className={labelCls}>
+                Adresse mail (facultatif)
+                <input
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  maxLength={254}
+                  autoComplete="email"
+                  placeholder="prenom.nom@exemple.fr"
+                  aria-describedby="aide-mail"
+                  className={inputCls}
+                />
+                <span id="aide-mail" className="mt-xs block font-body-sm text-body-sm normal-case text-on-surface-variant">
+                  Vous recevrez un mail de bienvenue, puis un mail à chaque nouvelle actualité. Votre adresse est transmise au
+                  service d'envoi des mails. Laissez vide pour ne rien recevoir.
+                </span>
+              </label>
 
               <fieldset className="space-y-xs">
                 <legend className={labelCls}>Rôle</legend>
