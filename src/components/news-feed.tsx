@@ -14,7 +14,18 @@ export function NewsFeed({ items, heading }: { items: News[]; heading?: string }
         {items.map((n) => {
           const open = openId === n.id;
           return (
-            <div key={n.id} className="min-w-0 rounded-[12px] border border-outline-variant bg-[#FAFAF7]">
+            <div key={n.id} className="min-w-0 overflow-hidden rounded-[12px] border border-outline-variant bg-[#FAFAF7]">
+              {n.image_path && (
+                // L'image s'affiche d'emblée : elle donne envie d'ouvrir l'actualité. Cliquer dessus déplie aussi la carte.
+                <div className="cursor-pointer" onClick={() => setOpenId(open ? null : n.id)}>
+                  <NewsImage
+                    banner
+                    path={n.image_path}
+                    alt=""
+                    className={open ? "max-h-80" : "h-44"}
+                  />
+                </div>
+              )}
               <button
                 type="button"
                 aria-expanded={open}
@@ -36,7 +47,6 @@ export function NewsFeed({ items, heading }: { items: News[]; heading?: string }
               </button>
               {open && (
                 <div className="flex flex-col gap-3 px-5 pb-5">
-                  {n.image_path && <NewsImage path={n.image_path} alt={n.title} />}
                   {n.body && (
                     <p className="whitespace-pre-line wrap-anywhere">
                       <Linkify text={n.body} />
