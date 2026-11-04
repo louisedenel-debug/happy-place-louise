@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ErrorSummary, Field, FormActions, Modal, TextArea, TextInput } from "@/components/manage/crud-ui";
+import { ErrorSummary, Field, FormActions, Modal, TextArea, TextInput, useConfirm } from "@/components/manage/crud-ui";
 import { ideaFormSchema, rejectionSchema, validate, type FieldErrors } from "@/lib/manage-schemas";
 import { BrandHeader } from "@/components/brand-header";
 import { AttachmentLink } from "@/components/attachment-link";
@@ -78,6 +78,7 @@ export type DashboardView = "overview" | "actions";
 
 /** Une seule page pour les trois profils : le rôle et la vue (`/vue` ou `/actions`) décident des blocs affichés. */
 export function Dashboard({ view }: { view: DashboardView }) {
+  const [ask, confirmDialog] = useConfirm();
   const qc = useQueryClient();
   const { role, email, user } = useRouteContext({ from: "/_authenticated" });
   const actions = view === "actions";
@@ -296,6 +297,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
     <div className="bg-background text-on-surface font-body-md min-h-screen flex flex-col">
       <BrandHeader />
       <main className="flex-grow w-full max-w-interface mx-auto p-sm md:p-md space-y-md">
+        {confirmDialog}
         <div className="mb-lg space-y-sm">
           {!(actions && role !== "admin") && (
             <p className="text-sm text-on-surface-variant">Vue d'ensemble</p>
@@ -380,8 +382,14 @@ export function Dashboard({ view }: { view: DashboardView }) {
                                 type="button"
                                 className="min-h-12 px-2 text-base font-semibold text-sev-crit underline"
                                 disabled={removeDraft.isPending}
-                                onClick={() => {
-                                  if (window.confirm(`Supprimer le brouillon « ${n.title} » ?`)) removeDraft.mutate(n);
+                                onClick={async () => {
+                                  const ok = await ask({
+                                    title: "Supprimer le brouillon ?",
+                                    message: `Supprimer le brouillon « ${n.title} » ?`,
+                                    confirmLabel: "Supprimer",
+                                    danger: true,
+                                  });
+                                  if (ok) removeDraft.mutate(n);
                                 }}
                               >
                                 Supprimer

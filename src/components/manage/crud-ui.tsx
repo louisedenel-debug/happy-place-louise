@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import type { FieldErrors } from "@/lib/manage-schemas";
 import { btnDanger, btnPrimary, btnSecondary } from "@/lib/button-styles";
 
@@ -193,4 +193,47 @@ export function ConfirmDelete({
       </div>
     </Modal>
   );
+}
+
+/**
+ * Confirmation dans l'app, à la place de la boîte du navigateur (qui peut ne pas s'afficher du tout).
+ * Usage : const [ask, confirmDialog] = useConfirm(); … if (await ask({ title, message })) …; puis {confirmDialog} dans le rendu.
+ */
+export function useConfirm() {
+  const [state, setState] = useState<{
+    title: string;
+    message: ReactNode;
+    confirmLabel: string;
+    danger: boolean;
+    resolve: (ok: boolean) => void;
+  } | null>(null);
+
+  const ask = useCallback(
+    (o: { title: string; message: ReactNode; confirmLabel?: string; danger?: boolean }) =>
+      new Promise<boolean>((resolve) =>
+        setState({ title: o.title, message: o.message, confirmLabel: o.confirmLabel ?? "Confirmer", danger: !!o.danger, resolve }),
+      ),
+    [],
+  );
+
+  const close = (ok: boolean) => {
+    state?.resolve(ok);
+    setState(null);
+  };
+
+  const dialog = state ? (
+    <Modal title={state.title} onClose={() => close(false)}>
+      <p className="font-body-md text-on-surface wrap-anywhere">{state.message}</p>
+      <div className="flex justify-end gap-2 pt-sm">
+        <button type="button" onClick={() => close(false)} className={btnSecondary}>
+          Annuler
+        </button>
+        <button type="button" onClick={() => close(true)} className={state.danger ? btnDanger : btnPrimary}>
+          {state.confirmLabel}
+        </button>
+      </div>
+    </Modal>
+  ) : null;
+
+  return [ask, dialog] as const;
 }

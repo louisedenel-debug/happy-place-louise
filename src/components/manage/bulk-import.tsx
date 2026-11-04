@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { loadBrowserLib } from "@/lib/browser-lib";
 import { btnPrimary, btnSecondary } from "@/lib/button-styles";
+import { useConfirm } from "@/components/manage/crud-ui";
 
 type ImportRow = { line: number; last_name: string; first_name: string; email: string; role: string; team: string };
 type ResultRow = {
@@ -114,6 +115,7 @@ function downloadReport(rows: ResultRow[]) {
 }
 
 export function BulkImport({ onImported }: { onImported: () => void }) {
+  const [ask, confirmDialog] = useConfirm();
   const [sent, setSent] = useState<ImportRow[]>([]);
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +150,12 @@ export function BulkImport({ onImported }: { onImported: () => void }) {
   async function confirmImport() {
     if (!result) return;
     const validLines = new Set(result.rows.filter((r) => r.status === "valide").map((r) => r.line));
-    if (!confirm(`Importer ${validLines.size} utilisateur(s) ?`)) return;
+    const ok = await ask({
+      title: "Importer la liste ?",
+      message: `Importer ${validLines.size} utilisateur(s) ?`,
+      confirmLabel: "Importer",
+    });
+    if (!ok) return;
     const toSend = sent.filter((r) => validLines.has(r.line));
     setBusy(true);
     const { data, error: e } = await supabase.rpc("bulk_import_allowed_users", { _rows: toSend, _dry_run: false });
@@ -170,6 +177,7 @@ export function BulkImport({ onImported }: { onImported: () => void }) {
 
   return (
     <section className="space-y-sm bg-surface-container-lowest border border-outline-variant p-md rounded-xl">
+      {confirmDialog}
       <h2 className="font-label-md text-label-md text-primary">Importer une liste</h2>
       <div className="flex flex-wrap items-center gap-sm">
         <button type="button" className={btn} onClick={() => downloadTemplate().catch((e) => toast.error((e as Error).message))}>

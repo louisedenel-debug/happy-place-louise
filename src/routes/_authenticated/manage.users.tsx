@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BulkImport } from "@/components/manage/bulk-import";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { countAttachmentDeletionQueue, processAttachmentDeletionQueue } from "@/lib/dashboard";
+import { useConfirm } from "@/components/manage/crud-ui";
 import { btnDangerOutlineSm, btnPrimary, btnPrimarySm, btnSecondary, btnSecondarySm } from "@/lib/button-styles";
 
 export const Route = createFileRoute("/_authenticated/manage/users")({
@@ -40,6 +41,7 @@ const emailSchema = z.string().trim().toLowerCase().email("Adresse email invalid
 const teamSchema = z.string().trim().min(2, "Nom d'équipe trop court").max(60, "60 caractères maximum");
 
 function UsersPage() {
+  const [ask, confirmDialog] = useConfirm();
   const qc = useQueryClient();
   const { email: me } = Route.useRouteContext();
   const [email, setEmail] = useState("");
@@ -150,17 +152,18 @@ function UsersPage() {
     d.setDate(d.getDate() + 7);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   })();
-  const scheduleRemoval = (u: Row) => {
+  const scheduleRemoval = async (u: Row) => {
     if (u.departure_date && u.departure_date <= minDeparture) {
       toast.info(`Départ déjà programmé le ${formatDate(u.departure_date)}`);
       return;
     }
-    if (
-      confirm(
-        `Retirer l'accès de ${u.email} ? Son accès sera supprimé le ${formatDate(minDeparture)}, dans 7 jours. Son manager et les admins sont prévenus dès maintenant et pourront télécharger ses documents d'ici là. Tu peux annuler avec « Annuler le départ ».`,
-      )
-    )
-      setDeparture.mutate({ id: u.id, date: minDeparture });
+    const ok = await ask({
+      title: "Retirer cet utilisateur ?",
+      message: `L'accès de ${u.email} sera supprimé le ${formatDate(minDeparture)}, dans 7 jours. Son manager et les admins sont prévenus dès maintenant dans « Rappels de départ » et pourront télécharger ses documents d'ici là. Tu peux annuler avec « Annuler le départ ».`,
+      confirmLabel: "Retirer l'accès",
+      danger: true,
+    });
+    if (ok) setDeparture.mutate({ id: u.id, date: minDeparture });
   };
   const [departureInputs, setDepartureInputs] = useState<Record<string, string>>({});
 
@@ -240,6 +243,7 @@ function UsersPage() {
 
   return (
     <div className="space-y-md">
+      {confirmDialog}
       {(queue.data ?? 0) > 0 && (
         <div className="flex items-center justify-between gap-sm border border-error bg-surface-container-lowest p-sm rounded-lg">
           <p className="text-body-sm text-error">{queue.data} document(s) en attente de suppression</p>
@@ -496,6 +500,7 @@ function UsersPage() {
 }
 
 function TeamsSection({ users, teams, onChanged }: { users: Row[]; teams: { name: string; is_reserved: boolean }[]; onChanged: () => void }) {
+  const [ask, confirmDialog] = useConfirm();
   const [name, setName] = useState("");
   const [editing, setEditing] = useState<{ from: string; to: string } | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -540,6 +545,7 @@ function TeamsSection({ users, teams, onChanged }: { users: Row[]; teams: { name
 
   return (
     <section className="space-y-sm bg-surface-container-lowest border border-outline-variant p-md rounded-xl">
+      {confirmDialog}
       <h2 className="font-label-md text-label-md text-primary">Équipes</h2>
       <form onSubmit={submit} className="flex flex-wrap items-start gap-xs">
         <div>
@@ -594,7 +600,10 @@ function TeamsSection({ users, teams, onChanged }: { users: Row[]; teams: { name
                   type="button"
                   className={`${btn} text-error`}
                   disabled={del.isPending}
-                  onClick={() => confirm(`Supprimer l'équipe « ${t.name} » ?`) && del.mutate(t.name)}
+                  onClick={async () => {
+                    if (await ask({ title: "Supprimer l'équipe ?", message: `Supprimer l'équipe « ${t.name} » ?`, confirmLabel: "Supprimer", danger: true }))
+                      del.mutate(t.name);
+                  }}
                 >
                   Supprimer
                 </button>
