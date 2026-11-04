@@ -29,6 +29,7 @@ import {
   type Submission,
   type SubmissionInput,
 } from "@/lib/dashboard";
+import { btnPrimary } from "@/lib/button-styles";
 
 export const Route = createFileRoute("/_authenticated/manage/submissions")({
   head: () => ({
@@ -119,7 +120,7 @@ function ManageSubmissions() {
             setErrors({});
             setForm({ ...empty });
           }}
-          className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md"
+          className={btnPrimary}
         >
           + NOUVELLE SOUMISSION
         </button>

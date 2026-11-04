@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { loadBrowserLib } from "@/lib/browser-lib";
+import { btnPrimary, btnSecondary } from "@/lib/button-styles";
 
 type ImportRow = { line: number; last_name: string; first_name: string; email: string; role: string; team: string };
 type ResultRow = {
@@ -164,7 +165,7 @@ export function BulkImport({ onImported }: { onImported: () => void }) {
 
   function cancel() { setResult(null); setSent([]); setError(null); setInputKey((k) => k + 1); }
 
-  const btn = "rounded-lg px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container disabled:opacity-50";
+  const btn = btnSecondary;
   const validCount = result?.rows.filter((r) => r.status === "valide").length ?? 0;
 
   return (
@@ -195,7 +196,7 @@ export function BulkImport({ onImported }: { onImported: () => void }) {
           </p>
           <div className="flex flex-wrap gap-sm">
             {result.dry_run && (
-              <button type="button" className="px-md py-xs bg-primary text-on-primary font-label-md text-label-md disabled:opacity-50" disabled={validCount === 0 || busy} onClick={confirmImport}>
+              <button type="button" className={btnPrimary} disabled={validCount === 0 || busy} onClick={confirmImport}>
                 Importer les {validCount} lignes valides
               </button>
             )}

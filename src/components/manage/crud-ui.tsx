@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { FieldErrors } from "@/lib/manage-schemas";
+import { btnDanger, btnPrimary, btnSecondary } from "@/lib/button-styles";
 
 export function ManageIcon({ name, className = "" }: { name: string; className?: string }) {
   return (
@@ -85,7 +86,7 @@ export function Modal({
 export function FormActions({
   pending,
   onCancel,
-  submitLabel = "ENREGISTRER",
+  submitLabel = "Enregistrer",
 }: {
   pending?: boolean;
   onCancel: () => void;
@@ -96,14 +97,14 @@ export function FormActions({
       <button
         type="button"
         onClick={onCancel}
-        className="px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container rounded-lg"
+        className={btnSecondary}
       >
-        ANNULER
+        Annuler
       </button>
       <button
         type="submit"
         disabled={pending}
-        className="px-lg py-xs bg-primary text-on-primary font-label-md text-label-md disabled:opacity-50"
+        className={btnPrimary}
       >
         {pending ? "…" : submitLabel}
       </button>
@@ -177,17 +178,17 @@ export function ConfirmDelete({
         <button
           type="button"
           onClick={onCancel}
-          className="px-md py-xs border border-outline text-primary font-label-md text-label-md hover:bg-surface-container rounded-lg"
+          className={btnSecondary}
         >
-          ANNULER
+          Annuler
         </button>
         <button
           type="button"
           onClick={onConfirm}
           disabled={pending}
-          className="px-lg py-xs bg-error text-on-error font-label-md text-label-md disabled:opacity-50"
+          className={btnDanger}
         >
-          {pending ? "SUPPRESSION…" : "SUPPRIMER"}
+          {pending ? "Suppression…" : "Supprimer"}
         </button>
       </div>
     </Modal>

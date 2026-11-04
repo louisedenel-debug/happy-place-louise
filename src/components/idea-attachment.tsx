@@ -56,7 +56,7 @@ export function IdeaAttachment({
         <button
           type="button"
           onClick={() => input.current?.click()}
-          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-primary bg-white px-4 text-base font-semibold text-primary hover:bg-surface-container focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="inline-flex min-h-12 items-center gap-2 rounded-lg border border-primary bg-white px-5 text-base font-semibold text-primary hover:bg-surface-container focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <span aria-hidden="true" className="material-symbols-outlined">attach_file</span>
           {file ? "Changer de fichier" : "Ajouter un fichier"}

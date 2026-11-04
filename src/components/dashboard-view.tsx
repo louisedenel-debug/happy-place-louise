@@ -686,7 +686,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
             />
             <FormActions
               pending={submit.isPending}
-              submitLabel="ENVOYER"
+              submitLabel="Envoyer"
               onCancel={() => setSubmissionForm(null)}
             />
           </form>

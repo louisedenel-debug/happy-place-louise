@@ -64,9 +64,9 @@ function EntreePage() {
               </p>
               <Button
                 onClick={() => setAttempt((n) => n + 1)}
-                className="mt-md h-12 w-full rounded-lg font-label-md text-xs uppercase text-on-primary"
+                className="mt-md min-h-12 w-full rounded-lg text-base font-semibold text-on-primary"
               >
-                RÉESSAYER
+                Réessayer
               </Button>
             </>
           ) : (

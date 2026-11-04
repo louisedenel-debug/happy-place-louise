@@ -3,6 +3,7 @@ import { Linkify } from "@/components/linkify";
 import { AttachmentLink } from "@/components/attachment-link";
 import { formatExactDate } from "@/components/expandable-card";
 import { ideaTitle, type Submission } from "@/lib/dashboard";
+import { btnPrimary, btnSecondary } from "@/lib/button-styles";
 
 /** Grande fenêtre de lecture d'une soumission (focus piégé, Échap, clic fond). */
 export function SubmissionReader({
@@ -64,7 +65,7 @@ export function SubmissionReader({
                     onClick={onReject}
                     className="flex-1 py-sm border border-outline text-primary font-label-sm text-label-sm hover:bg-surface-container transition-colors rounded-lg"
                   >
-                    REFUSER
+                    Refuser
                   </button>
                 )}
                 {onApprove && (
@@ -72,9 +73,9 @@ export function SubmissionReader({
                     type="button"
                     disabled={approving}
                     onClick={onApprove}
-                    className="flex-1 py-sm bg-primary text-on-primary font-label-sm text-label-sm hover:opacity-90 transition-colors disabled:opacity-60"
+                    className={`${btnPrimary} flex-1`}
                   >
-                    VALIDER
+                    Valider
                   </button>
                 )}
               </div>

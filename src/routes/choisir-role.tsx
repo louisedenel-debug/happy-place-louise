@@ -219,8 +219,8 @@ function ChoisirRolePage() {
                 </label>
               )}
 
-              <Button type="submit" disabled={busy} className="h-12 w-full rounded-lg font-label-md text-xs uppercase text-on-primary">
-                {busy ? "PATIENTE…" : current ? "CHANGER DE RÔLE" : "ENTRER DANS HAPPY PLACE"}
+              <Button type="submit" disabled={busy} className="min-h-12 w-full rounded-lg text-base font-semibold text-on-primary">
+                {busy ? "Patiente…" : current ? "Changer de rôle" : "Entrer dans Happy Place"}
               </Button>
             </form>
           )}
