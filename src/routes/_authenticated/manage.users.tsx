@@ -259,57 +259,76 @@ function UsersPage() {
       )}
       <TeamsSection users={list.data ?? []} teams={teamsQuery.data ?? []} onChanged={refresh} />
       <BulkImport onImported={refresh} />
-      <form onSubmit={submit} className="flex flex-col md:flex-row gap-xs md:items-start bg-surface-container-lowest border border-outline-variant p-md rounded-xl">
-        <input
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          placeholder="Prénom (facultatif)"
-          aria-label="Prénom"
-          maxLength={100}
-          className="border border-outline-variant bg-surface px-sm py-xs font-body-md rounded-lg"
-        />
-        <input
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          placeholder="Nom (facultatif)"
-          aria-label="Nom"
-          maxLength={100}
-          className="border border-outline-variant bg-surface px-sm py-xs font-body-md rounded-lg"
-        />
-        <div className="flex-1">
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="prenom.nom@gmail.com"
-            aria-label="Email Google"
-            className="w-full border border-outline-variant bg-surface px-sm py-xs font-body-md rounded-lg"
-          />
-          {err && <p className="text-error text-sm mt-1">{err}</p>}
+      <form
+        onSubmit={submit}
+        className="space-y-sm rounded-xl border border-outline-variant bg-surface-container-lowest p-md"
+      >
+        <h2 className="font-label-md text-label-md text-primary">Ajouter un utilisateur</h2>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <label className="block min-w-0 text-sm font-semibold text-on-surface-variant">
+            Prénom (facultatif)
+            <input
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              maxLength={100}
+              className="mt-1 block min-h-12 w-full rounded-lg border border-outline-variant bg-surface px-3 font-body-md font-normal text-on-surface"
+            />
+          </label>
+          <label className="block min-w-0 text-sm font-semibold text-on-surface-variant">
+            Nom (facultatif)
+            <input
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              maxLength={100}
+              className="mt-1 block min-h-12 w-full rounded-lg border border-outline-variant bg-surface px-3 font-body-md font-normal text-on-surface"
+            />
+          </label>
+          <label className="block min-w-0 text-sm font-semibold text-on-surface-variant md:col-span-2 xl:col-span-1">
+            Adresse mail Google
+            <input
+              inputMode="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="prenom.nom@gmail.com"
+              className="mt-1 block min-h-12 w-full rounded-lg border border-outline-variant bg-surface px-3 font-body-md font-normal text-on-surface"
+            />
+            {err && <span role="alert" className="mt-1 block text-sm font-semibold text-error">{err}</span>}
+          </label>
+          <label className="block min-w-0 text-sm font-semibold text-on-surface-variant">
+            Rôle
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as Row["role"])}
+              className="mt-1 block min-h-12 w-full rounded-lg border border-outline-variant bg-surface px-3 font-body-md font-normal text-on-surface"
+            >
+              <option value="collaborateur">Collaborateur</option>
+              <option value="manager">Manager</option>
+              <option value="admin">Admin</option>
+            </select>
+          </label>
+          {role === "collaborateur" && (
+            <label className="block min-w-0 text-sm font-semibold text-on-surface-variant">
+              Équipe
+              <select
+                value={newTeam}
+                onChange={(e) => setNewTeam(e.target.value)}
+                className="mt-1 block min-h-12 w-full rounded-lg border border-outline-variant bg-surface px-3 font-body-md font-normal text-on-surface"
+              >
+                <option value="">Choisir une équipe</option>
+                {selectableTeams.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <div className="flex items-end">
+            <button disabled={add.isPending} className={`${btnPrimary} w-full md:w-auto`}>
+              Ajouter
+            </button>
+          </div>
         </div>
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value as Row["role"])}
-          aria-label="Rôle"
-          className="border border-outline-variant bg-surface px-sm py-xs font-body-md rounded-lg"
-        >
-          <option value="collaborateur">Collaborateur</option>
-          <option value="manager">Manager</option>
-          <option value="admin">Admin</option>
-        </select>
-        {role === "collaborateur" && (
-<select
-            value={newTeam}
-            onChange={(e) => setNewTeam(e.target.value)}
-            aria-label="Équipe du collaborateur"
-            className="border border-outline-variant bg-surface px-sm py-xs font-body-md rounded-lg"
-          >
-            <option value="">Choisir une équipe</option>
-            {selectableTeams.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-        )}
-        <button disabled={add.isPending} className={btnPrimary}>
-          Ajouter
-        </button>
       </form>
 
       <div className="border border-outline-variant divide-y divide-outline-variant bg-surface-container-lowest rounded-xl overflow-hidden">
