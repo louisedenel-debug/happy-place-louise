@@ -402,7 +402,7 @@ export function Dashboard({ view }: { view: DashboardView }) {
                 )}
                 {news.isLoading && <p className="text-base text-on-surface-variant">Chargement…</p>}
                 {news.isError && <p className="text-base text-error">Les actualités sont indisponibles.</p>}
-                <NewsFeed items={published.slice(0, 6)} heading={actions && canWriteNews ? "Déjà publiées" : undefined} />
+                <NewsFeed items={published} heading={actions && canWriteNews ? "Déjà publiées" : undefined} />
               </div>
             </section>
           )}

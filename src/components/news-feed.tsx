@@ -2,30 +2,25 @@ import { useState } from "react";
 import { Linkify } from "@/components/linkify";
 import { NewsImage, NewsLinks } from "@/components/news-media";
 import { timeAgo, type News } from "@/lib/dashboard";
+import { ShowMoreActions, ShowMoreButton } from "@/components/show-more-button";
 
-/** Actualités publiées : chaque ligne se déplie sur place (aria-expanded). */
+const PAGE = 4;
+
+/** Actualités publiées : 4 affichées, « Voir plus d'actualités » pour la suite ; chaque ligne se déplie sur place (aria-expanded). */
 export function NewsFeed({ items, heading }: { items: News[]; heading?: string }) {
   const [openId, setOpenId] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const shown = showAll ? items : items.slice(0, PAGE);
+  const hidden = items.length - PAGE;
   return (
     <div className="flex flex-col gap-4">
       {heading && <h3 className="text-xl font-bold leading-snug text-primary">{heading}</h3>}
       {items.length === 0 && <p className="text-base text-on-surface-variant">Aucune actualité publiée pour le moment.</p>}
       <div className="grid items-start gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))]">
-        {items.map((n) => {
+        {shown.map((n) => {
           const open = openId === n.id;
           return (
-            <div key={n.id} className="min-w-0 overflow-hidden rounded-[12px] border border-outline-variant bg-[#FAFAF7]">
-              {n.image_path && (
-                // L'image s'affiche d'emblée : elle donne envie d'ouvrir l'actualité. Cliquer dessus déplie aussi la carte.
-                <div className="cursor-pointer" onClick={() => setOpenId(open ? null : n.id)}>
-                  <NewsImage
-                    banner
-                    path={n.image_path}
-                    alt=""
-                    className={open ? "max-h-80" : "h-44"}
-                  />
-                </div>
-              )}
+            <div key={n.id} className="min-w-0 rounded-[12px] border border-outline-variant bg-[#FAFAF7]">
               <button
                 type="button"
                 aria-expanded={open}
@@ -47,6 +42,7 @@ export function NewsFeed({ items, heading }: { items: News[]; heading?: string }
               </button>
               {open && (
                 <div className="flex flex-col gap-3 px-5 pb-5">
+                  {n.image_path && <NewsImage path={n.image_path} alt={n.title} />}
                   {n.body && (
                     <p className="whitespace-pre-line wrap-anywhere">
                       <Linkify text={n.body} />
@@ -59,6 +55,13 @@ export function NewsFeed({ items, heading }: { items: News[]; heading?: string }
           );
         })}
       </div>
+      {hidden > 0 && (
+        <ShowMoreActions>
+          <ShowMoreButton expanded={showAll} onClick={() => setShowAll((v) => !v)}>
+            {showAll ? "Voir moins d'actualités" : `Voir plus d'actualités (${hidden})`}
+          </ShowMoreButton>
+        </ShowMoreActions>
+      )}
     </div>
   );
 }

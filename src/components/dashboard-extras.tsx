@@ -1,4 +1,5 @@
 import { TeamFilter } from "@/components/team-filter";
+import { ShowMoreActions, ShowMoreButton } from "@/components/show-more-button";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -136,26 +137,14 @@ export function ValidatedSubmissions({
         ))}
       </div>
       {(filtered.length > limit || limit > PAGE) && (
-        <div className="mt-md flex flex-wrap gap-md">
+        <ShowMoreActions>
           {filtered.length > limit && (
-            <button
-              type="button"
-              onClick={() => setLimit((l) => l + PAGE)}
-              className="font-label-sm text-label-sm text-primary underline"
-            >
-              Afficher plus ({filtered.length - limit} restantes)
-            </button>
+            <ShowMoreButton onClick={() => setLimit((l) => l + PAGE)}>
+              Voir plus d'idées ({filtered.length - limit})
+            </ShowMoreButton>
           )}
-          {limit > PAGE && (
-            <button
-              type="button"
-              onClick={() => setLimit(PAGE)}
-              className="font-label-sm text-label-sm text-primary underline"
-            >
-              Afficher moins
-            </button>
-          )}
-        </div>
+          {limit > PAGE && <ShowMoreButton onClick={() => setLimit(PAGE)}>Voir moins d'idées</ShowMoreButton>}
+        </ShowMoreActions>
       )}
       </div>
     </section>

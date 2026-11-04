@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { TeamFilter } from "@/components/team-filter";
+import { ShowMoreActions, ShowMoreButton } from "@/components/show-more-button";
 import { timeAgo, type Blocker } from "@/lib/dashboard";
 
 const STEPS = ["OUVERT", "EN COURS", "SURVEILLANCE", "RÉSOLU"] as const;
@@ -92,14 +93,6 @@ export function BlockersBoard({
             {team ? "Aucun point bloquant pour cette équipe." : "Aucun point bloquant en cours."}
           </p>
         )}
-        <button
-          type="button"
-          aria-haspopup="dialog"
-          onClick={onOpenArchive}
-          className="self-start text-base font-semibold text-mod-blocages underline"
-        >
-          Voir l'archive des points résolus
-        </button>
         {list.map((b) => {
           const critical = b.severity === "critical";
           const open = openId === b.id;
@@ -162,6 +155,11 @@ export function BlockersBoard({
             </div>
           );
         })}
+        <ShowMoreActions>
+          <ShowMoreButton hasPopup onClick={onOpenArchive}>
+            Voir l'archive des points résolus
+          </ShowMoreButton>
+        </ShowMoreActions>
       </div>
     </section>
   );

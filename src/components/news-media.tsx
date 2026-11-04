@@ -18,24 +18,8 @@ function I({ name, className = "" }: { name: string; className?: string }) {
   return <span aria-hidden="true" className={`material-symbols-outlined ${className}`}>{name}</span>;
 }
 
-export function NewsImage({
-  path,
-  alt,
-  className = "",
-  banner,
-}: {
-  path: string;
-  alt: string;
-  className?: string;
-  /** Bandeau en haut d'une carte : pleine largeur, sans bordure, hauteur fixée par `className`. */
-  banner?: boolean;
-}) {
+export function NewsImage({ path, alt, className = "" }: { path: string; alt: string; className?: string }) {
   const q = useQuery({ queryKey: ["news-image", path], queryFn: () => signedNewsImageUrl(path), staleTime: 50 * 60 * 1000, retry: false });
-  if (banner) {
-    if (q.isError) return null;
-    if (!q.data) return <div aria-hidden="true" className={`w-full animate-pulse bg-surface-container ${className}`} />;
-    return <img src={q.data} alt={alt} className={`w-full object-cover ${className}`} />;
-  }
   if (!q.data) return null;
   return <img src={q.data} alt={alt} className={`w-full max-h-60 object-cover rounded-lg border border-outline-variant ${className}`} />;
 }
