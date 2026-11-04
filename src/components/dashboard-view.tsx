@@ -8,6 +8,7 @@ import { ErrorSummary, Field, FormActions, Modal, TextArea, TextInput } from "@/
 import { ideaFormSchema, rejectionSchema, validate, type FieldErrors } from "@/lib/manage-schemas";
 import { BrandHeader } from "@/components/brand-header";
 import { AttachmentLink } from "@/components/attachment-link";
+import { IdeaAttachment } from "@/components/idea-attachment";
 import { CharCounter, SubmissionPreview, rejectionErrorMessage } from "@/components/expandable-card";
 import { Linkify } from "@/components/linkify";
 import { SubmissionReader } from "@/components/submission-reader";
@@ -35,8 +36,6 @@ import {
   reviewSubmission,
   submitIdea,
   ideaTitle,
-  ATTACHMENT_TYPES,
-  MAX_ATTACHMENT_BYTES,
   timeAgo,
   updateBlockerStatus,
   updateMetric,
@@ -676,31 +675,15 @@ export function Dashboard({ view }: { view: DashboardView }) {
               />
               <CharCounter value={submissionForm.content} max={2000} min={5} />
             </Field>
-            <Field label="Pièce jointe : PDF ou image (optionnel, 20 Mo max)" error={submissionErrors.attachment}>
-              <input
-                type="file"
-                accept="application/pdf,.pdf,image/jpeg,image/png,image/webp"
-                className="block w-full text-body-sm"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] ?? null;
-                  if (f && !ATTACHMENT_TYPES[f.type]) {
-                    setSubmissionErrors({ ...submissionErrors, attachment: "Seuls les PDF et les images (JPEG, PNG, WebP) sont acceptés." });
-                    e.target.value = "";
-                    setAttachment(null);
-                    return;
-                  }
-                  if (f && f.size > MAX_ATTACHMENT_BYTES) {
-                    setSubmissionErrors({ ...submissionErrors, attachment: "Le fichier dépasse 20 Mo." });
-                    e.target.value = "";
-                    setAttachment(null);
-                    return;
-                  }
-                  const { attachment: _a, ...rest } = submissionErrors;
-                  setSubmissionErrors(rest);
-                  setAttachment(f);
-                }}
-              />
-            </Field>
+            <IdeaAttachment
+              file={attachment}
+              error={submissionErrors.attachment}
+              onChange={setAttachment}
+              onError={(message) => {
+                const { attachment: _a, ...rest } = submissionErrors;
+                setSubmissionErrors(message ? { ...rest, attachment: message } : rest);
+              }}
+            />
             <FormActions
               pending={submit.isPending}
               submitLabel="ENVOYER"
