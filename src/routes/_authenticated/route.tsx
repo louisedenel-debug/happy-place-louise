@@ -9,7 +9,11 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
     try {
       const { data, error } = await supabase.auth.getUser();
-      if (error || !data.user) throw redirect({ to: "/auth" });
+      if (error || !data.user) {
+        // Compte supprimé (ou session périmée) : on oublie la session locale, sinon /auth la retrouve et boucle.
+        await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+        throw redirect({ to: "/auth" });
+      }
       const email = data.user.email ?? "";
       const role = email ? await fetchOwnRole(email) : null;
       if (!role) throw redirect({ to: "/choisir-role" });

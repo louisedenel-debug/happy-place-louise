@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { demoEnabled } from "@/lib/demo-mode";
 import { supabase } from "@/integrations/supabase/client";
 import {
   PERSONAS,
@@ -9,22 +10,6 @@ import {
   switchPersona,
   type Persona,
 } from "@/lib/personas";
-
-const DEMO_KEY = "hp-demo";
-const DEMO_CODE = "bigger-boat";
-
-/** En local, la barre est toujours là ; en ligne, elle n'apparaît qu'après avoir ouvert le site avec ?demo=bigger-boat (?demo=off la cache). */
-function demoEnabled(): boolean {
-  if (import.meta.env.DEV) return true;
-  try {
-    const asked = new URLSearchParams(window.location.search).get("demo");
-    if (asked === DEMO_CODE) localStorage.setItem(DEMO_KEY, "1");
-    if (asked === "off") localStorage.removeItem(DEMO_KEY);
-    return localStorage.getItem(DEMO_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
 
 /** Barre de test (version élèves) : trois personnages distincts, chacun avec son compte. */
 export function PersonaBar() {
