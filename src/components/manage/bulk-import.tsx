@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { loadBrowserLib } from "@/lib/browser-lib";
@@ -121,10 +121,13 @@ export function BulkImport({ onImported }: { onImported: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [inputKey, setInputKey] = useState(0);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   async function onFile(file: File | undefined) {
     setError(null); setResult(null);
     if (!file) return;
+    setFileName(file.name);
     if (!file.name.toLowerCase().endsWith(".csv")) return setError("Seuls les fichiers .csv sont acceptés.");
     if (file.size > 1024 * 1024) return setError("Fichier trop volumineux (1 Mo maximum).");
     const table = parseCsv(await file.text());
@@ -170,7 +173,7 @@ export function BulkImport({ onImported }: { onImported: () => void }) {
     onImported();
   }
 
-  function cancel() { setResult(null); setSent([]); setError(null); setInputKey((k) => k + 1); }
+  function cancel() { setResult(null); setSent([]); setError(null); setFileName(null); setInputKey((k) => k + 1); }
 
   const btn = btnSecondary;
   const validCount = result?.rows.filter((r) => r.status === "valide").length ?? 0;
@@ -179,20 +182,41 @@ export function BulkImport({ onImported }: { onImported: () => void }) {
     <section className="space-y-sm bg-surface-container-lowest border border-outline-variant p-md rounded-xl">
       {confirmDialog}
       <h2 className="font-label-md text-label-md text-primary">Importer une liste</h2>
-      <div className="flex flex-wrap items-center gap-sm">
-        <button type="button" className={btn} onClick={() => downloadTemplate().catch((e) => toast.error((e as Error).message))}>
-          Télécharger le modèle (.xlsx)
+      <p className="text-base">
+        Ajoutez plusieurs personnes d'un coup à partir d'un fichier CSV. Un aperçu s'affiche avant l'import : rien n'est
+        ajouté sans ta confirmation.
+      </p>
+      <ol className="flex list-none flex-col gap-1 p-0 text-sm text-on-surface-variant">
+        <li>1. Télécharge le modèle et remplis-le (une ligne par personne).</li>
+        <li>2. Exporte-le en CSV.</li>
+        <li>3. Choisis le fichier CSV pour vérifier la liste.</li>
+      </ol>
+      <div className="flex flex-wrap items-center gap-2.5">
+        <button type="button" className={`${btn} gap-2`} onClick={() => downloadTemplate().catch((e) => toast.error((e as Error).message))}>
+          <span aria-hidden="true" className="material-symbols-outlined">download</span>
+          Télécharger le modèle
         </button>
         <input
           key={inputKey}
+          ref={fileInput}
           type="file"
           accept=".csv,text/csv"
           aria-label="Fichier CSV à importer"
           disabled={busy}
           onChange={(e) => onFile(e.target.files?.[0])}
-          className="text-body-sm"
+          className="hidden"
         />
-        {busy && <span className="text-body-sm">…</span>}
+        <button type="button" className={`${btnPrimary} gap-2`} disabled={busy} onClick={() => fileInput.current?.click()}>
+          <span aria-hidden="true" className="material-symbols-outlined">upload_file</span>
+          {fileName ? "Choisir un autre fichier" : "Choisir un fichier CSV"}
+        </button>
+        {fileName && (
+          <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-outline bg-white px-2.5 py-1 text-sm">
+            <span aria-hidden="true" className="material-symbols-outlined !text-base text-primary">description</span>
+            <span className="wrap-anywhere font-semibold">{fileName}</span>
+          </span>
+        )}
+        {busy && <span className="text-sm text-on-surface-variant">Vérification…</span>}
       </div>
       {error && <p className="text-error text-sm">{error}</p>}
       {result && (

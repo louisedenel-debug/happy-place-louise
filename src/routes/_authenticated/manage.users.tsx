@@ -258,7 +258,6 @@ function UsersPage() {
         </div>
       )}
       <TeamsSection users={list.data ?? []} teams={teamsQuery.data ?? []} onChanged={refresh} />
-      <BulkImport onImported={refresh} />
       <form
         onSubmit={submit}
         className="space-y-sm rounded-xl border border-outline-variant bg-surface-container-lowest p-md"
@@ -330,6 +329,7 @@ function UsersPage() {
           </div>
         </div>
       </form>
+      <BulkImport onImported={refresh} />
 
       <div className="border border-outline-variant divide-y divide-outline-variant bg-surface-container-lowest rounded-xl overflow-hidden">
         {list.data?.map((u) => (

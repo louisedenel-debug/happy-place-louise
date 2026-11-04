@@ -105,23 +105,7 @@ function ManageNews() {
 
   return (
     <section className="space-y-md">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold leading-snug text-primary">
-          Actualités ({list.data?.length ?? 0})
-        </h2>
-        <button
-          onClick={() => {
-            setEditing(null);
-            setErrors({});
-            setMedia(emptyMedia());
-            setShowLinkErrs(false);
-            setForm({ ...empty });
-          }}
-          className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-primary px-5 text-base font-semibold text-on-primary hover:opacity-90"
-        >
-          <span aria-hidden="true" className="material-symbols-outlined">add</span>Nouvelle actualité
-        </button>
-      </div>
+      <h2 className="text-xl font-bold leading-snug text-primary">Actualités ({list.data?.length ?? 0})</h2>
 
       {list.isLoading && <p className="text-body-sm text-on-surface-variant">Chargement…</p>}
       {list.isError && (
