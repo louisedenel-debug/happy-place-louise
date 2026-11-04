@@ -61,34 +61,15 @@ export function NewsWriter({
     <div id="redaction-actualite" className="flex max-w-[860px] scroll-mt-24 flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <h3 className="text-xl font-bold leading-snug text-primary">Rédiger une actualité</h3>
-        <div className="group relative">
-          <button
-            type="button"
-            aria-label="Une bonne actualité"
-            className="grid h-7 w-7 place-items-center rounded-full border-[1.5px] border-mod-actus bg-white text-mod-actus"
-          >
-            <Icon name="info" className="!text-[18px]" />
-          </button>
-          <div
-            role="tooltip"
-            className="absolute left-0 top-[calc(100%+8px)] z-20 hidden w-[340px] max-w-[86vw] rounded-[12px] border border-mod-actus bg-mod-actus-tint p-4 shadow-lg group-focus-within:block group-hover:block"
-          >
-            <p className="mb-2.5 text-lg font-bold leading-snug text-mod-actus">Une bonne actualité</p>
-            <ul className="m-0 flex list-disc flex-col gap-1.5 pl-5">
-              <li>La nouvelle est dans la première phrase.</li>
-              <li>Entre 60 et 120 mots.</li>
-              <li>Des personnes nommées, pas « l'équipe » seule.</li>
-              <li>Une phrase sur ce que ça change pour le lecteur.</li>
-            </ul>
-          </div>
-        </div>
         <button
           type="button"
           aria-expanded={helpOpen}
           aria-controls="aide-redac"
           onClick={() => setHelpOpen((o) => !o)}
           className={`ml-auto inline-flex min-h-12 items-center gap-2 rounded-lg border px-5 text-base font-semibold text-white ${
-            helpOpen ? "border-[#4F1A51] bg-[#4F1A51] hover:bg-[#5E2060]" : "border-mod-actus bg-mod-actus hover:bg-[#8A3A8C]"
+            helpOpen
+              ? "border-[#4F1A51] bg-[#4F1A51] hover:bg-[#5E2060]"
+              : "border-mod-actus bg-mod-actus hover:bg-[#8A3A8C]"
           }`}
         >
           <Icon name="menu_book" />
@@ -102,75 +83,77 @@ export function NewsWriter({
           className="flex items-center gap-2 rounded-lg border border-mod-actus bg-mod-actus-tint px-4 py-3 text-base font-semibold text-mod-actus"
         >
           <Icon name="edit" />
-          Vous modifiez un brouillon : « {title || "sans titre"} ». Publiez-le ou enregistrez vos changements.
+          Vous modifiez un brouillon : « {title || "sans titre"} ». Publiez-le ou enregistrez vos
+          changements.
         </p>
       )}
 
-      <p className="max-w-[640px] text-base">
-        Trois minutes suffisent pour faire connaître votre équipe : ses réussites sont vues, ses nouveaux visages
-        accueillis, et chacun sait vers qui se tourner. Ce que vous partagez donne envie aux autres équipes d'en faire
-        autant.
-      </p>
+      {!helpOpen && (
+        <p className="max-w-[640px] text-base">
+          Trois minutes suffisent pour faire connaître votre équipe : ses réussites sont vues, ses
+          nouveaux visages accueillis, et chacun sait vers qui se tourner. Ce que vous partagez
+          donne envie aux autres équipes d'en faire autant.
+        </p>
+      )}
 
       {helpOpen && (
-        <div id="aide-redac" className="flex flex-col gap-3">
+        <div
+          id="aide-redac"
+          className="flex flex-col gap-3 rounded-[12px] border border-mod-actus bg-mod-actus-tint p-4"
+        >
           <p className="font-semibold">
-            1. Que voulez-vous annoncer ? Un exemple se place dans le texte, à vous de l'adapter.
+            Que voulez-vous annoncer ?{" "}
+            <span className="font-normal text-on-surface-variant">
+              Un exemple remplit le texte ci-dessous, à vous de l'adapter.
+            </span>
           </p>
-          <div
-            role="radiogroup"
-            aria-label="Type d'actualité"
-            className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]"
-          >
+          <div role="radiogroup" aria-label="Type d'actualité" className="flex flex-wrap gap-2">
             {HELP_TYPES.map((t) => {
               const on = kind === t.kind;
-              const e = HELP_EXAMPLES[t.kind];
               return (
-                <div key={t.kind} className="group relative">
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={on}
-                    onClick={() => pick(t.kind)}
-                    className={`flex h-full w-full flex-col gap-2 rounded-[12px] border p-4 text-left text-primary ${
-                      on ? "border-2 border-mod-actus bg-mod-actus-tint" : "border-outline bg-white hover:bg-surface-container"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <span aria-hidden="true" className="grid h-9 w-9 flex-none place-items-center rounded-[12px] bg-mod-actus text-white">
-                        <Icon name={t.icon} />
-                      </span>
-                    </span>
-                    <span className="font-semibold">{t.label}</span>
-                    <span className="text-sm text-on-surface-variant">{t.hint}</span>
-                  </button>
-                  <div
-                    role="tooltip"
-                    className="absolute left-0 top-[calc(100%+8px)] z-20 hidden w-[340px] max-w-[86vw] rounded-[12px] border border-mod-actus bg-mod-actus-tint p-4 shadow-lg group-focus-within:block group-hover:block"
-                  >
-                    <p className="mb-2.5 text-lg font-bold leading-snug text-mod-actus">{e.checkTitle}</p>
-                    <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
-                      {e.checks.map((c) => (
-                        <li key={c.label} className="flex items-start gap-2.5">
-                          <Icon name="check" className="mt-0.5 !text-[18px] text-mod-actus" />
-                          <span>
-                            <strong>{c.label}</strong>
-                            <br />
-                            <span className="text-sm text-on-surface-variant">{c.hint}</span>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                <button
+                  key={t.kind}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  aria-controls="aide-reperes"
+                  onClick={() => pick(t.kind)}
+                  className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 font-semibold ${
+                    on
+                      ? "border-mod-actus bg-mod-actus text-white"
+                      : "border-mod-actus bg-white text-mod-actus hover:bg-surface-container"
+                  }`}
+                >
+                  <Icon name={t.icon} className="!text-[20px]" />
+                  {t.label.replace(/\.$/, "")}
+                </button>
               );
             })}
           </div>
-          <p className="flex items-center gap-2 text-sm text-on-surface-variant">
-            <Icon name="info" className="!text-[16px]" />
-            Exemples d'illustration : remplacez les noms, dates et chiffres par les vôtres.
-          </p>
-          <p className="mt-1 font-semibold">2. Rédigez votre actualité</p>
+          <div id="aide-reperes" aria-live="polite" className="flex flex-col gap-2">
+            {ex && (
+              <>
+                <p className="text-sm font-semibold text-mod-actus">À mentionner</p>
+                <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+                  {ex.checks.map((c) => (
+                    <li
+                      key={c.label}
+                      title={c.hint}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-white px-3 py-1.5 text-sm"
+                    >
+                      <Icon name="check" className="!text-[16px] text-mod-actus" />
+                      <span className="font-semibold">{c.label}</span>
+                      <span className="sr-only"> : {c.hint}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            <p className="text-sm text-on-surface-variant">
+              Une bonne actualité : la nouvelle dans la première phrase, 60 à 120 mots, des
+              personnes nommées, une phrase sur ce que ça change pour le lecteur.
+            </p>
+          </div>
         </div>
       )}
 
@@ -215,7 +198,11 @@ export function NewsWriter({
 
       <div className="flex flex-wrap items-center justify-end gap-4">
         {editing && (
-          <button type="button" onClick={onCancelEdit} className="text-base font-semibold text-primary underline">
+          <button
+            type="button"
+            onClick={onCancelEdit}
+            className="text-base font-semibold text-primary underline"
+          >
             Annuler la modification
           </button>
         )}
